@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodel/search_view_model.dart';
 import '../widget/custom_search_header.dart';
 import '../widget/filter_dropdown.dart';
-import '../widget/job_card.dart';
+import '../widget/search_job_card.dart';
 import '../theme/app_colors.dart';
 
 class SearchView extends StatefulWidget {
@@ -162,10 +162,10 @@ class _SearchViewState extends State<SearchView> {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: viewModel.jobs.length,
                             itemBuilder: (context, index) {
-                              return JobCard(
+                              return SearchJobCard(
                                 job: viewModel.jobs[index],
-                                applyButtonText:
-                                    'عاجل', // Matching screenshot badge style roughly
+                                isUrgent: index == 0,
+                                showBookmark: true,
                               );
                             },
                           ),
