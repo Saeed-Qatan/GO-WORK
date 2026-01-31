@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/profile/profile_view_model.dart';
+import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
 
@@ -21,7 +21,10 @@ class ProfileView extends StatelessWidget {
                 Icons.edit_outlined,
                 color: AppColors.textSecondary,
               ),
-              onPressed: () {},
+              onPressed: () {
+                debugPrint('Edit Profile Pressed');
+                // Could navigate to an edit profile screen here
+              },
             ),
             Text(
               AppConstants.profileTitle,
@@ -36,7 +39,7 @@ class ProfileView extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
               onPressed: () {
-                // Navigation if needed
+                Navigator.pop(context);
               },
             ),
           ],
@@ -46,10 +49,49 @@ class ProfileView extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
-          if (viewModel.isLoading || viewModel.profile == null) {
+          if (viewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          if (viewModel.errorMessage != null && viewModel.profile == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    viewModel.errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => viewModel.fetchProfile(),
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (viewModel.profile == null) {
+            return const Center(child: Text('لا يوجد بيانات للملف الشخصي'));
+          }
+
           final profile = viewModel.profile!;
+
+          // Function to get initials from name
+          String getInitials(String name) {
+            List<String> names = name.split(" ");
+            String initials = "";
+            int numWords = names.length > 2 ? 2 : names.length;
+            for (var i = 0; i < numWords; i++) {
+              if (names[i].isNotEmpty) {
+                initials += names[i][0].toUpperCase();
+              }
+            }
+            return initials;
+          }
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -75,18 +117,40 @@ class ProfileView extends StatelessWidget {
                         width: 80,
                         height: 80,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF1976D2), // Blue
+                          color: Color(0xFF1565C0), // Consistent blue
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          'OA',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                        child: profile.avatarUrl.isNotEmpty
+                            ? ClipOval(
+                                child: Image.network(
+                                  profile.avatarUrl,
+                                  fit: BoxFit.cover,
+                                  width: 80,
+                                  height: 80,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Text(
+                                        getInitials(profile.name),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium
+                                            ?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                ),
+                              )
+                            : Text(
+                                getInitials(profile.name),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
-                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(

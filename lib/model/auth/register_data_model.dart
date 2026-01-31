@@ -1,18 +1,17 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-
-
-class RegisterDataModel extends ChangeNotifier {
-  String firstName;
-  String fatherName;
-  String familyName;
-  String email;
-  String phone;
-  String password;
-  File? cvFile;
-  String? fieldOfInterest;
-  List<String> skills;
+class RegisterDataModel {
+  final String firstName;
+  final String fatherName;
+  final String familyName;
+  final String email;
+  final String phone;
+  final String password;
+  final String confirmPassword;
+  final File? profilePhoto;
+  final File? cvFile;
+  final List<String> skills;
+  final int? interstedInCategoryId;
 
   RegisterDataModel({
     required this.firstName,
@@ -21,73 +20,39 @@ class RegisterDataModel extends ChangeNotifier {
     required this.email,
     required this.phone,
     required this.password,
+    required this.confirmPassword,
+    this.profilePhoto,
     this.cvFile,
-    this.fieldOfInterest,
     List<String>? skills,
+    this.interstedInCategoryId,
   }) : skills = skills ?? [];
 
-  void updateFirstName(String value) {
-    firstName = value;
-    notifyListeners();
-  }
-
-  void updateFatherName(String value) {
-    fatherName = value;
-    notifyListeners();
-  }
-
-  void updateFamilyName(String value) {
-    familyName = value;
-    notifyListeners();
-  }
-
-  void updateEmail(String value) {
-    email = value;
-    notifyListeners();
-  }
-
-  void updatePhone(String value) {
-    phone = value;
-    notifyListeners();
-  }
-
-  void updatePassword(String value) {
-    password = value;
-    notifyListeners();
-  }
-
-  void setCvFile(File? file) {
-    cvFile = file;
-    notifyListeners();
-  }
-
-  void setFieldOfInterest(String? field) {
-    fieldOfInterest = field;
-    notifyListeners();
-  }
-
-  void addSkill(String skill) {
-    if (!skills.contains(skill)) {
-      skills.add(skill);
-      notifyListeners();
-    }
-  }
-
-  void removeSkill(String skill) {
-    skills.remove(skill);
-    notifyListeners();
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'firstName': firstName,
-      'fatherName': fatherName,
-      'familyName': familyName,
-      'email': email,
-      'phone': phone,
-      'password': password,
-      'fieldOfInterest': fieldOfInterest,
-      'skills': skills,
-    };
+  RegisterDataModel copyWith({
+    String? firstName,
+    String? fatherName,
+    String? familyName,
+    String? email,
+    String? phone,
+    String? password,
+    String? confirmPassword,
+    File? profilePhoto,
+    File? cvFile,
+    List<String>? skills,
+    int? interstedInCategoryId,
+  }) {
+    return RegisterDataModel(
+      firstName: firstName ?? this.firstName,
+      fatherName: fatherName ?? this.fatherName,
+      familyName: familyName ?? this.familyName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      password: password ?? this.password,
+      confirmPassword: confirmPassword ?? this.confirmPassword,
+      profilePhoto: profilePhoto ?? this.profilePhoto,
+      cvFile: cvFile ?? this.cvFile,
+      skills: skills ?? this.skills,
+      interstedInCategoryId:
+          interstedInCategoryId ?? this.interstedInCategoryId,
+    );
   }
 }

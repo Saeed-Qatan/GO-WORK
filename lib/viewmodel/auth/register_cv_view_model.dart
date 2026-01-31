@@ -1,18 +1,25 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/utils/navigations.dart';
-import 'package:gowork/view/main_view.dart';
-import 'package:provider/provider.dart';
-import 'package:gowork/repository/register_repository.dart';
+import 'package:gowork/services/auth/register_service.dart';
 
 class RegisterCVViewModel extends ChangeNotifier {
   final TextEditingController skillController = TextEditingController();
+  final List<String> _skills = [];
+  List<String> get skills => List.unmodifiable(_skills);
+
+  String? _selectedField;
+  String? get selectedField => _selectedField;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  String _cvFileName = '';
-  String get cvFileName => _cvFileName;
+  File? _cvFile;
+  File? get cvFile => _cvFile;
+  String? _cvFileName;
+  String? get cvFileName => _cvFileName;
 
   final List<String> suggestedSkills = [
     'JavaScript',
@@ -38,45 +45,46 @@ class RegisterCVViewModel extends ChangeNotifier {
     'الذكاء الاصطناعي',
   ];
 
-  Future<void> pickCVFile(BuildContext context) async {
-    // TODO: Implement file picker using file_picker package
-    // For now, simulate file selection
-    _cvFileName = 'my_cv.pdf';
-
-    // TODO: Set cvFile on dataModel when file picker is implemented
-    // final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-    // dataModel.setCvFile(pickedFile);
-
-    notifyListeners();
-  }
-
-  void addSkillFromTextField(BuildContext context) {
+  void addSkillFromTextField() {
     final skill = skillController.text.trim();
-    if (skill.isNotEmpty) {
-      final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-      dataModel.addSkill(skill);
+    if (skill.isNotEmpty && !_skills.contains(skill)) {
+      _skills.add(skill);
       skillController.clear();
       notifyListeners();
     }
   }
 
-  void addSuggestedSkill(BuildContext context, String skill) {
-    final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-    dataModel.addSkill(skill);
-    notifyListeners();
-  }
-
-  void removeSkill(BuildContext context, String skill) {
-    final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-    dataModel.removeSkill(skill);
-    notifyListeners();
-  }
-
-  void selectField(BuildContext context, String? field) {
-    if (field != null) {
-      final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-      dataModel.setFieldOfInterest(field);
+  void addSuggestedSkill(String skill) {
+    if (!_skills.contains(skill)) {
+      _skills.add(skill);
       notifyListeners();
+    }
+  }
+
+  void removeSkill(String skill) {
+    _skills.remove(skill);
+    notifyListeners();
+  }
+
+  void selectField(String? field) {
+    _selectedField = field;
+    notifyListeners();
+  }
+
+  Future<void> pickCVFile(BuildContext context) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        _cvFile = File(result.files.single.path!);
+        _cvFileName = result.files.single.name;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error picking CV: $e');
     }
   }
 
@@ -85,16 +93,25 @@ class RegisterCVViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
+      final baseDataModel =
+          ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
 
-      final RegisterRepository repository = RegisterRepository();
-      await repository.register(dataModel);
+      final completeDataModel = baseDataModel.copyWith(
+        skills: _skills,
+        interstedInCategoryId: _selectedField != null
+            ? fieldsOfInterest.indexOf(_selectedField!) + 1
+            : null,
+        cvFile: _cvFile,
+      );
+
+      final RegisterService service = RegisterService();
+      await service.register(completeDataModel);
 
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('تم التسجيل بنجاح!')));
-        NavigationService.pushAndRemoveUntil(const MainView());
+        NavigationService.pushNamedAndRemoveUntil(Routes.login);
       }
     } catch (e) {
       if (context.mounted) {

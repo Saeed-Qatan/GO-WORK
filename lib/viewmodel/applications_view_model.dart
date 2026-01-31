@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../model/application_model.dart';
-
+import '../model/application_model.dart';
+import '../repository/applications_repository.dart';
 
 class ApplicationsViewModel extends ChangeNotifier {
+  final ApplicationsRepository _repository = ApplicationsRepository();
   List<ApplicationModel> _allApplications = [];
   List<ApplicationModel> _filteredApplications = [];
 
@@ -14,54 +15,27 @@ class ApplicationsViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
   ApplicationsViewModel() {
     fetchApplications();
   }
 
   Future<void> fetchApplications() async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 800)); // Mock API delay
-
-    _allApplications = [
-      ApplicationModel(
-        id: '1',
-        role: 'React Frontend مطور',
-        company: 'شركة التقنية المتقدمة',
-        companyLogo: '',
-        date: '2024-01-15',
-        status: ApplicationStatus.inReview,
-      ),
-      ApplicationModel(
-        id: '2',
-        role: 'مصمم جرافيك',
-        company: 'وكالة الإبداع الرقمي',
-        companyLogo: '',
-        date: '2024-01-14',
-        status: ApplicationStatus.accepted,
-      ),
-      ApplicationModel(
-        id: '3',
-        role: 'مختص تسويق رقمي',
-        company: 'شركة النمو التسويقي',
-        companyLogo: '',
-        date: '2024-01-10',
-        status: ApplicationStatus.rejected,
-      ),
-      ApplicationModel(
-        id: '4',
-        role: 'مطور واجهات',
-        company: 'حلول الويب',
-        companyLogo: '',
-        date: '2024-01-18',
-        status: ApplicationStatus.sent,
-      ),
-    ];
-
-    _applyFilter();
-    _isLoading = false;
-    notifyListeners();
+    try {
+      _allApplications = await _repository.getApplications();
+      _applyFilter();
+    } catch (e) {
+      _errorMessage = 'حدث خطأ أثناء جلب الطلبات: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   void setFilterIndex(int index) {

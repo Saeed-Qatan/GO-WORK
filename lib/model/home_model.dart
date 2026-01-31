@@ -1,46 +1,52 @@
-import 'package:flutter/material.dart';
+// Pure data models for home feature
+// No Flutter dependencies - UI logic handled separately
 
 class UserModel {
   final String name;
   final String imageUrl;
 
   UserModel({required this.name, required this.imageUrl});
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      name: json['name'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
+    );
+  }
 }
+
+/// Stat types for UI mapping
+enum StatType { interview, review, sent, unknown }
 
 class StatModel {
   final String count;
   final String label;
-  final IconData icon;
-  final Color color;
+  final StatType type;
 
-  StatModel({
-    required this.count,
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
+  StatModel({required this.count, required this.label, required this.type});
 
   factory StatModel.fromJson(Map<String, dynamic> json) {
-    // Map basic fields
     String label = json['label'] ?? '';
-    // Determine icon and color based on label or type from backend
-    // This is a client-side mapping for UI logic
-    IconData icon = Icons.work;
-    Color color = Colors.blue;
 
-    if (label.contains('مقابلة') || label.contains('Interview')) {
-      icon = Icons.mic;
-      color = Colors.orange;
-    } else if (label.contains('طلب') || label.contains('Application')) {
-      icon = Icons.description;
-      color = Colors.purple;
+    // Determine type based on label
+    StatType type = StatType.unknown;
+    if (label.contains('مقابلة') ||
+        label.contains('مقابلات') ||
+        label.contains('Interview')) {
+      type = StatType.interview;
+    } else if (label.contains('مراجعة') || label.contains('Review')) {
+      type = StatType.review;
+    } else if (label.contains('طلب') ||
+        label.contains('مرسلة') ||
+        label.contains('Application') ||
+        label.contains('Sent')) {
+      type = StatType.sent;
     }
 
     return StatModel(
       count: json['count']?.toString() ?? '0',
       label: label,
-      icon: icon,
-      color: color,
+      type: type,
     );
   }
 }
@@ -53,8 +59,8 @@ class JobModel {
   final int matchPercentage;
   final String category;
   final String location;
-  final String type; // e.g., Full-time
-  final String workMode; // e.g., On-site
+  final String type;
+  final String workMode;
   final String minSalary;
   final String maxSalary;
 

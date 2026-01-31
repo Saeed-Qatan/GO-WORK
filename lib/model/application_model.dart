@@ -16,4 +16,18 @@ class ApplicationModel {
     required this.date,
     required this.status,
   });
+
+  factory ApplicationModel.fromJson(Map<String, dynamic> json) {
+    return ApplicationModel(
+      id: json['id']?.toString() ?? '',
+      role: json['role'] ?? '',
+      company: json['company'] ?? '',
+      companyLogo: json['companyLogo'] ?? '',
+      date: json['date'] ?? '',
+      status: ApplicationStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+        orElse: () => ApplicationStatus.sent,
+      ),
+    );
+  }
 }

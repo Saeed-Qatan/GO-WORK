@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/home/home_view_model.dart';
+import '../viewmodel/home_view_model.dart';
 import '../widget/home_header.dart';
 import '../widget/stat_card.dart';
 import '../widget/job_card.dart';
 import '../core/constants/app_constants.dart';
 import '../widget/home_filters.dart';
+import '../utils/stat_ui_helper.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -53,8 +54,8 @@ class _HomeViewState extends State<HomeView> {
                             (stat) => StatCard(
                               count: stat.count,
                               label: stat.label,
-                              icon: stat.icon,
-                              iconColor: stat.color,
+                              icon: StatUiHelper.getIcon(stat.type),
+                              iconColor: StatUiHelper.getColor(stat.type),
                             ),
                           )
                           .toList(),

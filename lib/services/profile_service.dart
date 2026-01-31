@@ -5,7 +5,7 @@ class ProfileService {
   final ApiClient _apiClient = ApiClient();
 
   Future<Map<String, dynamic>> getUserProfile() async {
-    return await _apiClient.get(ApiConstants.getUser);
+    return await _apiClient.get(ApiConstants.profile);
   }
 
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {

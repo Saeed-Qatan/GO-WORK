@@ -6,11 +6,15 @@ import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 
 import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/view/auth/login_view.dart';
+import 'package:gowork/view/auth/register_info_page.dart';
+import 'package:gowork/view/auth/register_photo_page.dart';
+import 'package:gowork/view/auth/register_cv_skills_page.dart';
 import 'viewmodel/auth/login_view_model.dart';
-import 'viewmodel/home/home_view_model.dart';
-import 'viewmodel/applications/applications_view_model.dart';
-import 'viewmodel/interviews/interviews_view_model.dart';
-import 'viewmodel/profile/profile_view_model.dart';
+import 'viewmodel/home_view_model.dart';
+import 'viewmodel/applications_view_model.dart';
+import 'viewmodel/interviews_view_model.dart';
+import 'viewmodel/profile_view_model.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
@@ -42,6 +46,12 @@ class MyApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        routes: {
+          Routes.login: (context) => const LoginView(),
+          Routes.registerInfo: (context) => const RegisterPage(),
+          Routes.registerPhoto: (context) => const RegisterPhotoPage(),
+          Routes.registerCV: (context) => const RegisterCVPage(),
+        },
         home: const SplashView(),
       ),
     );

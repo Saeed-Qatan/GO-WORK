@@ -24,4 +24,22 @@ class InterviewModel {
     required this.interviewerRole,
     required this.status,
   });
+
+  factory InterviewModel.fromJson(Map<String, dynamic> json) {
+    return InterviewModel(
+      id: json['id']?.toString() ?? '',
+      role: json['role'] ?? '',
+      company: json['company'] ?? '',
+      companyLogo: json['companyLogo'] ?? '',
+      date: json['date'] ?? '',
+      time: json['time'] ?? '',
+      location: json['location'] ?? '',
+      interviewerName: json['interviewerName'] ?? '',
+      interviewerRole: json['interviewerRole'] ?? '',
+      status: InterviewStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+        orElse: () => InterviewStatus.waiting,
+      ),
+    );
+  }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../viewmodel/applications/applications_view_model.dart';
+import '../viewmodel/applications_view_model.dart';
 
 class ApplicationsHeader extends StatelessWidget {
   final ApplicationsViewModel viewModel;

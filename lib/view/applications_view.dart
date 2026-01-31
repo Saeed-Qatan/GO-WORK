@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/applications/applications_view_model.dart';
+import '../viewmodel/applications_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widget/application_card.dart';

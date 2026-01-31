@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gowork/theme/app_colors.dart';
-import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/viewmodel/auth/register_cv_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
@@ -21,21 +20,15 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Center(
           child: SingleChildScrollView(
-            child: Consumer<RegisterDataModel>(
-              builder: (context, dataModel, child) {
-                // Access ViewModel from the local provider
-                final viewModel = Provider.of<RegisterCVViewModel>(
-                  context,
-                  listen: false,
-                );
-
+            child: Consumer<RegisterCVViewModel>(
+              builder: (context, viewModel, child) {
                 final isFormComplete =
-                    dataModel.cvFile != null &&
-                    dataModel.fieldOfInterest != null &&
-                    dataModel.skills.isNotEmpty;
+                    (viewModel.cvFileName?.isNotEmpty ?? false) &&
+                    viewModel.selectedField != null &&
+                    viewModel.skills.isNotEmpty;
 
                 final availableSuggestedSkills = viewModel.suggestedSkills
-                    .where((skill) => !dataModel.skills.contains(skill))
+                    .where((skill) => !viewModel.skills.contains(skill))
                     .toList();
 
                 return Container(
@@ -128,11 +121,12 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                 color: Colors.grey,
                               ),
                               const SizedBox(height: 10),
-                              if (dataModel.cvFile != null)
+                              if (viewModel.cvFileName != null &&
+                                  viewModel.cvFileName!.isNotEmpty)
                                 Consumer<RegisterCVViewModel>(
                                   builder: (context, cvViewModel, child) =>
                                       Text(
-                                        cvViewModel.cvFileName,
+                                        cvViewModel.cvFileName!,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
                                           fontWeight: FontWeight.bold,
@@ -185,7 +179,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             child: IconButton(
                               icon: const Icon(Icons.add, color: Colors.white),
                               onPressed: () =>
-                                  viewModel.addSkillFromTextField(context),
+                                  viewModel.addSkillFromTextField(),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -206,7 +200,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                 ),
                               ),
                               onSubmitted: (value) =>
-                                  viewModel.addSkillFromTextField(context),
+                                  viewModel.addSkillFromTextField(),
                             ),
                           ),
                         ],
@@ -218,13 +212,12 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           spacing: 8.0,
                           runSpacing: 4.0,
                           alignment: WrapAlignment.start,
-                          children: dataModel.skills
+                          children: viewModel.skills
                               .map(
                                 (skill) => Chip(
                                   label: Text(skill),
                                   deleteIcon: const Icon(Icons.close, size: 16),
-                                  onDeleted: () =>
-                                      viewModel.removeSkill(context, skill),
+                                  onDeleted: () => viewModel.removeSkill(skill),
                                   backgroundColor: AppColors.inputBackground,
                                   side: BorderSide.none,
                                 ),
@@ -255,10 +248,8 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                     color: Colors.grey.shade800,
                                   ),
                                   side: BorderSide.none,
-                                  onPressed: () => viewModel.addSuggestedSkill(
-                                    context,
-                                    skill,
-                                  ),
+                                  onPressed: () =>
+                                      viewModel.addSuggestedSkill(skill),
                                 ),
                               )
                               .toList(),
@@ -276,7 +267,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                       ),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
-                        initialValue: dataModel.fieldOfInterest,
+                        initialValue: viewModel.selectedField,
                         hint: const Text('اختر المجال المهتم به'),
                         decoration: InputDecoration(
                           filled: true,
@@ -297,7 +288,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           );
                         }).toList(),
                         onChanged: (newValue) =>
-                            viewModel.selectField(context, newValue),
+                            viewModel.selectField(newValue),
                       ),
                       const SizedBox(height: 30),
 
