@@ -8,44 +8,29 @@ class RegisterPhotoViewModel extends ChangeNotifier {
   File? selectedImage;
   bool isLoading = false;
 
-  Future<void> pickFile(BuildContext context) async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-      );
-      if (result != null && result.files.single.path != null) {
-        selectedImage = File(result.files.single.path!);
-        notifyListeners();
-      }
-    } catch (e) {
-      debugPrint('Error picking image: $e');
-    }
-  }
-
-  void removeImage() {
-    selectedImage = null;
-    notifyListeners();
-  }
-
-  Future<void> onContinuePressed(BuildContext context) async {
-    isLoading = true;
-    notifyListeners();
-
-    try {
-      final baseData =
-          ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
-      final data = baseData.copyWith(profilePhoto: selectedImage);
-
-      Navigator.pushNamed(context, Routes.registerCV, arguments: data);
-    } finally {
-      isLoading = false;
+  Future<void> pickFile() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result?.files.single.path != null) {
+      selectedImage = File(result!.files.single.path!);
       notifyListeners();
     }
   }
 
-  void onSkipPressed(BuildContext context) {
-    final baseData =
+  void onContinuePressed(BuildContext context) {
+    final base =
         ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
-    Navigator.pushNamed(context, Routes.registerCV, arguments: baseData);
+
+    Navigator.pushNamed(
+      context,
+      Routes.registerCV,
+      arguments: base.copyWith(profilePhoto: selectedImage),
+    );
+  }
+
+  void onSkipPressed(BuildContext context) {
+    final base =
+        ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
+
+    Navigator.pushNamed(context, Routes.registerCV, arguments: base);
   }
 }

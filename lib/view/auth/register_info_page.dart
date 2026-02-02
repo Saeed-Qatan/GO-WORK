@@ -83,30 +83,38 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: viewModel.firstNameController,
                           label: 'اسم الاول',
                           hint: 'علي',
+                          validator: (val) =>
+                              viewModel.validateNotEmpty(val, 'الاسم الاول'),
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.fatherNameController,
                           label: 'اسم الاب',
                           hint: 'ناصر',
+                          validator: (val) =>
+                              viewModel.validateNotEmpty(val, 'اسم الاب'),
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.familyNameController,
                           label: 'اسم العائلة',
                           hint: 'محمد',
+                          validator: (val) =>
+                              viewModel.validateNotEmpty(val, 'اسم العائلة'),
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.emailController,
                           label: 'البريد الإلكتروني',
                           hint: 'ali@gmail.com',
+                          validator: viewModel.validateEmail,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.phoneController,
                           label: 'رقم الهاتف',
                           hint: '+967774165326',
+                          validator: viewModel.validatePhone,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
@@ -114,6 +122,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: viewModel.passwordController,
                           hint: 'كلمة المرور',
                           isPassword: true,
+                          validator: viewModel.validatePassword,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
@@ -121,6 +130,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           hint: 'تأكيد كلمة المرور',
                           label: 'تأكيد كلمة المرور',
                           isPassword: true,
+                          validator: viewModel.validateConfirmPassword,
                         ),
                         if (viewModel.errorMessage != null)
                           Padding(

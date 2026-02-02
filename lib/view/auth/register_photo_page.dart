@@ -42,7 +42,7 @@ class RegisterPhotoPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 30),
                       GestureDetector(
-                        onTap: () => viewModel.pickFile(context),
+                        onTap: () => viewModel.pickFile(),
                         child: Container(
                           height: 180,
                           width: 180,

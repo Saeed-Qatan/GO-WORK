@@ -1,48 +1,89 @@
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:gowork/core/constants/api_constants.dart';
-import '../model/auth/register_data_model.dart';
+import 'package:gowork/model/auth/register_data_model.dart';
 
 class RegisterRepository {
-  final String endpoint = '${ApiConstants.baseUrl}${ApiConstants.register}';
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConstants.baseUrl,
+      headers: {
+        'Accept': 'application/json',
+        // Do NOT set Content-Type here, let Dio set it to multipart/form-data with boundary
+      },
+      validateStatus: (status) => status! < 500,
+    ),
+  );
 
-  Future<void> register(RegisterDataModel dataModel) async {
-    var request = http.MultipartRequest('POST', Uri.parse(endpoint));
+  Future<void> register(RegisterDataModel data) async {
+    final formData = FormData();
 
-    request.fields['firstName'] = dataModel.firstName;
-    request.fields['midName'] = dataModel.fatherName;
-    request.fields['lastName'] = dataModel.familyName;
-    request.fields['email'] = dataModel.email;
-    request.fields['phoneNumber'] = dataModel.phone;
-    request.fields['Password'] = dataModel.password;
-    request.fields['PasswordConfirmation'] = dataModel.confirmPassword;
-    if (dataModel.interstedInCategoryId != null) {
-      request.fields['interstedInCategoryId'] = dataModel.interstedInCategoryId
-          .toString();
-    }
-    for (var skill in dataModel.skills) {
-      request.fields['listOfSkills'] = skill;
-    }
+    formData.fields
+      ..add(MapEntry('firstName', data.firstName))
+      ..add(MapEntry('midName', data.fatherName))
+      ..add(MapEntry('lastName', data.familyName))
+      ..add(MapEntry('email', data.email))
+      ..add(MapEntry('phoneNumber', data.phone))
+      ..add(MapEntry('Password', data.password))
+      ..add(MapEntry('PasswordConfirmation', data.confirmPassword));
 
-    if (dataModel.profilePhoto != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'ProfilePhoto',
-          dataModel.profilePhoto!.path,
+    if (data.interstedInCategoryId != null) {
+      formData.fields.add(
+        MapEntry(
+          'interstedInCategoryId',
+          data.interstedInCategoryId.toString(),
         ),
       );
     }
 
-    if (dataModel.cvFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('Resume', dataModel.cvFile!.path),
+    for (final skill in data.skills) {
+      formData.fields.add(MapEntry('listOfSkills', skill));
+    }
+
+    if (data.profilePhoto != null) {
+      formData.files.add(
+        MapEntry(
+          'ProfilePhoto',
+          await MultipartFile.fromFile(data.profilePhoto!.path),
+        ),
       );
     }
 
-    var response = await request.send();
+    if (data.cvFile != null) {
+      formData.files.add(
+        MapEntry('Resume', await MultipartFile.fromFile(data.cvFile!.path)),
+      );
+    }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      var body = await response.stream.bytesToString();
-      throw Exception('Error ${response.statusCode}: $body');
+    print('---------------- REGISTRATION DEBUG ----------------');
+    for (var field in formData.fields) {
+      print('Field: ${field.key} = ${field.value}');
+    }
+    for (var file in formData.files) {
+      print(
+        'File: ${file.key} = ${file.value.filename}, path: ${data.profilePhoto?.path}',
+      );
+    }
+    print('----------------------------------------------------');
+
+    try {
+      final response = await _dio.post(ApiConstants.register, data: formData);
+      print('Response: ${response.statusCode} - ${response.data}');
+
+      if (response.data['success'] != true) {
+        final errors = response.data['errors'];
+        String errorMessage = 'Registration failed';
+        if (errors is List && errors.isNotEmpty) {
+          errorMessage = errors.join('\n');
+        } else if (errors is Map) {
+          errorMessage = errors.values.join('\n');
+        } else if (errors is String) {
+          errorMessage = errors;
+        }
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('Registration Exception: $e');
+      rethrow;
     }
   }
 }

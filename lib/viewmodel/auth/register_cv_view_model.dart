@@ -2,56 +2,58 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
-import 'package:gowork/utils/navigations.dart';
 import 'package:gowork/services/auth/register_service.dart';
+import 'package:gowork/utils/navigations.dart';
 
 class RegisterCVViewModel extends ChangeNotifier {
-  final TextEditingController skillController = TextEditingController();
+  final skillController = TextEditingController();
   final List<String> _skills = [];
-  List<String> get skills => List.unmodifiable(_skills);
+  List<String> get skills => _skills;
 
-  String? _selectedField;
-  String? get selectedField => _selectedField;
+  String? selectedField;
+  File? cvFile;
+  String? cvFileName;
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  bool isLoading = false;
 
-  File? _cvFile;
-  File? get cvFile => _cvFile;
-  String? _cvFileName;
-  String? get cvFileName => _cvFileName;
-
-  final List<String> suggestedSkills = [
-    'JavaScript',
-    'Python',
-    'React',
-    'Node.js',
-    'HTML/CSS',
-    'Flutter',
-    'تحليل البيانات',
-    'إدارة المشاريع',
-    'التسويق الرقمي',
-    'التصميم الجرافيكي',
-  ];
-
-  final List<String> fieldsOfInterest = [
+  final fieldsOfInterest = [
     'تطوير البرمجيات',
     'تحليل البيانات',
     'التسويق الرقمي',
     'إدارة المشاريع',
     'التصميم الجرافيكي',
-    'الموارد البشرية',
-    'المحاسبة والمالية',
-    'الذكاء الاصطناعي',
   ];
 
-  void addSkillFromTextField() {
-    final skill = skillController.text.trim();
-    if (skill.isNotEmpty && !_skills.contains(skill)) {
-      _skills.add(skill);
+  final suggestedSkills = [
+    'Flutter',
+    'Dart',
+    'Kotlin',
+    'Swift',
+    'Java',
+    'Python',
+    'JavaScript',
+    'React',
+    'Node.js',
+    'SQL',
+  ];
+
+  void selectField(String? value) {
+    selectedField = value;
+    notifyListeners();
+  }
+
+  void addSkill() {
+    final v = skillController.text.trim();
+    if (v.isNotEmpty && !_skills.contains(v)) {
+      _skills.add(v);
       skillController.clear();
       notifyListeners();
     }
+  }
+
+  void removeSkill(String s) {
+    _skills.remove(s);
+    notifyListeners();
   }
 
   void addSuggestedSkill(String skill) {
@@ -61,66 +63,48 @@ class RegisterCVViewModel extends ChangeNotifier {
     }
   }
 
-  void removeSkill(String skill) {
-    _skills.remove(skill);
-    notifyListeners();
-  }
+  Future<void> pickCV() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
 
-  void selectField(String? field) {
-    _selectedField = field;
-    notifyListeners();
-  }
-
-  Future<void> pickCVFile(BuildContext context) async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx'],
-      );
-
-      if (result != null && result.files.single.path != null) {
-        _cvFile = File(result.files.single.path!);
-        _cvFileName = result.files.single.name;
-        notifyListeners();
-      }
-    } catch (e) {
-      debugPrint('Error picking CV: $e');
+    if (result?.files.single.path != null) {
+      cvFile = File(result!.files.single.path!);
+      cvFileName = result.files.single.name;
+      notifyListeners();
     }
   }
 
   Future<void> finishRegistration(BuildContext context) async {
-    _isLoading = true;
+    isLoading = true;
     notifyListeners();
 
     try {
-      final baseDataModel =
+      final base =
           ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
 
-      final completeDataModel = baseDataModel.copyWith(
+      final data = base.copyWith(
         skills: _skills,
-        interstedInCategoryId: _selectedField != null
-            ? fieldsOfInterest.indexOf(_selectedField!) + 1
-            : null,
-        cvFile: _cvFile,
+        cvFile: cvFile,
+        interstedInCategoryId: selectedField == null
+            ? null
+            : fieldsOfInterest.indexOf(selectedField!) + 1,
       );
 
-      final RegisterService service = RegisterService();
-      await service.register(completeDataModel);
+      await RegisterService().register(data);
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم التسجيل بنجاح!')));
-        NavigationService.pushNamedAndRemoveUntil(Routes.login);
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم التسجيل بنجاح')));
+
+      NavigationService.pushNamedAndRemoveUntil(Routes.login);
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('حدث خطأ: ${e.toString()}')));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
     } finally {
-      _isLoading = false;
+      isLoading = false;
       notifyListeners();
     }
   }

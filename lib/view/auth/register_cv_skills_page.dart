@@ -100,7 +100,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                       ),
                       const SizedBox(height: 10),
                       GestureDetector(
-                        onTap: () => viewModel.pickCVFile(context),
+                        onTap: () => viewModel.pickCV(),
                         child: Container(
                           height: 150,
                           width: double.infinity,
@@ -135,8 +135,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                 )
                               else
                                 ElevatedButton(
-                                  onPressed: () =>
-                                      viewModel.pickCVFile(context),
+                                  onPressed: () => viewModel.pickCV(),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xffF6F9FF),
                                     foregroundColor: Theme.of(
@@ -178,8 +177,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             ),
                             child: IconButton(
                               icon: const Icon(Icons.add, color: Colors.white),
-                              onPressed: () =>
-                                  viewModel.addSkillFromTextField(),
+                              onPressed: () => viewModel.addSkill(),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -199,8 +197,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   horizontal: 16,
                                 ),
                               ),
-                              onSubmitted: (value) =>
-                                  viewModel.addSkillFromTextField(),
+                              onSubmitted: (value) => viewModel.addSkill(),
                             ),
                           ),
                         ],

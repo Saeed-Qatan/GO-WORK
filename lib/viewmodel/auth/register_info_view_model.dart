@@ -5,81 +5,75 @@ import 'package:gowork/utils/navigations.dart';
 class RegisterInfoViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
 
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController fatherNameController = TextEditingController();
-  final TextEditingController familyNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final firstNameController = TextEditingController();
+  final fatherNameController = TextEditingController();
+  final familyNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  bool obscurePassword = true;
-  bool obscureConfirmPassword = true;
   bool isLoading = false;
   String? errorMessage;
 
-  void togglePassword() {
-    obscurePassword = !obscurePassword;
-    notifyListeners();
-  }
-
-  void toggleConfirmPassword() {
-    obscureConfirmPassword = !obscureConfirmPassword;
-    notifyListeners();
-  }
-
-  String? validateNotEmpty(String? val, String field) {
-    if (val == null || val.isEmpty) return 'الرجاء إدخال $field';
+  String? validateNotEmpty(String? v, String name) {
+    if (v == null || v.trim().isEmpty) return 'الرجاء إدخال $name';
     return null;
   }
 
-  String? validateEmail(String? val) {
-    if (val == null || val.isEmpty) return 'الرجاء إدخال البريد الإلكتروني';
-    final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!regex.hasMatch(val)) return 'البريد الإلكتروني غير صالح';
+  String? validateEmail(String? v) {
+    if (v == null || v.isEmpty) return 'الرجاء إدخال البريد الإلكتروني';
+    if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
+      return 'البريد الإلكتروني غير صالح';
+    }
     return null;
   }
 
-  String? validatePassword(String? val) {
-    if (val == null || val.isEmpty) return 'الرجاء إدخال كلمة المرور';
-    if (val.length < 6) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+  String? validatePhone(String? v) {
+    if (v == null || v.trim().isEmpty) return 'الرجاء إدخال رقم الهاتف';
+    if (!RegExp(r'^[0-9]+$').hasMatch(v))
+      return 'رقم الهاتف يجب أن يحتوي على أرقام فقط';
+    if (v.length < 9) return 'رقم الهاتف قصير جداً';
     return null;
   }
 
-  String? validateConfirmPassword(String? val) {
-    if (val == null || val.isEmpty) return 'الرجاء تأكيد كلمة المرور';
-    if (val != passwordController.text) return 'كلمات المرور غير متطابقة';
+  String? validatePassword(String? v) {
+    if (v == null || v.isEmpty) return 'الرجاء إدخال كلمة المرور';
+    if (v.length < 6) return 'كلمة المرور قصيرة جداً';
+
+    // Check for English characters and complexity
+    bool hasUppercase = v.contains(RegExp(r'[A-Z]'));
+    bool hasDigits = v.contains(RegExp(r'[0-9]'));
+    bool hasSpecialCharacters = v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    bool isEnglish = v.contains(RegExp(r'^[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]+$'));
+
+    if (!isEnglish) return 'كلمة المرور يجب أن تكون باللغة الإنجليزية';
+    if (!hasUppercase) return 'يجب أن تحتوي على حرف كبير واحد على الأقل';
+    if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل';
+    if (!hasSpecialCharacters) return 'يجب أن تحتوي على رمز خاص (@#\$%)';
+
     return null;
   }
 
-  Future<void> onContinuePressed(BuildContext context) async {
+  String? validateConfirmPassword(String? v) {
+    if (v != passwordController.text) return 'كلمات المرور غير متطابقة';
+    return null;
+  }
+
+  void onContinuePressed(BuildContext context) {
     if (!formKey.currentState!.validate()) return;
 
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
+    final data = RegisterDataModel(
+      firstName: firstNameController.text.trim(),
+      fatherName: fatherNameController.text.trim(),
+      familyName: familyNameController.text.trim(),
+      email: emailController.text.trim(),
+      phone: phoneController.text.trim(),
+      password: passwordController.text,
+      confirmPassword: confirmPasswordController.text,
+    );
 
-    try {
-      final data = RegisterDataModel(
-        firstName: firstNameController.text,
-        fatherName: fatherNameController.text,
-        familyName: familyNameController.text,
-        email: emailController.text,
-        phone: phoneController.text,
-        password: passwordController.text,
-        confirmPassword: confirmPasswordController.text,
-      );
-
-      if (context.mounted) {
-        Navigator.pushNamed(context, Routes.registerPhoto, arguments: data);
-      }
-    } catch (e) {
-      errorMessage = 'حدث خطأ، الرجاء المحاولة مرة أخرى';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    Navigator.pushNamed(context, Routes.registerPhoto, arguments: data);
   }
 
   void onLoginPressed(BuildContext context) {
