@@ -1,76 +1,52 @@
-import 'package:dio/dio.dart';
+import 'dart:io';
+
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
+import 'package:gowork/utils/api_storage.dart';
 
 class RegisterRepository {
-  final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: ApiConstants.baseUrl,
-      headers: {
-        'Accept': 'application/json',
-        // Do NOT set Content-Type here, let Dio set it to multipart/form-data with boundary
-      },
-      validateStatus: (status) => status! < 500,
-    ),
-  );
+  final ApiClient _apiClient = ApiClient();
 
   Future<void> register(RegisterDataModel data) async {
-    final formData = FormData();
-
-    formData.fields
-      ..add(MapEntry('firstName', data.firstName))
-      ..add(MapEntry('midName', data.fatherName))
-      ..add(MapEntry('lastName', data.familyName))
-      ..add(MapEntry('email', data.email))
-      ..add(MapEntry('phoneNumber', data.phone))
-      ..add(MapEntry('Password', data.password))
-      ..add(MapEntry('PasswordConfirmation', data.confirmPassword));
+    final Map<String, String> fields = {
+      'firstName': data.firstName,
+      'midName': data.fatherName,
+      'lastName': data.familyName,
+      'email': data.email,
+      'phoneNumber': data.phone,
+      'Password': data.password,
+      'PasswordConfirmation': data.confirmPassword,
+    };
 
     if (data.interstedInCategoryId != null) {
-      formData.fields.add(
-        MapEntry(
-          'interstedInCategoryId',
-          data.interstedInCategoryId.toString(),
-        ),
-      );
+      fields['interstedInCategoryId'] = data.interstedInCategoryId.toString();
     }
 
+    final List<MapEntry<String, String>> repeatedFields = [];
     for (final skill in data.skills) {
-      formData.fields.add(MapEntry('listOfSkills', skill));
+      repeatedFields.add(MapEntry('listOfSkills', skill));
     }
 
+    final Map<String, File> files = {};
     if (data.profilePhoto != null) {
-      formData.files.add(
-        MapEntry(
-          'ProfilePhoto',
-          await MultipartFile.fromFile(data.profilePhoto!.path),
-        ),
-      );
+      files['ProfilePhoto'] = data.profilePhoto!;
     }
-
     if (data.cvFile != null) {
-      formData.files.add(
-        MapEntry('Resume', await MultipartFile.fromFile(data.cvFile!.path)),
-      );
+      files['Resume'] = data.cvFile!;
     }
-
-    print('---------------- REGISTRATION DEBUG ----------------');
-    for (var field in formData.fields) {
-      print('Field: ${field.key} = ${field.value}');
-    }
-    for (var file in formData.files) {
-      print(
-        'File: ${file.key} = ${file.value.filename}, path: ${data.profilePhoto?.path}',
-      );
-    }
-    print('----------------------------------------------------');
 
     try {
-      final response = await _dio.post(ApiConstants.register, data: formData);
-      print('Response: ${response.statusCode} - ${response.data}');
+      final response = await _apiClient.postMultipart(
+        ApiConstants.register,
+        fields: fields,
+        repeatedFields: repeatedFields,
+        files: files,
+      );
 
-      if (response.data['success'] != true) {
-        final errors = response.data['errors'];
+      print('Response: $response');
+
+      if (response['success'] != true) {
+        final errors = response['errors'];
         String errorMessage = 'Registration failed';
         if (errors is List && errors.isNotEmpty) {
           errorMessage = errors.join('\n');

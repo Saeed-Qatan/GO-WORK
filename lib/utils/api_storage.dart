@@ -1,36 +1,50 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:gowork/core/constants/api_constants.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:gowork/utils/local_storage.dart';
 
 class ApiClient {
-  Future<Map<String, String>> _getHeaders(
-    Map<String, String>? extraHeaders,
-  ) async {
-    final token = await LocalStorage().getString('token');
-    final Map<String, String> headers = Map.from(ApiConstants.headers);
+  late final Dio _dio;
 
-    if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
-    }
+  ApiClient() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        headers: ApiConstants.headers,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
+    );
 
-    if (extraHeaders != null) {
-      headers.addAll(extraHeaders);
-    }
-
-    return headers;
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await LocalStorage().getString('token');
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+        onError: (DioException e, handler) {
+          return handler.next(e);
+        },
+      ),
+    );
   }
 
   Future<Map<String, dynamic>> get(
     String endpoint, {
     Map<String, String>? headers,
   }) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    final requestHeaders = await _getHeaders(headers);
-
-    final response = await http.get(url, headers: requestHeaders);
-    return _handleResponse(response);
+    try {
+      final response = await _dio.get(
+        endpoint,
+        options: Options(headers: headers, contentType: 'application/json'),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<Map<String, dynamic>> post(
@@ -38,15 +52,16 @@ class ApiClient {
     Map<String, dynamic> body, {
     Map<String, String>? headers,
   }) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    final requestHeaders = await _getHeaders(headers);
-
-    final response = await http.post(
-      url,
-      headers: requestHeaders,
-      body: jsonEncode(body),
-    );
-    return _handleResponse(response);
+    try {
+      final response = await _dio.post(
+        endpoint,
+        data: body,
+        options: Options(headers: headers, contentType: 'application/json'),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<Map<String, dynamic>> put(
@@ -54,26 +69,31 @@ class ApiClient {
     Map<String, dynamic> body, {
     Map<String, String>? headers,
   }) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    final requestHeaders = await _getHeaders(headers);
-
-    final response = await http.put(
-      url,
-      headers: requestHeaders,
-      body: jsonEncode(body),
-    );
-    return _handleResponse(response);
+    try {
+      final response = await _dio.put(
+        endpoint,
+        data: body,
+        options: Options(headers: headers, contentType: 'application/json'),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<Map<String, dynamic>> delete(
     String endpoint, {
     Map<String, String>? headers,
   }) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    final requestHeaders = await _getHeaders(headers);
-
-    final response = await http.delete(url, headers: requestHeaders);
-    return _handleResponse(response);
+    try {
+      final response = await _dio.delete(
+        endpoint,
+        options: Options(headers: headers, contentType: 'application/json'),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<Map<String, dynamic>> uploadFile(
@@ -81,18 +101,21 @@ class ApiClient {
     File file, {
     Map<String, String>? headers,
   }) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    final request = http.MultipartRequest('POST', url);
+    try {
+      String fileName = file.path.split('/').last;
+      FormData formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(file.path, filename: fileName),
+      });
 
-    final requestHeaders = await _getHeaders(headers);
-    request.headers.addAll(requestHeaders);
-
-    request.files.add(await http.MultipartFile.fromPath('file', file.path));
-
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
-
-    return _handleResponse(response);
+      final response = await _dio.post(
+        endpoint,
+        data: formData,
+        options: Options(headers: headers),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<Map<String, dynamic>> postMultipart(
@@ -102,44 +125,64 @@ class ApiClient {
     Map<String, File>? files,
     Map<String, String>? headers,
   }) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    final request = http.MultipartRequest('POST', url);
+    try {
+      final formData = FormData();
 
-    final requestHeaders = await _getHeaders(headers);
-    request.headers.addAll(requestHeaders);
-
-    if (fields != null) {
-      request.fields.addAll(fields);
-    }
-
-    if (repeatedFields != null) {
-      for (var entry in repeatedFields) {
-        request.files.add(
-          http.MultipartFile.fromString(entry.key, entry.value),
-        );
+      if (fields != null) {
+        fields.forEach((key, value) {
+          formData.fields.add(MapEntry(key, value));
+        });
       }
-    }
 
-    if (files != null) {
-      for (var entry in files.entries) {
-        request.files.add(
-          await http.MultipartFile.fromPath(entry.key, entry.value.path),
-        );
+      if (repeatedFields != null) {
+        formData.fields.addAll(repeatedFields);
       }
+
+      if (files != null) {
+        for (var entry in files.entries) {
+          formData.files.add(
+            MapEntry(
+              entry.key,
+              await MultipartFile.fromFile(
+                entry.value.path,
+                filename: entry.value.path.split('/').last,
+              ),
+            ),
+          );
+        }
+      }
+
+      final response = await _dio.post(
+        endpoint,
+        data: formData,
+        options: Options(headers: headers),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
     }
-
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
-
-    return _handleResponse(response);
   }
 
-  dynamic _handleResponse(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body);
+  Map<String, dynamic> _handleResponse(Response response) {
+    if (response.statusCode != null &&
+        response.statusCode! >= 200 &&
+        response.statusCode! < 300) {
+      if (response.data is Map<String, dynamic>) {
+        return response.data;
+      }
+      // If data is somehow not a Map (e.g. empty or list), we might return empty map or throw.
+      // Assuming API always returns JSON object as per return type.
+      return <String, dynamic>{};
     } else {
-      // You might want to throw custom exceptions here based on status code
-      throw Exception('Error ${response.statusCode}: ${response.body}');
+      throw Exception('Error ${response.statusCode}: ${response.data}');
+    }
+  }
+
+  Exception _handleDioError(DioException e) {
+    if (e.response != null) {
+      return Exception('Error ${e.response?.statusCode}: ${e.response?.data}');
+    } else {
+      return Exception('Network Error: ${e.message}');
     }
   }
 }

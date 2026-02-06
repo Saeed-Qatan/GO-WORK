@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:gowork/repository/forget_repository.dart';
+import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/view/auth/reset_password_view.dart';
 
 enum ForgetState { idle, loading, success, error }
 
 class ForgetViewModel extends ChangeNotifier {
+  final ForgetRepository _repository = ForgetRepository();
   final TextEditingController emailController = TextEditingController();
 
   ForgetState _state = ForgetState.idle;
@@ -26,7 +30,7 @@ class ForgetViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> submit() async {
+  Future<void> submit(BuildContext context) async {
     if (!canSubmit) return;
 
     _state = ForgetState.loading;
@@ -34,9 +38,6 @@ class ForgetViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
       final email = emailController.text.trim();
 
       // Basic email validation
@@ -44,13 +45,26 @@ class ForgetViewModel extends ChangeNotifier {
         throw Exception('البريد الإلكتروني غير صالح');
       }
 
+      await _repository.forgetPassword(email);
+
       _state = ForgetState.success;
+      notifyListeners();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم إرسال كود التحقق إلى بريدك الإلكتروني'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigate to Reset Password Page
+        NavigationService.pushReplacement(ResetPasswordView(email: email));
+      }
     } catch (e) {
       _state = ForgetState.error;
       _error = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   @override

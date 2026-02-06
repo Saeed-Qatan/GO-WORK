@@ -102,7 +102,7 @@ class ForgetPage extends StatelessWidget {
                         onPressed: vm.canSubmit
                             ? () {
                                 FocusScope.of(context).unfocus();
-                                vm.submit();
+                                vm.submit(context);
                               }
                             : null,
                       ),

@@ -5,6 +5,7 @@ class Routes {
   static const String registerInfo = '/registerInfo';
   static const String registerPhoto = '/registerPhoto';
   static const String registerCV = '/registerCV';
+  static const String verifyEmail = '/verifyEmail';
   static const String home =
       '/home'; // Assuming a home route exists or will exist
 }

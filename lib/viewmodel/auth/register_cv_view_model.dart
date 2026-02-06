@@ -98,7 +98,10 @@ class RegisterCVViewModel extends ChangeNotifier {
         context,
       ).showSnackBar(const SnackBar(content: Text('تم التسجيل بنجاح')));
 
-      NavigationService.pushNamedAndRemoveUntil(Routes.login);
+      NavigationService.pushNamedAndRemoveUntil(
+        Routes.verifyEmail,
+        arguments: data.email,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),

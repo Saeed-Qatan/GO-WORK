@@ -3,14 +3,17 @@ class ApiConstants {
   static const String baseUrl = 'https://gowork.runasp.net/api/';
 
   // Endpoints
-  static const String login = 'Account/auth/login';
+  static const String login = 'Account/Candidate/Login';
   static const String loginWithGoogle = 'Account/auth/login-with-google';
   static const String register = 'Account/Candidate/Register';
-  static const String forgetPassword = 'Account/auth/forget-password';
+  static const String forgetPassword = 'Account/ForgetPassword';
+  static const String resetPassword = 'Account/ResetPassword';
   static const String getUser = 'Account/user';
   static const String updateProfile = 'Account/user/update';
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';
+  static const String verifyEmail = 'Account/Candidate/VerifyEmail';
+  static const String resendCode = 'Account/resend-code';
 
   // New Endpoints
   static const String home = 'Account/home';
@@ -19,8 +22,5 @@ class ApiConstants {
   static const String profile = 'Account/user/profile';
 
   // Headers عامة
-  static const Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+  static const Map<String, String> headers = {'Accept': 'application/json'};
 }

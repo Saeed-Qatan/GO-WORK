@@ -10,6 +10,8 @@ import 'package:gowork/view/auth/login_view.dart';
 import 'package:gowork/view/auth/register_info_page.dart';
 import 'package:gowork/view/auth/register_photo_page.dart';
 import 'package:gowork/view/auth/register_cv_skills_page.dart';
+import 'package:gowork/view/auth/email_verification_page.dart';
+
 import 'viewmodel/auth/login_view_model.dart';
 import 'viewmodel/home_view_model.dart';
 import 'viewmodel/applications_view_model.dart';
@@ -51,6 +53,7 @@ class MyApp extends StatelessWidget {
           Routes.registerInfo: (context) => const RegisterPage(),
           Routes.registerPhoto: (context) => const RegisterPhotoPage(),
           Routes.registerCV: (context) => const RegisterCVPage(),
+          Routes.verifyEmail: (context) => const EmailVerificationPage(),
         },
         home: const SplashView(),
       ),
