@@ -1,6 +1,6 @@
 class ApiConstants {
   // رابط السيرفر الأساسي
-  static const String baseUrl = 'https://gowork.runasp.net/api/';
+  static const String baseUrl = 'https://api.masarak.app/api/';
 
   // Endpoints
   static const String login = 'Account/Candidate/Login';
