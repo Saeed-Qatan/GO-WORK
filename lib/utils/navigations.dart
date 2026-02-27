@@ -8,6 +8,7 @@ class Routes {
   static const String verifyEmail = '/verifyEmail';
   static const String home =
       '/home'; // Assuming a home route exists or will exist
+  static const String editProfile = '/editProfile';
 }
 
 class NavigationService {

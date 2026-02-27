@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
+import '../../core/constants/app_constants.dart';
+import '../../viewmodel/edit_profile_view_model.dart';
+
+class EditPhoneField extends StatelessWidget {
+  final EditProfileViewModel viewModel;
+
+  const EditPhoneField({super.key, required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            AppConstants.phoneLabel,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: AppColors.textPrimary.withOpacity(0.8),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Country code box
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                margin: const EdgeInsets.only(
+                  top: 2,
+                ), // visually align with un-errored textfield
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                ),
+                child: Text(
+                  '+966',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+
+              // Phone input
+              Expanded(
+                child: TextFormField(
+                  controller: viewModel.phoneController,
+                  validator: (val) =>
+                      viewModel.formData.validatePhone(val ?? ''),
+                  keyboardType: TextInputType.phone,
+                  textAlign: TextAlign.left,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    errorStyle: const TextStyle(fontWeight: FontWeight.w500),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.red,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

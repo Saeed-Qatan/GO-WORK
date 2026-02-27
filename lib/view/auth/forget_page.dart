@@ -9,6 +9,7 @@ import 'package:gowork/widget/custom_button.dart';
 import 'package:gowork/widget/display_box_widget.dart';
 import 'package:provider/provider.dart';
 
+import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/viewmodel/auth/forget_view_model.dart';
 
 class ForgetPage extends StatelessWidget {
@@ -23,20 +24,13 @@ class ForgetPage extends StatelessWidget {
           // Listen to state changes
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (vm.state == ForgetState.success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني',
-                  ),
-                  backgroundColor: Colors.green,
-                ),
+              SnackbarService.showSuccess(
+                'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني',
               );
               NavigationService.pushReplacement(const LoginView());
             }
             if (vm.state == ForgetState.error && vm.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(vm.error!), backgroundColor: Colors.red),
-              );
+              SnackbarService.showError(vm.error!);
             }
           });
 

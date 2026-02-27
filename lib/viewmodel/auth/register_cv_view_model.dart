@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/services/auth/register_service.dart';
 import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/utils/snackbar_service.dart';
 
 class RegisterCVViewModel extends ChangeNotifier {
   final skillController = TextEditingController();
@@ -94,18 +95,16 @@ class RegisterCVViewModel extends ChangeNotifier {
 
       await RegisterService().register(data);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تم التسجيل بنجاح')));
+      SnackbarService.showSuccess(
+        'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',
+      );
 
       NavigationService.pushNamedAndRemoveUntil(
         Routes.verifyEmail,
         arguments: data.email,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
+      SnackbarService.showError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       isLoading = false;
       notifyListeners();

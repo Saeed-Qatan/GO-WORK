@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gowork/model/auth/reset_password_model.dart';
 import 'package:gowork/repository/reset_password_repository.dart';
 import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/view/auth/login_view.dart';
 
 enum ResetState { idle, loading, success, error }
@@ -80,12 +81,7 @@ class ResetPasswordViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم تغيير كلمة المرور بنجاح'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        SnackbarService.showSuccess('تم تغيير كلمة المرور بنجاح');
         NavigationService.pushReplacement(const LoginView());
       }
     } catch (e) {

@@ -6,11 +6,13 @@ import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 
 import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/view/auth/login_view.dart';
 import 'package:gowork/view/auth/register_info_page.dart';
 import 'package:gowork/view/auth/register_photo_page.dart';
 import 'package:gowork/view/auth/register_cv_skills_page.dart';
 import 'package:gowork/view/auth/email_verification_page.dart';
+import 'package:gowork/view/edit_profile_view.dart';
 
 import 'viewmodel/auth/login_view_model.dart';
 import 'viewmodel/home_view_model.dart';
@@ -41,6 +43,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         navigatorKey: NavigationService.navigatorKey,
+        scaffoldMessengerKey: SnackbarService.messengerKey,
         locale: const Locale('ar', 'AE'), // Default to Arabic as per screenshot
         supportedLocales: const [Locale('en', 'US'), Locale('ar', 'AE')],
         localizationsDelegates: const [
@@ -54,6 +57,7 @@ class MyApp extends StatelessWidget {
           Routes.registerPhoto: (context) => const RegisterPhotoPage(),
           Routes.registerCV: (context) => const RegisterCVPage(),
           Routes.verifyEmail: (context) => const EmailVerificationPage(),
+          Routes.editProfile: (context) => const EditProfileView(),
         },
         home: const SplashView(),
       ),

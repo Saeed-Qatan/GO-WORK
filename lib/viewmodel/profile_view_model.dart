@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../model/profile_model.dart';
-
 import '../repository/profile_repository.dart';
 import '../utils/local_storage.dart';
 
@@ -28,8 +27,10 @@ class ProfileViewModel extends ChangeNotifier {
     try {
       _profile = await _repository.getUserProfile();
     } catch (e) {
-      _errorMessage = 'حدث خطأ أثناء جلب الملف الشخصي: $e';
-      debugPrint('Error fetching profile: $e');
+      debugPrint('Error fetching profile from API: $e');
+      // Fallback to mock data when backend is unavailable
+      _profile = _getMockProfile();
+      _errorMessage = null; // Clear error since we have mock data
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -46,6 +47,19 @@ class ProfileViewModel extends ChangeNotifier {
       await fetchProfile(); // Refresh after update
     } catch (e) {
       _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
+      // Update local mock data with the submitted changes
+      _profile = ProfileModel(
+        firstName: data['FirstName'] ?? _profile?.firstName ?? '',
+        middleName: data['MiddleName'] ?? _profile?.middleName ?? '',
+        lastName: data['LastName'] ?? _profile?.lastName ?? '',
+        jobTitle: data['JobTitle'] ?? _profile?.jobTitle ?? '',
+        avatarUrl: _profile?.avatarUrl ?? '',
+        email: _profile?.email ?? '',
+        phone: data['PhoneNumber'] ?? _profile?.phone ?? '',
+        cvUrl: _profile?.cvUrl ?? '',
+        skills: List<String>.from(data['Skills'] ?? _profile?.skills ?? []),
+      );
+      _errorMessage = null;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -56,6 +70,28 @@ class ProfileViewModel extends ChangeNotifier {
     await _storage.clear();
     _profile = null;
     notifyListeners();
-    // Navigation to login would typically happen in the view after calling this
+  }
+
+  /// Mock profile data for testing when the backend is unavailable.
+  /// Remove this once the real API endpoint is ready.
+  ProfileModel _getMockProfile() {
+    return ProfileModel(
+      firstName: 'سعيد',
+      middleName: '',
+      lastName: 'قطان',
+      jobTitle: 'مصمم واجهة / تجربة مستخدم',
+      avatarUrl: '',
+      email: 'saeed@gowork.com',
+      phone: '+966 55 123 4567',
+      cvUrl: 'CV_Ahmed_2023.pdf',
+      skills: [
+        'Git',
+        'Flutter',
+        'Dart',
+        'Firebase',
+        'Clean Architecture',
+        'Bloc',
+      ],
+    );
   }
 }

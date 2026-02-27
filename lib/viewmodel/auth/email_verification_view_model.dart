@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:gowork/services/auth/email_verification_service.dart';
 import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/utils/snackbar_service.dart';
 
 class EmailVerificationViewModel extends ChangeNotifier {
   final EmailVerificationService _service = EmailVerificationService();
@@ -46,9 +47,7 @@ class EmailVerificationViewModel extends ChangeNotifier {
 
   Future<void> verify(BuildContext context) async {
     if (code.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء إدخال الرمز كاملاً')),
-      );
+      SnackbarService.showWarning('الرجاء إدخال الرمز كاملاً');
       return;
     }
     if (email == null) return;
@@ -58,17 +57,11 @@ class EmailVerificationViewModel extends ChangeNotifier {
     try {
       await _service.verifyEmail(email!, code);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم التحقق بنجاح')));
+        SnackbarService.showSuccess('تم التحقق بنجاح');
         NavigationService.pushNamedAndRemoveUntil(Routes.login);
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-        );
-      }
+      SnackbarService.showError(e.toString().replaceAll('Exception: ', ''));
     } finally {
       isLoading = false;
       notifyListeners();
@@ -86,15 +79,11 @@ class EmailVerificationViewModel extends ChangeNotifier {
       await _service.resendCode(email!);
       startTimer();
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم إعادة إرسال الرمز')));
+        SnackbarService.showInfo('تم إعادة إرسال الرمز بنجاح');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-        );
+        SnackbarService.showError(e.toString().replaceAll('Exception: ', ''));
       }
     } finally {
       isLoading = false;

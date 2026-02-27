@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gowork/repository/forget_repository.dart';
 import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/view/auth/reset_password_view.dart';
 
 enum ForgetState { idle, loading, success, error }
@@ -51,12 +52,7 @@ class ForgetViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم إرسال كود التحقق إلى بريدك الإلكتروني'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        SnackbarService.showInfo('تم إرسال كود التحقق إلى بريدك الإلكتروني');
         // Navigate to Reset Password Page
         NavigationService.pushReplacement(ResetPasswordView(email: email));
       }
