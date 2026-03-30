@@ -11,19 +11,10 @@ class RegisterCVViewModel extends ChangeNotifier {
   final List<String> _skills = [];
   List<String> get skills => _skills;
 
-  String? selectedField;
   File? cvFile;
   String? cvFileName;
 
   bool isLoading = false;
-
-  final fieldsOfInterest = [
-    'تطوير البرمجيات',
-    'تحليل البيانات',
-    'التسويق الرقمي',
-    'إدارة المشاريع',
-    'التصميم الجرافيكي',
-  ];
 
   final suggestedSkills = [
     'Flutter',
@@ -37,11 +28,6 @@ class RegisterCVViewModel extends ChangeNotifier {
     'Node.js',
     'SQL',
   ];
-
-  void selectField(String? value) {
-    selectedField = value;
-    notifyListeners();
-  }
 
   void addSkill() {
     final v = skillController.text.trim();
@@ -88,9 +74,6 @@ class RegisterCVViewModel extends ChangeNotifier {
       final data = base.copyWith(
         skills: _skills,
         cvFile: cvFile,
-        interstedInCategoryId: selectedField == null
-            ? null
-            : fieldsOfInterest.indexOf(selectedField!) + 1,
       );
 
       await RegisterService().register(data);

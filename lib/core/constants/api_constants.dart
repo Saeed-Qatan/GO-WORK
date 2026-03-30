@@ -10,6 +10,7 @@ class ApiConstants {
   static const String resetPassword = 'Account/ResetPassword';
   static const String getUser = 'Account/user';
   static const String updateProfile = 'Account/user/update';
+  static const String me = 'Account/Me';
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';
   static const String verifyEmail = 'Account/Candidate/VerifyEmail';
@@ -19,7 +20,11 @@ class ApiConstants {
   static const String home = 'Account/home';
   static const String applications = 'Account/applications';
   static const String interviews = 'Account/interviews';
-  static const String profile = 'Account/user/profile';
+  static const String updateCandidateProfile =
+      'Account/Candidate/UpdateProfile';
+  static const String getResume = 'Account/candidate/me/resume';
+  static const String uploadResume = 'Account/candidate/uploadfile';
+  static const String uploadProfilePicture = 'Account/candidate/uploadfile';
 
   // Headers عامة
   static const Map<String, String> headers = {'Accept': 'application/json'};

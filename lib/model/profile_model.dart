@@ -33,10 +33,19 @@ class ProfileModel {
       middleName: json['middleName'] ?? json['MiddleName'] ?? '',
       lastName: json['lastName'] ?? json['LastName'] ?? '',
       jobTitle: json['jobTitle'] ?? json['JobTitle'] ?? json['role'] ?? '',
-      avatarUrl: json['avatarUrl'] ?? json['AvatarUrl'] ?? '',
+      avatarUrl:
+          json['avatarUrl'] ??
+          json['profilPhotoUrl'] ??
+          json['AvatarUrl'] ??
+          '',
       email: json['email'] ?? json['Email'] ?? '',
-      phone: json['phone'] ?? json['Phone'] ?? json['PhoneNumber'] ?? '',
-      cvUrl: json['cvUrl'] ?? json['CvUrl'] ?? '',
+      phone:
+          json['phoneNo'] ??
+          json['phone'] ??
+          json['Phone'] ??
+          json['PhoneNumber'] ??
+          '',
+      cvUrl: json['resumeUrl'] ?? json['cvUrl'] ?? json['CvUrl'] ?? '',
       skills: List<String>.from(json['skills'] ?? json['Skills'] ?? []),
     );
   }

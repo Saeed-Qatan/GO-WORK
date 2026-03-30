@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../model/profile_model.dart';
 import '../repository/profile_repository.dart';
@@ -15,9 +16,7 @@ class ProfileViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  ProfileViewModel() {
-    fetchProfile();
-  }
+  ProfileViewModel();
 
   Future<void> fetchProfile() async {
     _isLoading = true;
@@ -27,39 +26,56 @@ class ProfileViewModel extends ChangeNotifier {
     try {
       _profile = await _repository.getUserProfile();
     } catch (e) {
-      debugPrint('Error fetching profile from API: $e');
-      // Fallback to mock data when backend is unavailable
-      _profile = _getMockProfile();
-      _errorMessage = null; // Clear error since we have mock data
+      debugPrint('Error fetching profile: $e');
+      _errorMessage = 'حدث خطأ أثناء تحميل الملف الشخصي: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> updateProfile(Map<String, dynamic> data) async {
+  /// PATCH /Account/Candidate/UpdateProfile — form-data with all fields + files
+  Future<void> updateProfile({
+    required Map<String, String> fields,
+    List<MapEntry<String, String>>? repeatedFields,
+    Map<String, File>? files,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _repository.updateProfile(data);
-      await fetchProfile(); // Refresh after update
-    } catch (e) {
-      _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
-      // Update local mock data with the submitted changes
-      _profile = ProfileModel(
-        firstName: data['FirstName'] ?? _profile?.firstName ?? '',
-        middleName: data['MiddleName'] ?? _profile?.middleName ?? '',
-        lastName: data['LastName'] ?? _profile?.lastName ?? '',
-        jobTitle: data['JobTitle'] ?? _profile?.jobTitle ?? '',
-        avatarUrl: _profile?.avatarUrl ?? '',
-        email: _profile?.email ?? '',
-        phone: data['PhoneNumber'] ?? _profile?.phone ?? '',
-        cvUrl: _profile?.cvUrl ?? '',
-        skills: List<String>.from(data['Skills'] ?? _profile?.skills ?? []),
+      print('--- STARTING PROFILE UPDATE (PATCH) ---');
+      await _repository.updateProfile(
+        fields: fields,
+        repeatedFields: repeatedFields,
+        files: files,
       );
-      _errorMessage = null;
+      print('--- PROFILE UPDATE SUCCESS. REFETCHING PROFILE ---');
+      await fetchProfile();
+    } catch (e) {
+      print('--- ERROR IN UPDATE PROFILE: $e ---');
+      _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// POST /Account/candidate/uploadfile
+  Future<void> uploadFile(File file) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      print('--- STARTING FILE UPLOAD ---');
+      await _repository.uploadFile(file);
+      print('--- FILE UPLOAD SUCCESS. REFETCHING PROFILE ---');
+      await fetchProfile();
+    } catch (e) {
+      print('--- ERROR IN UPLOAD FILE: $e ---');
+      _errorMessage = 'حدث خطأ أثناء رفع الملف: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -70,28 +86,5 @@ class ProfileViewModel extends ChangeNotifier {
     await _storage.clear();
     _profile = null;
     notifyListeners();
-  }
-
-  /// Mock profile data for testing when the backend is unavailable.
-  /// Remove this once the real API endpoint is ready.
-  ProfileModel _getMockProfile() {
-    return ProfileModel(
-      firstName: 'سعيد',
-      middleName: '',
-      lastName: 'قطان',
-      jobTitle: 'مصمم واجهة / تجربة مستخدم',
-      avatarUrl: '',
-      email: 'saeed@gowork.com',
-      phone: '+966 55 123 4567',
-      cvUrl: 'CV_Ahmed_2023.pdf',
-      skills: [
-        'Git',
-        'Flutter',
-        'Dart',
-        'Firebase',
-        'Clean Architecture',
-        'Bloc',
-      ],
-    );
   }
 }

@@ -15,6 +15,9 @@ class LoginRepository {
       request.toJson(),
     );
 
+    print('--- RAW LOGIN RESPONSE ---');
+    print(response);
+
     final loginResponse = LoginResponse.fromJson(response);
 
     // Save token and userId to local storage

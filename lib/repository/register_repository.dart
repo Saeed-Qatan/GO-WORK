@@ -16,11 +16,11 @@ class RegisterRepository {
       'phoneNumber': data.phone,
       'Password': data.password,
       'PasswordConfirmation': data.confirmPassword,
+      // Hardcoded default category ID discovered via API probe to satisfy backend requirement
+      'interstedInCategoryId': '101',
     };
 
-    if (data.interstedInCategoryId != null) {
-      fields['interstedInCategoryId'] = data.interstedInCategoryId.toString();
-    }
+
 
     final List<MapEntry<String, String>> repeatedFields = [];
     for (final skill in data.skills) {

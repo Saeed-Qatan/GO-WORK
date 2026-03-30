@@ -24,7 +24,6 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
               builder: (context, viewModel, child) {
                 final isFormComplete =
                     (viewModel.cvFileName?.isNotEmpty ?? false) &&
-                    viewModel.selectedField != null &&
                     viewModel.skills.isNotEmpty;
 
                 final availableSuggestedSkills = viewModel.suggestedSkills
@@ -254,40 +253,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                       ),
                       const SizedBox(height: 25),
 
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          "المجال المهتم به",
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      DropdownButtonFormField<String>(
-                        initialValue: viewModel.selectedField,
-                        hint: const Text('اختر المجال المهتم به'),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: AppColors.inputBackground,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                        ),
-                        items: viewModel.fieldsOfInterest.map((String field) {
-                          return DropdownMenuItem<String>(
-                            value: field,
-                            child: Text(field),
-                          );
-                        }).toList(),
-                        onChanged: (newValue) =>
-                            viewModel.selectField(newValue),
-                      ),
-                      const SizedBox(height: 30),
+
 
                       Consumer<RegisterCVViewModel>(
                         builder: (context, cvViewModel, child) {

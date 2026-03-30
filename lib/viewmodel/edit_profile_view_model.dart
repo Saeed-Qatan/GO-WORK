@@ -131,11 +131,35 @@ class EditProfileViewModel extends ChangeNotifier {
         phone: phoneController.text.trim(),
       );
 
-      final dataToSubmit = _formData.toJson();
+      // Build form-data fields
+      final fields = <String, String>{
+        'FirstName': _formData.firstName,
+        'MiddleName': _formData.middleName,
+        'LastName': _formData.lastName,
+      };
 
-      // In a real app we'd also upload _formData.newAvatarFile and _formData.newCvFile here
+      if (_formData.jobTitle.isNotEmpty)
+        fields['JobTitle'] = _formData.jobTitle;
+      if (_formData.phone.isNotEmpty) fields['PhoneNo'] = _formData.phone;
 
-      await _profileViewModel.updateProfile(dataToSubmit);
+      // Skills as repeated form-data fields
+      final repeatedFields = _formData.skills
+          .map((s) => MapEntry('Skills', s))
+          .toList();
+
+      // Files: ProfilePhoto and ResumeFile
+      final files = <String, File>{};
+      if (_formData.newAvatarFile != null)
+        files['ProfilePhoto'] = _formData.newAvatarFile!;
+      if (_formData.newCvFile != null)
+        files['ResumeFile'] = _formData.newCvFile!;
+
+      // Single PATCH request with everything
+      await _profileViewModel.updateProfile(
+        fields: fields,
+        repeatedFields: repeatedFields.isEmpty ? null : repeatedFields,
+        files: files.isEmpty ? null : files,
+      );
 
       SnackbarService.showSuccess('تم تحديث الملف الشخصي بنجاح');
       return true;

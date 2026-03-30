@@ -11,7 +11,6 @@ class RegisterDataModel {
   final File? profilePhoto;
   final File? cvFile;
   final List<String> skills;
-  final int? interstedInCategoryId;
 
   RegisterDataModel({
     required this.firstName,
@@ -24,14 +23,12 @@ class RegisterDataModel {
     this.profilePhoto,
     this.cvFile,
     this.skills = const [],
-    this.interstedInCategoryId,
   });
 
   RegisterDataModel copyWith({
     File? profilePhoto,
     File? cvFile,
     List<String>? skills,
-    int? interstedInCategoryId,
   }) {
     return RegisterDataModel(
       firstName: firstName,
@@ -44,8 +41,6 @@ class RegisterDataModel {
       profilePhoto: profilePhoto ?? this.profilePhoto,
       cvFile: cvFile ?? this.cvFile,
       skills: skills ?? this.skills,
-      interstedInCategoryId:
-          interstedInCategoryId ?? this.interstedInCategoryId,
     );
   }
 }

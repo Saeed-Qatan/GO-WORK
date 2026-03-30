@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
@@ -9,8 +10,22 @@ import '../widget/profile/profile_action_buttons.dart';
 import '../widget/profile/profile_contact_info_card.dart';
 import '../widget/profile/profile_skills_card.dart';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch profile only when this page is actually shown (after login)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileViewModel>().fetchProfile();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,8 +97,29 @@ class ProfileView extends StatelessWidget {
                   onEditProfile: () {
                     Navigator.pushNamed(context, Routes.editProfile);
                   },
-                  onDownloadCV: () {
-                    debugPrint('Download CV tapped');
+                  onDownloadCV: () async {
+                    final cvUrl = profile.cvUrl;
+                    if (cvUrl.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('لا يوجد سيرة ذاتية للتحميل'),
+                        ),
+                      );
+                      return;
+                    }
+                    final uri = Uri.parse(cvUrl);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('تعذر فتح رابط السيرة الذاتية'),
+                        ),
+                      );
+                    }
                   },
                 ),
                 const SizedBox(height: 20),

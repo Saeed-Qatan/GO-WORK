@@ -22,10 +22,24 @@ class ApiClient {
           final token = await LocalStorage().getString('token');
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            print('--- JWT SENT ---: Bearer $token');
+          } else {
+            print('--- NO JWT TOKEN FOUND IN STORAGE ---');
           }
           return handler.next(options);
         },
-        onError: (DioException e, handler) {
+        onError: (DioException e, handler) async {
+          if (e.response?.statusCode == 401) {
+            // Token expired or invalid, clear local storage
+            await LocalStorage().remove('token');
+            await LocalStorage().remove('userId');
+            // We return a specialized exception so UI can route to login if needed
+            return handler.next(
+              e.copyWith(
+                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.',
+              ),
+            );
+          }
           return handler.next(e);
         },
       ),
@@ -153,6 +167,96 @@ class ApiClient {
       }
 
       final response = await _dio.post(
+        endpoint,
+        data: formData,
+        options: Options(headers: headers),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> putMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    List<MapEntry<String, String>>? repeatedFields,
+    Map<String, File>? files,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final formData = FormData();
+
+      if (fields != null) {
+        fields.forEach((key, value) {
+          formData.fields.add(MapEntry(key, value));
+        });
+      }
+
+      if (repeatedFields != null) {
+        formData.fields.addAll(repeatedFields);
+      }
+
+      if (files != null) {
+        for (var entry in files.entries) {
+          formData.files.add(
+            MapEntry(
+              entry.key,
+              await MultipartFile.fromFile(
+                entry.value.path,
+                filename: entry.value.path.split('/').last,
+              ),
+            ),
+          );
+        }
+      }
+
+      final response = await _dio.put(
+        endpoint,
+        data: formData,
+        options: Options(headers: headers),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> patchMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    List<MapEntry<String, String>>? repeatedFields,
+    Map<String, File>? files,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final formData = FormData();
+
+      if (fields != null) {
+        fields.forEach((key, value) {
+          formData.fields.add(MapEntry(key, value));
+        });
+      }
+
+      if (repeatedFields != null) {
+        formData.fields.addAll(repeatedFields);
+      }
+
+      if (files != null) {
+        for (var entry in files.entries) {
+          formData.files.add(
+            MapEntry(
+              entry.key,
+              await MultipartFile.fromFile(
+                entry.value.path,
+                filename: entry.value.path.split('/').last,
+              ),
+            ),
+          );
+        }
+      }
+
+      final response = await _dio.patch(
         endpoint,
         data: formData,
         options: Options(headers: headers),
