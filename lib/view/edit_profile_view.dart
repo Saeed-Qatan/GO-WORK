@@ -4,11 +4,11 @@ import '../viewmodel/edit_profile_view_model.dart';
 import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../widget/profile/edit_avatar_section.dart';
-import '../widget/profile/edit_labeled_field.dart';
-import '../widget/profile/edit_phone_field.dart';
-import '../widget/profile/edit_skills_section.dart';
-import '../widget/profile/edit_cv_section.dart';
+import '../widget/edit_profile/edit_avatar_section.dart';
+import '../widget/edit_profile/edit_labeled_field.dart';
+import '../widget/edit_profile/edit_phone_field.dart';
+import '../widget/edit_profile/edit_skills_section.dart';
+import '../widget/edit_profile/edit_cv_section.dart';
 
 class EditProfileView extends StatelessWidget {
   const EditProfileView({super.key});
@@ -101,15 +101,7 @@ class EditProfileView extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // ── Job Title ──
-                    EditLabeledField(
-                      label: AppConstants.jobTitleLabel,
-                      controller: viewModel.jobTitleController,
-                      suffixIcon: Icons.content_paste_rounded,
-                      validator: (val) =>
-                          viewModel.formData.validateJobTitle(val ?? ''),
-                    ),
-                    const SizedBox(height: 16),
+
 
                     // ── Phone Number ──
                     EditPhoneField(viewModel: viewModel),

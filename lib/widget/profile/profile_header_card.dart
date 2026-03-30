@@ -112,23 +112,7 @@ class ProfileHeaderCard extends StatelessWidget {
               fontSize: 22,
             ),
           ),
-          const SizedBox(height: 10),
 
-          // Job title pill
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F4FA),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                profile.role,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
         ],
       ),
     );
