@@ -14,6 +14,15 @@ class RegisterPhotoPage extends StatelessWidget {
       create: (_) => RegisterPhotoViewModel(),
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
         body: Center(
           child: SingleChildScrollView(
             child: Consumer<RegisterPhotoViewModel>(

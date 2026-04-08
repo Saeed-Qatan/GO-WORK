@@ -14,7 +14,7 @@ class ApiConstants {
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';
   static const String verifyEmail = 'Account/Candidate/VerifyEmail';
-  static const String resendCode = 'Account/resend-code';
+  static const String resendCode = 'Account/ResendOtp';
 
   // New Endpoints
   static const String home = 'Account/home';

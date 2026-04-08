@@ -23,7 +23,7 @@ class AppConstants {
   static const String statApplied = 'طلبات مرسلة';
   static const String recommendedJobs = 'وظائف موصى بها';
   static const String allFields = 'جميع المجالات';
-  static const String applyNow = 'تقدم الآن';
+  static const String applyNow = ' عرض التفاصيل';
 
   // Bottom Nav
   static const String navHome = 'الرئيسية';

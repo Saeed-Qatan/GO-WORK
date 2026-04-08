@@ -129,39 +129,7 @@ class HomeHeader extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 24),
 
-                // Search Bar
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: AppConstants.searchHint,
-                      hintStyle: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(color: const Color(0xFF9E9E9E)),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: Color(0xFFBDBDBD),
-                        size: 26,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
