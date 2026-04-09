@@ -102,7 +102,7 @@ class _NavBarItemWidget extends StatelessWidget {
         duration: const Duration(milliseconds: 400),
         curve: Curves.fastLinearToSlowEaseIn,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 12,
+          horizontal: isSelected ? 16 : 8,
           vertical: 10,
         ),
         decoration: BoxDecoration(

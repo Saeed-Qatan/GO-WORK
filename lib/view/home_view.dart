@@ -43,6 +43,8 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 const HomeHeader(),
                 // Stats Row
+                const SizedBox(height: 19.5),
+
                 Transform.translate(
                   offset: const Offset(0, -40), // Pull up to overlap header
                   child: Padding(
