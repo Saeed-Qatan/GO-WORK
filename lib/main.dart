@@ -20,7 +20,6 @@ import 'viewmodel/applications_view_model.dart';
 import 'viewmodel/interviews_view_model.dart';
 import 'viewmodel/profile_view_model.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-git add .
 void main() {
   runApp(const MyApp());
 }
