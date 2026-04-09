@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../model/home_model.dart';
+import '../../theme/app_colors.dart';
+import '../../model/home_model.dart';
+import '../../view/job_details_view.dart';
 
 class JobCard extends StatelessWidget {
   final JobModel job;
@@ -111,45 +112,61 @@ class JobCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 16,
-                color: AppColors.textSecondary,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    job.location,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              Text(
-                job.location,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.access_time,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    job.type,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              const Icon(
-                Icons.access_time,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                job.type,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(width: 16),
-              const Icon(
-                Icons.monitor,
-                size: 16,
-                color: AppColors.textSecondary,
-              ), // Work Mode
-              const SizedBox(width: 4),
-              Text(
-                job.workMode,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.monitor,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ), // Work Mode
+                  const SizedBox(width: 4),
+                  Text(
+                    job.workMode,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
               ),
             ],
           ),
@@ -165,7 +182,14 @@ class JobCard extends StatelessWidget {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JobDetailsView(job: job),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

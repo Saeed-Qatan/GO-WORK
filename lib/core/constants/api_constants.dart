@@ -16,8 +16,8 @@ class ApiConstants {
   static const String verifyEmail = 'Account/Candidate/VerifyEmail';
   static const String resendCode = 'Account/ResendOtp';
 
-  // New Endpoints
-  static const String home = 'Account/home';
+  static const String recommendedJobs = 'Jobs/recommendations';
+  static const String jobDetails = 'Job'; // Will append /{id}
   static const String applications = 'Account/applications';
   static const String interviews = 'Account/interviews';
   static const String updateCandidateProfile =

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/home_view_model.dart';
-import '../widget/home_header.dart';
-import '../widget/stat_card.dart';
-import '../widget/job_card.dart';
+import '../widget/home/home_header.dart';
+import '../widget/home/stat_card.dart';
+import '../widget/home/job_card.dart';
 import '../core/constants/app_constants.dart';
-import '../widget/home_filters.dart';
+import '../widget/home/home_filters.dart';
 import '../utils/stat_ui_helper.dart';
 
 class HomeView extends StatefulWidget {
