@@ -7,7 +7,13 @@ All features strictly follow the **MVVM Architecture** and use **Provider** for 
 
 ## Features Implemented
 
-### 1. Register Feature
+### 1. Job Details Backend Integration
+Integrated the remote API `Jobs/2` to display full dynamic job information.
+- **Model**: Updated `JobModel` to parse and safely store new full details (like `description`, `skills`, dates, and `currency`).
+- **ViewModel**: Created `JobDetailsViewModel` for fetching and managing state.
+- **View**: Transformed `JobDetailsView` to seamlessly display pre-fetched data and live data gracefully.
+
+### 2. Register Feature
 A complete registration flow allowing new users to sign up.
 - **View**: `RegisterView` with form validation (Name, Email, Phone, Password).
 - **ViewModel**: `RegisterViewModel` managing loading states and simulated API calls.

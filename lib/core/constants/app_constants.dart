@@ -15,7 +15,7 @@ class AppConstants {
   static const String createAccount = 'إنشاء حساب جديد';
 
   // Home Screen
-  static const String homeWelcome = 'مرحباً، أحمد محمد';
+  static const String homeWelcome = 'مرحباً';
   static const String homeSubtitle = 'ابحث عن وظيفتك المثالية اليوم';
   static const String searchHint = 'ابحث عن وظيفة أو شركة...';
   static const String statInterviews = 'مقابلات';

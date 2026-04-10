@@ -19,6 +19,7 @@ import 'viewmodel/home_view_model.dart';
 import 'viewmodel/applications_view_model.dart';
 import 'viewmodel/interviews_view_model.dart';
 import 'viewmodel/profile_view_model.dart';
+import 'viewmodel/job_details_view_model.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(create: (_) => InterviewsViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ChangeNotifierProvider(create: (_) => JobDetailsViewModel()),
       ],
       child: MaterialApp(
         title: 'Go Work',

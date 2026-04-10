@@ -11,6 +11,9 @@ class HomeViewModel extends ChangeNotifier {
   List<JobModel> _jobs = [];
   List<JobModel> get jobs => _jobs;
 
+  String _userName = '';
+  String get userName => _userName;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -26,10 +29,12 @@ class HomeViewModel extends ChangeNotifier {
       final results = await Future.wait([
         _repository.getStats(),
         _repository.getRecommendedJobs(),
+        _repository.getUserName(),
       ]);
 
       _stats = results[0] as List<StatModel>;
       _jobs = results[1] as List<JobModel>;
+      _userName = results[2] as String;
     } catch (e) {
       debugPrint('Error fetching home data: $e');
     } finally {

@@ -1,6 +1,6 @@
 // Pure data models for home feature
 // No Flutter dependencies - UI logic handled separately
-
+import 'package:flutter/foundation.dart';
 class UserModel {
   final String name;
   final String imageUrl;
@@ -64,6 +64,15 @@ class JobModel {
   final String minSalary;
   final String maxSalary;
 
+  // Additional detail fields
+  final String? description;
+  final String? currency;
+  final String? postedDate;
+  final String? expirationDate;
+  final List<String>? skills;
+  final bool? canApply;
+  final String? contactNumber;
+
   JobModel({
     required this.id,
     required this.title,
@@ -76,21 +85,60 @@ class JobModel {
     required this.workMode,
     required this.minSalary,
     required this.maxSalary,
+    this.description,
+    this.currency,
+    this.postedDate,
+    this.expirationDate,
+    this.skills,
+    this.canApply,
+    this.contactNumber,
   });
 
   factory JobModel.fromJson(Map<String, dynamic> json) {
+    String companyName = '';
+    String logoUrl = '';
+
+    if (json['company'] is Map) {
+      companyName = json['company']['name']?.toString() ?? '';
+      logoUrl = json['company']['logoUrl']?.toString() ?? '';
+    } else {
+      companyName = json['companyName']?.toString() ?? json['company']?.toString() ?? '';
+      logoUrl = json['companyLogoUrl']?.toString() ?? '';
+    }
+
+    // Parse skills list safely
+    List<String>? parsedSkills;
+    if (json['skills'] != null) {
+      try {
+        parsedSkills = (json['skills'] as List).map((item) => item.toString()).toList();
+      } catch (e) {
+        debugPrint('Error parsing skills: $e');
+      }
+    }
+
     return JobModel(
       id: json['id']?.toString() ?? '',
-      title: json['title'] ?? '',
-      company: json['company'] ?? '',
-      companyLogoUrl: json['companyLogoUrl'] ?? '',
+      title: json['title']?.toString() ?? '',
+      company: companyName,
+      companyLogoUrl: logoUrl,
       matchPercentage: json['matchPercentage'] ?? 0,
-      category: json['category'] ?? '',
-      location: json['location'] ?? '',
-      type: json['type'] ?? '',
-      workMode: json['workMode'] ?? '',
+      category: json['category']?.toString() ?? '',
+      location: json['governate']?.toString() ?? json['country']?.toString() ?? json['location']?.toString() ?? '',
+      type: json['jobType']?.toString() ?? json['type']?.toString() ?? '',
+      workMode: json['jobLocationType']?.toString() ?? json['locationType']?.toString() ?? json['workMode']?.toString() ?? '',
       minSalary: json['minSalary']?.toString() ?? '',
       maxSalary: json['maxSalary']?.toString() ?? '',
+      description: json['description']?.toString(),
+      currency: json['currency']?.toString(),
+      postedDate: json['postedDate']?.toString(),
+      expirationDate: json['expirationDate']?.toString(),
+      skills: parsedSkills,
+      canApply: json['canApply'] as bool?,
+      contactNumber: json['contactNumber']?.toString() ?? 
+                     json['phoneNumber']?.toString() ?? 
+                     json['phone']?.toString() ??
+                     json['phone_number']?.toString() ??
+                     (json['company'] is Map ? json['company']['phone']?.toString() ?? json['company']['contactNumber']?.toString() : null),
     );
   }
 }

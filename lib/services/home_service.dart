@@ -7,30 +7,63 @@ class HomeService {
 
   Future<Map<String, dynamic>> getHomeData() async {
     List<dynamic> jobsList = [];
+    List<Map<String, String>> statsList = [];
+    String userName = '';
     
     try {
       final response = await _apiClient.get(ApiConstants.recommendedJobs);
       
-      // ApiClient returns Map<String, dynamic> and unwraps response
       if (response.containsKey('data')) {
-        jobsList = response['data'] ?? [];
+        final data = response['data'] as Map<String, dynamic>;
+        
+        userName = data['seekerFullName'] ?? '';
+        
+        // Parse jobs
+        if (data.containsKey('recommendations')) {
+          jobsList = data['recommendations'] ?? [];
+        }
+
+        // Parse stats
+        statsList = [
+          {
+            'count': (data['totalInterviewsCount'] ?? 0).toString(),
+            'label': 'مقابلات',
+            'type': 'interview'
+          },
+          {
+            'count': (data['pendingReviewApplicationsCount'] ?? 0).toString(),
+            'label': 'قيد المراجعة',
+            'type': 'review'
+          },
+          {
+            'count': (data['totalApplicationsCount'] ?? 0).toString(),
+            'label': 'طلبات مرسلة',
+            'type': 'sent'
+          },
+        ];
+
       } else if (response.containsKey('jobs')) {
+        // Fallback for older format if it ever happens
         jobsList = response['jobs'] ?? [];
       } else if (response.isNotEmpty) {
-        // If the map is just dictionary of jobs, wrap it (fallback)
         jobsList = [response];
       }
     } catch (e) {
       debugPrint('Failed to fetch recommended jobs: $e');
-      // On failure, jobsList stays empty, but we let it return so stats still show.
+    }
+
+    // Default stats if none were parsed
+    if (statsList.isEmpty) {
+      statsList = [
+        {'count': '0', 'label': 'مقابلات', 'type': 'interview'},
+        {'count': '0', 'label': 'قيد المراجعة', 'type': 'review'},
+        {'count': '0', 'label': 'طلبات مرسلة', 'type': 'sent'},
+      ];
     }
 
     return {
-      'stats': [
-        {'count': '3', 'label': 'مقابلات', 'type': 'interview'},
-        {'count': '5', 'label': 'قيد المراجعة', 'type': 'review'},
-        {'count': '12', 'label': 'طلبات مرسلة', 'type': 'sent'},
-      ],
+      'seekerFullName': userName,
+      'stats': statsList,
       'jobs': jobsList,
     };
   }

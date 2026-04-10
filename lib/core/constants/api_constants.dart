@@ -17,7 +17,7 @@ class ApiConstants {
   static const String resendCode = 'Account/ResendOtp';
 
   static const String recommendedJobs = 'Jobs/recommendations';
-  static const String jobDetails = 'Job'; // Will append /{id}
+  static const String jobDetails = 'Jobs'; // Will append /{id}
   static const String applications = 'Account/applications';
   static const String interviews = 'Account/interviews';
   static const String updateCandidateProfile =

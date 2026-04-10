@@ -42,4 +42,11 @@ class HomeRepository {
     }
     return [];
   }
+  Future<String> getUserName() async {
+    final data = await _fetchHomeData();
+    if (data['seekerFullName'] != null) {
+      return data['seekerFullName'] as String;
+    }
+    return '';
+  }
 }
