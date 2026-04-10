@@ -254,8 +254,8 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                         ),
                         const SizedBox(width: 12),
                         _buildInfoColumn(
-                          'الموقع',
-                          job.location,
+                          'الدولة',
+                          job.country.isNotEmpty ? job.country : 'غير محدد',
                           onSurfaceVariant,
                           surfaceContainerLow,
                         ),
@@ -403,14 +403,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                           surfaceContainerLow,
                           onSurfaceVariant,
                         ),
-                        const SizedBox(height: 16),
-                        _buildAdditionalDetailRow(
-                          Icons.tag,
-                          'رقم المرجع',
-                          '#${job.id}',
-                          surfaceContainerLow,
-                          onSurfaceVariant,
-                        ),
+
                         if (job.contactNumber != null &&
                             job.contactNumber!.isNotEmpty) ...[
                           const SizedBox(height: 16),

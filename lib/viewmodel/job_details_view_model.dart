@@ -23,7 +23,30 @@ class JobDetailsViewModel extends ChangeNotifier {
     try {
       final job = await _jobService.getJobById(jobId);
       if (job != null) {
-        _jobDetails = job;
+        if (_jobDetails != null) {
+          _jobDetails = JobModel(
+            id: job.id,
+            title: job.title.isNotEmpty ? job.title : _jobDetails!.title,
+            company: job.company.isNotEmpty ? job.company : _jobDetails!.company,
+            companyLogoUrl: job.companyLogoUrl.isNotEmpty ? job.companyLogoUrl : _jobDetails!.companyLogoUrl,
+            category: job.category.isNotEmpty ? job.category : _jobDetails!.category,
+            location: job.location.isNotEmpty ? job.location : _jobDetails!.location,
+            country: job.country.isNotEmpty ? job.country : _jobDetails!.country,
+            type: job.type.isNotEmpty ? job.type : _jobDetails!.type,
+            workMode: job.workMode.isNotEmpty ? job.workMode : _jobDetails!.workMode,
+            minSalary: job.minSalary.isNotEmpty ? job.minSalary : _jobDetails!.minSalary,
+            maxSalary: job.maxSalary.isNotEmpty ? job.maxSalary : _jobDetails!.maxSalary,
+            description: job.description ?? _jobDetails!.description,
+            currency: job.currency ?? _jobDetails!.currency,
+            postedDate: job.postedDate ?? _jobDetails!.postedDate,
+            expirationDate: job.expirationDate ?? _jobDetails!.expirationDate,
+            skills: job.skills != null && job.skills!.isNotEmpty ? job.skills : _jobDetails!.skills,
+            canApply: job.canApply ?? _jobDetails!.canApply,
+            contactNumber: job.contactNumber ?? _jobDetails!.contactNumber,
+          );
+        } else {
+          _jobDetails = job;
+        }
       } else {
         _errorMessage = 'Failed to load details.';
       }

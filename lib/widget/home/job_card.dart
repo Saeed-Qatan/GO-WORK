@@ -37,7 +37,6 @@ class JobCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Placeholder for logo if image not available
                     Container(
                       width: 48,
                       height: 48,
@@ -45,10 +44,24 @@ class JobCard extends StatelessWidget {
                         color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
-                        Icons.business,
-                        color: AppColors.primary,
-                      ),
+                      child: job.companyLogoUrl.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                job.companyLogoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.business,
+                                    color: AppColors.primary,
+                                  );
+                                },
+                              ),
+                            )
+                          : const Icon(
+                              Icons.business,
+                              color: AppColors.primary,
+                            ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -94,7 +107,6 @@ class JobCard extends StatelessWidget {
                   ],
                 ),
               ),
-
             ],
           ),
           const SizedBox(height: 16),
@@ -114,9 +126,9 @@ class JobCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     job.location,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -131,9 +143,9 @@ class JobCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     job.type,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -148,9 +160,9 @@ class JobCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     job.workMode,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -161,7 +173,7 @@ class JobCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${job.minSalary} - ${job.maxSalary} ريال',
+                '${job.minSalary} - ${job.maxSalary} ${job.currency ?? "ريال"}',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,

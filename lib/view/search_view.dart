@@ -177,7 +177,9 @@ class _SearchViewState extends State<SearchView> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
                                 ),
                                 child: const Icon(
                                   Icons.sort,
@@ -233,7 +235,8 @@ class _SearchViewState extends State<SearchView> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => JobDetailsView(job: jobItem),
+                                      builder: (context) =>
+                                          JobDetailsView(job: jobItem),
                                     ),
                                   );
                                 },
