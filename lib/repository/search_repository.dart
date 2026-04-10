@@ -1,84 +1,56 @@
+import 'package:flutter/foundation.dart';
+import '../core/constants/api_constants.dart';
 import '../model/home_model.dart';
+import '../utils/api_storage.dart';
 
 class SearchRepository {
+  final ApiClient _apiClient = ApiClient();
+
   Future<List<JobModel>> searchJobs({
     String? query,
     String? category,
     String? location,
     String? type,
+    String? country,
   }) async {
-    // Artificial delay to mimic API call
-    await Future.delayed(const Duration(seconds: 1));
+    List<JobModel> fetchedJobs = [];
 
-    // Mock Data
-    return [
-      JobModel(
-        id: '1',
-        title: 'React Frontend مطور',
-        company: 'شركة التقنية المتقدمة',
-        companyLogoUrl: '',
-        matchPercentage: 95,
-        category: 'تطوير برمجيات',
-        location: 'الرياض',
-        type: 'دوام كامل',
-        workMode: 'حضوري',
-        minSalary: '8000',
-        maxSalary: '12000',
-      ),
-      JobModel(
-        id: '2',
-        title: 'UI/UX Designer',
-        company: 'Creative Solutions',
-        companyLogoUrl: '',
-        matchPercentage: 88,
-        category: 'Design',
-        location: 'جده',
-        type: 'عقد',
-        workMode: 'عن بعد',
-        minSalary: '5000',
-        maxSalary: '9000',
-      ),
-      JobModel(
-        id: '3',
-        title: 'Flutter Developer',
-        company: 'App Masters',
-        companyLogoUrl: '',
-        matchPercentage: 92,
-        category: 'Mobile Dev',
-        location: 'الرياض',
-        type: 'دوام كامل',
-        workMode: 'هجين',
-        minSalary: '10000',
-        maxSalary: '15000',
-      ),
-      JobModel(
-        id: '4',
-        title: 'Project Manager',
-        company: 'BuildIt',
-        companyLogoUrl: '',
-        matchPercentage: 75,
-        category: 'Management',
-        location: 'الدمام',
-        type: 'دوام كامل',
-        workMode: 'حضوري',
-        minSalary: '15000',
-        maxSalary: '20000',
-      ),
-      JobModel(
-        id: '5',
-        title: 'Data Analyst',
-        company: 'DataCorp',
-        companyLogoUrl: '',
-        matchPercentage: 85,
-        category: 'Data',
-        location: 'عن بعد',
-        type: 'بارت تايم',
-        workMode: 'عن بعد',
-        minSalary: '4000',
-        maxSalary: '7000',
-      ),
-    ].where((job) {
-      // Simple local filtering logic
+    try {
+      // Construct query parameters
+      final Map<String, String> queryParams = {};
+      if (query != null && query.isNotEmpty) queryParams['query'] = query;
+      if (category != null && category != 'جميع المجالات') queryParams['category'] = category;
+      if (location != null && location != 'الكل') queryParams['location'] = location;
+      if (type != null && type != 'الكل') queryParams['type'] = type;
+      if (country != null && country != 'الكل') queryParams['country'] = country;
+
+      String queryString = '';
+      if (queryParams.isNotEmpty) {
+        queryString = '?' + queryParams.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
+      }
+
+      // Use the searchJobs endpoint
+      final response = await _apiClient.get('${ApiConstants.searchJobs}$queryString');
+      
+      if (response.containsKey('data')) {
+        final data = response['data'] as Map<String, dynamic>;
+        if (data.containsKey('jobs')) {
+          final listMap = data['jobs'] as List<dynamic>? ?? [];
+          fetchedJobs = listMap.map((item) => JobModel.fromJson(item as Map<String, dynamic>)).toList();
+        } else if (data.containsKey('recommendations')) {
+          final listMap = data['recommendations'] as List<dynamic>? ?? [];
+          fetchedJobs = listMap.map((item) => JobModel.fromJson(item as Map<String, dynamic>)).toList();
+        }
+      } else if (response.containsKey('jobs')) {
+        final listMap = response['jobs'] as List<dynamic>? ?? [];
+        fetchedJobs = listMap.map((item) => JobModel.fromJson(item as Map<String, dynamic>)).toList();
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch jobs for search: $e');
+    }
+
+    // Apply local filtering logic
+    return fetchedJobs.where((job) {
       final matchesQuery =
           query == null ||
           query.isEmpty ||
@@ -91,9 +63,11 @@ class SearchRepository {
           job.category == category;
       final matchesLocation =
           location == null || location == 'الكل' || job.location == location;
+      final matchesCountry =
+          country == null || country == 'الكل' || job.country == country;
       final matchesType = type == null || type == 'الكل' || job.type == type;
 
-      return matchesQuery && matchesCategory && matchesLocation && matchesType;
+      return matchesQuery && matchesCategory && matchesLocation && matchesCountry && matchesType;
     }).toList();
   }
 }

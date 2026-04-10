@@ -15,11 +15,16 @@ class SearchViewModel extends ChangeNotifier {
   String? _selectedCategory;
   String? _selectedLocation;
   String? _selectedType;
+  String? _selectedCountry;
 
   // Getters for filters
   String? get selectedCategory => _selectedCategory;
   String? get selectedLocation => _selectedLocation;
   String? get selectedType => _selectedType;
+  String? get selectedCountry => _selectedCountry;
+
+  String _sortBy = 'date'; // 'date' or 'salary'
+  String get sortBy => _sortBy;
 
   SearchViewModel() {
     searchJobs(); // Load initial data
@@ -46,6 +51,33 @@ class SearchViewModel extends ChangeNotifier {
     searchJobs();
   }
 
+  void setCountry(String? value) {
+    _selectedCountry = value;
+    searchJobs();
+  }
+
+  void setSortBy(String sortBy) {
+    _sortBy = sortBy;
+    _applySorting();
+    notifyListeners();
+  }
+
+  void _applySorting() {
+    if (_sortBy == 'date') {
+      _jobs.sort((a, b) {
+        final aDate = DateTime.tryParse(a.postedDate ?? '') ?? DateTime(2000);
+        final bDate = DateTime.tryParse(b.postedDate ?? '') ?? DateTime(2000);
+        return bDate.compareTo(aDate); // Descending (newest first)
+      });
+    } else if (_sortBy == 'salary') {
+      _jobs.sort((a, b) {
+        final aSalary = double.tryParse(a.maxSalary) ?? 0.0;
+        final bSalary = double.tryParse(b.maxSalary) ?? 0.0;
+        return bSalary.compareTo(aSalary); // Descending (highest salary first)
+      });
+    }
+  }
+
   Future<void> searchJobs() async {
     _isLoading = true;
     notifyListeners();
@@ -56,7 +88,9 @@ class SearchViewModel extends ChangeNotifier {
         category: _selectedCategory,
         location: _selectedLocation,
         type: _selectedType,
+        country: _selectedCountry,
       );
+      _applySorting();
     } catch (e) {
       debugPrint('Error searching jobs: $e');
       _jobs = [];

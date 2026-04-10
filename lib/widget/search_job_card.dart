@@ -138,24 +138,26 @@ class SearchJobCard extends StatelessWidget {
 
                   // Footer: Salary and Match
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Match Percentage (Green Badge)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                      ElevatedButton(
+                        onPressed: onTap,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 8,
+                          ),
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9), // Light Green
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${job.matchPercentage}% تطابق',
-                          style: const TextStyle(
-                            color: Color(0xFF43A047), // Darker Green
+                        child: const Text(
+                          'عرض التفاصيل',
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),

@@ -56,9 +56,9 @@ class JobModel {
   final String title;
   final String company;
   final String companyLogoUrl;
-  final int matchPercentage;
   final String category;
   final String location;
+  final String country;
   final String type;
   final String workMode;
   final String minSalary;
@@ -78,9 +78,9 @@ class JobModel {
     required this.title,
     required this.company,
     required this.companyLogoUrl,
-    required this.matchPercentage,
     required this.category,
     required this.location,
+    required this.country,
     required this.type,
     required this.workMode,
     required this.minSalary,
@@ -121,9 +121,9 @@ class JobModel {
       title: json['title']?.toString() ?? '',
       company: companyName,
       companyLogoUrl: logoUrl,
-      matchPercentage: json['matchPercentage'] ?? 0,
       category: json['category']?.toString() ?? '',
-      location: json['governate']?.toString() ?? json['country']?.toString() ?? json['location']?.toString() ?? '',
+      location: json['governate']?.toString() ?? json['location']?.toString() ?? '',
+      country: json['country']?.toString() ?? '',
       type: json['jobType']?.toString() ?? json['type']?.toString() ?? '',
       workMode: json['jobLocationType']?.toString() ?? json['locationType']?.toString() ?? json['workMode']?.toString() ?? '',
       minSalary: json['minSalary']?.toString() ?? '',

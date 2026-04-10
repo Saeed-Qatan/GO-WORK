@@ -5,6 +5,7 @@ import '../widget/custom_search_header.dart';
 import '../widget/filter_dropdown.dart';
 import '../widget/search_job_card.dart';
 import '../theme/app_colors.dart';
+import 'job_details_view.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -83,7 +84,8 @@ class _SearchViewState extends State<SearchView> {
                                   'الرياض',
                                   'جده',
                                   'الدمام',
-                                  'عن بعد',
+                                  'صنعاء',
+                                  'عدن',
                                 ],
                                 onChanged: viewModel.setLocation,
                               ),
@@ -91,14 +93,35 @@ class _SearchViewState extends State<SearchView> {
                             const SizedBox(width: 16),
                             Expanded(
                               child: FilterDropdown(
+                                label: 'الدولة',
+                                hint: 'الكل',
+                                value: viewModel.selectedCountry,
+                                items: const [
+                                  'الكل',
+                                  'السعودية',
+                                  'اليمن',
+                                  'مصر',
+                                  'الإمارات',
+                                  'الأردن',
+                                ],
+                                onChanged: viewModel.setCountry,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilterDropdown(
                                 label: 'نوع الوظيفة',
                                 hint: 'الكل',
                                 value: viewModel.selectedType,
                                 items: const [
                                   'الكل',
-                                  'دوام كامل',
+                                  'FullTime',
+                                  'PartTime',
                                   'عقد',
-                                  'بارت تايم',
                                 ],
                                 onChanged: viewModel.setType,
                               ),
@@ -111,16 +134,55 @@ class _SearchViewState extends State<SearchView> {
                         // Result Count
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey.shade300),
+                            PopupMenuButton<String>(
+                              onSelected: (value) {
+                                viewModel.setSortBy(value);
+                              },
+                              offset: const Offset(0, 40),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(
-                                Icons.sort,
-                                color: AppColors.textSecondary,
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'date',
+                                  child: Text(
+                                    'حسب التاريخ (الأحدث)',
+                                    style: TextStyle(
+                                      color: viewModel.sortBy == 'date'
+                                          ? AppColors.primary
+                                          : AppColors.textPrimary,
+                                      fontWeight: viewModel.sortBy == 'date'
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'salary',
+                                  child: Text(
+                                    'حسب الراتب (الأعلى)',
+                                    style: TextStyle(
+                                      color: viewModel.sortBy == 'salary'
+                                          ? AppColors.primary
+                                          : AppColors.textPrimary,
+                                      fontWeight: viewModel.sortBy == 'salary'
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey.shade300),
+                                ),
+                                child: const Icon(
+                                  Icons.sort,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
                             const Spacer(),
@@ -162,10 +224,19 @@ class _SearchViewState extends State<SearchView> {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: viewModel.jobs.length,
                             itemBuilder: (context, index) {
+                              final jobItem = viewModel.jobs[index];
                               return SearchJobCard(
-                                job: viewModel.jobs[index],
+                                job: jobItem,
                                 isUrgent: index == 0,
                                 showBookmark: true,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => JobDetailsView(job: jobItem),
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),

@@ -94,21 +94,7 @@ class JobCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Match Percentage
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50), // Green
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${job.matchPercentage}%',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+
             ],
           ),
           const SizedBox(height: 16),
