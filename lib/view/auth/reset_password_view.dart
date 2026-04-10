@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/theme/app_colors.dart';
 import 'package:gowork/viewmodel/auth/reset_password_view_model.dart';
@@ -38,7 +38,7 @@ class ResetPasswordView extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -49,7 +49,7 @@ class ResetPasswordView extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'اعادة تعيين كلمة المرور',
+                          'Ø§Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ† ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±',
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -58,22 +58,22 @@ class ResetPasswordView extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'أدخل الكود المرسل الى بريدك الالكتروني وكلمة المرور الجديدة',
+                          'Ø£Ø¯Ø®Ù„ Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„Ù…Ø±Ø³Ù„ Ø§Ù„Ù‰ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø§Ù„ÙƒØªØ±ÙˆÙ†ÙŠ ÙˆÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø©',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: AppColors.textSecondary),
                         ),
                         const SizedBox(height: 32),
                         CustomTextField(
-                          label: 'كود التحقق',
-                          hint: 'أدخل الكود',
+                          label: 'ÙƒÙˆØ¯ Ø§Ù„ØªØ­Ù‚Ù‚',
+                          hint: 'Ø£Ø¯Ø®Ù„ Ø§Ù„ÙƒÙˆØ¯',
                           prefixIcon: Icons.vpn_key_outlined,
                           controller: viewModel.codeController,
                           validator: viewModel.validateCode,
                         ),
                         const SizedBox(height: 16),
                         CustomTextField(
-                          label: 'كلمة المرور الجديدة',
+                          label: 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø©',
                           hint: '********',
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
@@ -82,7 +82,7 @@ class ResetPasswordView extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         CustomTextField(
-                          label: 'تأكيد كلمة المرور',
+                          label: 'ØªØ£ÙƒÙŠØ¯ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±',
                           hint: '********',
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
@@ -101,7 +101,7 @@ class ResetPasswordView extends StatelessWidget {
                             ),
                           ),
                         CustomButton(
-                          text: 'تغيير كلمة المرور',
+                          text: 'ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±',
                           isLoading: viewModel.isLoading,
                           onPressed: () {
                             viewModel.submit(context);

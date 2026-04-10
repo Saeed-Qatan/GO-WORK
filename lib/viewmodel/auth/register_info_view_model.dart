@@ -31,8 +31,9 @@ class RegisterInfoViewModel extends ChangeNotifier {
 
   String? validatePhone(String? v) {
     if (v == null || v.trim().isEmpty) return 'الرجاء إدخال رقم الهاتف';
-    if (!RegExp(r'^[0-9]+$').hasMatch(v))
+    if (!RegExp(r'^[0-9]+$').hasMatch(v)) {
       return 'رقم الهاتف يجب أن يحتوي على أرقام فقط';
+    }
     if (v.length < 9) return 'رقم الهاتف قصير جداً';
     return null;
   }

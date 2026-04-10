@@ -114,11 +114,13 @@ class _ProfileViewState extends State<ProfileView> {
                         mode: LaunchMode.externalApplication,
                       );
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('تعذر فتح رابط السيرة الذاتية'),
-                        ),
-                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('تعذر فتح رابط السيرة الذاتية'),
+                          ),
+                        );
+                      }
                     }
                   },
                 ),

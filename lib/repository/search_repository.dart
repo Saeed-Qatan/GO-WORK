@@ -26,7 +26,7 @@ class SearchRepository {
 
       String queryString = '';
       if (queryParams.isNotEmpty) {
-        queryString = '?' + queryParams.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
+        queryString = '?${queryParams.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
       }
 
       // Use the searchJobs endpoint

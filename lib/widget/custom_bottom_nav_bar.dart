@@ -37,13 +37,13 @@ class CustomBottomNavigationBar extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 24,
             spreadRadius: 4,
             offset: const Offset(0, -8),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -107,7 +107,7 @@ class _NavBarItemWidget extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.12)
+              ? AppColors.primary.withValues(alpha: 0.12)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -125,7 +125,7 @@ class _NavBarItemWidget extends StatelessWidget {
                 size: 26,
                 color: isSelected
                     ? AppColors.primary
-                    : AppColors.textSecondary.withOpacity(0.7),
+                    : AppColors.textSecondary.withValues(alpha: 0.7),
               ),
             ),
             AnimatedSize(

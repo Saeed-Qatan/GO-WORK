@@ -86,8 +86,8 @@ class EditSkillsSection extends StatelessWidget {
                 color: AppColors.primary,
               ),
               onDeleted: () => viewModel.removeSkill(index),
-              backgroundColor: AppColors.primary.withOpacity(0.1),
-              side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),

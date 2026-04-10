@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:gowork/core/constants/api_constants.dart';
 import 'dart:io';
 import 'package:gowork/utils/local_storage.dart';
@@ -22,9 +23,9 @@ class ApiClient {
           final token = await LocalStorage().getString('token');
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
-            print('--- JWT SENT ---: Bearer $token');
+            debugPrint('--- JWT SENT ---: Bearer $token');
           } else {
-            print('--- NO JWT TOKEN FOUND IN STORAGE ---');
+            debugPrint('--- NO JWT TOKEN FOUND IN STORAGE ---');
           }
           return handler.next(options);
         },

@@ -18,7 +18,7 @@ class EditPhoneField extends StatelessWidget {
           child: Text(
             AppConstants.phoneLabel,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.textPrimary.withOpacity(0.8),
+              color: AppColors.textPrimary.withValues(alpha: 0.8),
               fontWeight: FontWeight.w600,
             ),
           ),

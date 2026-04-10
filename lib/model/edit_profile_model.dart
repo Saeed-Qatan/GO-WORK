@@ -79,8 +79,9 @@ class EditProfileModel {
 
   String? validateName(String value, String fieldName) {
     if (value.trim().isEmpty) return 'الرجاء إدخال $fieldName';
-    if (value.trim().length < 2)
+    if (value.trim().length < 2) {
       return '$fieldName يجب أن يكون حرفين على الأقل';
+    }
     return null;
   }
 

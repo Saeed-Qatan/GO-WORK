@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/utils/api_storage.dart';
@@ -43,7 +44,7 @@ class RegisterRepository {
         files: files,
       );
 
-      print('Response: $response');
+      debugPrint('Response: $response');
 
       if (response['success'] != true) {
         final errors = response['errors'];
@@ -58,7 +59,7 @@ class RegisterRepository {
         throw Exception(errorMessage);
       }
     } catch (e) {
-      print('Registration Exception: $e');
+      debugPrint('Registration Exception: $e');
       rethrow;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/utils/api_storage.dart';
 import '../model/auth/login_model.dart';
@@ -15,8 +16,8 @@ class LoginRepository {
       request.toJson(),
     );
 
-    print('--- RAW LOGIN RESPONSE ---');
-    print(response);
+    debugPrint('--- RAW LOGIN RESPONSE ---');
+    debugPrint(response.toString());
 
     final loginResponse = LoginResponse.fromJson(response);
 

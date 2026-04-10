@@ -138,8 +138,9 @@ class EditProfileViewModel extends ChangeNotifier {
         'LastName': _formData.lastName,
       };
 
-      if (_formData.jobTitle.isNotEmpty)
+      if (_formData.jobTitle.isNotEmpty) {
         fields['JobTitle'] = _formData.jobTitle;
+      }
       if (_formData.phone.isNotEmpty) fields['PhoneNo'] = _formData.phone;
 
       // Skills as repeated form-data fields
@@ -149,10 +150,12 @@ class EditProfileViewModel extends ChangeNotifier {
 
       // Files: ProfilePhoto and ResumeFile
       final files = <String, File>{};
-      if (_formData.newAvatarFile != null)
+      if (_formData.newAvatarFile != null) {
         files['ProfilePhoto'] = _formData.newAvatarFile!;
-      if (_formData.newCvFile != null)
+      }
+      if (_formData.newCvFile != null) {
         files['ResumeFile'] = _formData.newCvFile!;
+      }
 
       // Single PATCH request with everything
       await _profileViewModel.updateProfile(
