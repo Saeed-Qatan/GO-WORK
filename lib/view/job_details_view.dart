@@ -448,8 +448,9 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                           children: [
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: (job.canApply == true)
-                                    ? () {}
+                                onPressed: (job.canApply == true && !isLoading)
+                                    ? () =>
+                                          viewModel.applyToJob(context, job.id)
                                     : null,
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(

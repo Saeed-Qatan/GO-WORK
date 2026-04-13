@@ -17,8 +17,8 @@ class RegisterRepository {
       'phoneNumber': data.phone,
       'Password': data.password,
       'PasswordConfirmation': data.confirmPassword,
-      // Hardcoded default category ID discovered via API probe to satisfy backend requirement
-      'interstedInCategoryId': '101',
+      // Use dynamic category ID, fallback to '101' if somehow null
+      'interstedInCategoryId': data.categoryId ?? '101',
     };
 
 

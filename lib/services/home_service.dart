@@ -14,33 +14,40 @@ class HomeService {
       final response = await _apiClient.get(ApiConstants.recommendedJobs);
       
       if (response.containsKey('data')) {
-        final data = response['data'] as Map<String, dynamic>;
+        final dataStr = response['data'];
         
-        userName = data['seekerFullName'] ?? '';
-        
-        // Parse jobs
-        if (data.containsKey('recommendations')) {
-          jobsList = data['recommendations'] ?? [];
+        if (dataStr is Map<String, dynamic>) {
+          userName = dataStr['seekerFullName'] ?? '';
+          
+          // Parse jobs
+          if (dataStr.containsKey('recommendations')) {
+            jobsList = dataStr['recommendations'] ?? [];
+          }
+          
+          // Parse stats
+          statsList = [
+            {
+              'count': (dataStr['totalInterviewsCount'] ?? 0).toString(),
+              'label': 'مقابلات',
+              'type': 'interview'
+            },
+            {
+              'count': (dataStr['pendingReviewApplicationsCount'] ?? 0).toString(),
+              'label': 'قيد المراجعة',
+              'type': 'review'
+            },
+            {
+              'count': (dataStr['totalApplicationsCount'] ?? 0).toString(),
+              'label': 'طلبات مرسلة',
+              'type': 'sent'
+            },
+          ];
+        } else if (dataStr is List) {
+           // Backend returns array of jobs directly in data
+           jobsList = dataStr;
         }
 
-        // Parse stats
-        statsList = [
-          {
-            'count': (data['totalInterviewsCount'] ?? 0).toString(),
-            'label': 'مقابلات',
-            'type': 'interview'
-          },
-          {
-            'count': (data['pendingReviewApplicationsCount'] ?? 0).toString(),
-            'label': 'قيد المراجعة',
-            'type': 'review'
-          },
-          {
-            'count': (data['totalApplicationsCount'] ?? 0).toString(),
-            'label': 'طلبات مرسلة',
-            'type': 'sent'
-          },
-        ];
+
 
       } else if (response.containsKey('jobs')) {
         // Fallback for older format if it ever happens

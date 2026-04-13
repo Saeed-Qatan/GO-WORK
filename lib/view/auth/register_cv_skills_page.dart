@@ -3,6 +3,7 @@ import 'package:gowork/theme/app_colors.dart';
 import 'package:gowork/viewmodel/auth/register_cv_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
+import 'package:gowork/widget/filter_dropdown.dart';
 
 class RegisterCVPage extends StatefulWidget {
   const RegisterCVPage({super.key});
@@ -33,7 +34,8 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
               builder: (context, viewModel, child) {
                 final isFormComplete =
                     (viewModel.cvFileName?.isNotEmpty ?? false) &&
-                    viewModel.skills.isNotEmpty;
+                    viewModel.skills.isNotEmpty &&
+                    viewModel.selectedCategoryId != null;
 
                 final availableSuggestedSkills = viewModel.suggestedSkills
                     .where((skill) => !viewModel.skills.contains(skill))
@@ -261,9 +263,32 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         ),
                       ),
                       const SizedBox(height: 25),
-
-
-
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "المجال المناسب",
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      FilterDropdown(
+                        label: 'اختر مجالك المهني',
+                        hint: 'لم يتم الاختيار',
+                        value: viewModel.selectedCategoryId != null
+                            ? viewModel.categories.firstWhere((cat) => cat['id'] == viewModel.selectedCategoryId)['name']
+                            : null,
+                        items: viewModel.categories.map((cat) => cat['name']!).toList(),
+                        onChanged: (String? newFieldValue) {
+                          if (newFieldValue != null) {
+                            final chosenCat = viewModel.categories.firstWhere((cat) => cat['name'] == newFieldValue);
+                            viewModel.setCategory(chosenCat['id']);
+                          } else {
+                            viewModel.setCategory(null);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 35),
                       Consumer<RegisterCVViewModel>(
                         builder: (context, cvViewModel, child) {
                           return cvViewModel.isLoading

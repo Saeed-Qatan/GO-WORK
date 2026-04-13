@@ -1,6 +1,7 @@
 // Pure data models for home feature
 // No Flutter dependencies - UI logic handled separately
 import 'package:flutter/foundation.dart';
+
 class UserModel {
   final String name;
   final String imageUrl;
@@ -94,6 +95,48 @@ class JobModel {
     this.contactNumber,
   });
 
+  JobModel copyWith({
+    String? id,
+    String? title,
+    String? company,
+    String? companyLogoUrl,
+    String? category,
+    String? location,
+    String? country,
+    String? type,
+    String? workMode,
+    String? minSalary,
+    String? maxSalary,
+    String? description,
+    String? currency,
+    String? postedDate,
+    String? expirationDate,
+    List<String>? skills,
+    bool? canApply,
+    String? contactNumber,
+  }) {
+    return JobModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      company: company ?? this.company,
+      companyLogoUrl: companyLogoUrl ?? this.companyLogoUrl,
+      category: category ?? this.category,
+      location: location ?? this.location,
+      country: country ?? this.country,
+      type: type ?? this.type,
+      workMode: workMode ?? this.workMode,
+      minSalary: minSalary ?? this.minSalary,
+      maxSalary: maxSalary ?? this.maxSalary,
+      description: description ?? this.description,
+      currency: currency ?? this.currency,
+      postedDate: postedDate ?? this.postedDate,
+      expirationDate: expirationDate ?? this.expirationDate,
+      skills: skills ?? this.skills,
+      canApply: canApply ?? this.canApply,
+      contactNumber: contactNumber ?? this.contactNumber,
+    );
+  }
+
   factory JobModel.fromJson(Map<String, dynamic> json) {
     String companyName = '';
     String logoUrl = '';
@@ -102,7 +145,8 @@ class JobModel {
       companyName = json['company']['name']?.toString() ?? '';
       logoUrl = json['company']['logoUrl']?.toString() ?? '';
     } else {
-      companyName = json['companyName']?.toString() ?? json['company']?.toString() ?? '';
+      companyName =
+          json['companyName']?.toString() ?? json['company']?.toString() ?? '';
       logoUrl = json['companyLogoUrl']?.toString() ?? '';
     }
 
@@ -110,7 +154,9 @@ class JobModel {
     List<String>? parsedSkills;
     if (json['skills'] != null) {
       try {
-        parsedSkills = (json['skills'] as List).map((item) => item.toString()).toList();
+        parsedSkills = (json['skills'] as List)
+            .map((item) => item.toString())
+            .toList();
       } catch (e) {
         debugPrint('Error parsing skills: $e');
       }
@@ -122,10 +168,15 @@ class JobModel {
       company: companyName,
       companyLogoUrl: logoUrl,
       category: json['category']?.toString() ?? '',
-      location: json['governate']?.toString() ?? json['location']?.toString() ?? '',
+      location:
+          json['governate']?.toString() ?? json['location']?.toString() ?? '',
       country: json['country']?.toString() ?? '',
       type: json['jobType']?.toString() ?? json['type']?.toString() ?? '',
-      workMode: json['jobLocationType']?.toString() ?? json['locationType']?.toString() ?? json['workMode']?.toString() ?? '',
+      workMode:
+          json['jobLocationType']?.toString() ??
+          json['locationType']?.toString() ??
+          json['workMode']?.toString() ??
+          '',
       minSalary: json['minSalary']?.toString() ?? '',
       maxSalary: json['maxSalary']?.toString() ?? '',
       description: json['description']?.toString(),
@@ -134,11 +185,15 @@ class JobModel {
       expirationDate: json['expirationDate']?.toString(),
       skills: parsedSkills,
       canApply: json['canApply'] as bool?,
-      contactNumber: json['contactNumber']?.toString() ?? 
-                     json['phoneNumber']?.toString() ?? 
-                     json['phone']?.toString() ??
-                     json['phone_number']?.toString() ??
-                     (json['company'] is Map ? json['company']['phone']?.toString() ?? json['company']['contactNumber']?.toString() : null),
+      contactNumber:
+          json['contactNumber']?.toString() ??
+          json['phoneNumber']?.toString() ??
+          json['phone']?.toString() ??
+          json['phone_number']?.toString() ??
+          (json['company'] is Map
+              ? json['company']['phone']?.toString() ??
+                    json['company']['contactNumber']?.toString()
+              : null),
     );
   }
 }

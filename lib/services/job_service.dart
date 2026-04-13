@@ -9,8 +9,10 @@ class JobService {
   /// Fetch detailed information for a specific job by its ID.
   Future<JobModel?> getJobById(dynamic jobId) async {
     try {
-      final response = await _apiClient.get('${ApiConstants.jobDetails}/$jobId');
-      
+      final response = await _apiClient.get(
+        '${ApiConstants.jobDetails}/$jobId',
+      );
+
       // Depending on how your backend wraps the single entity:
       // It might return { "data": { ... } } or just { "id": ... } directly.
       if (response.containsKey('data') && response['data'] != null) {
@@ -24,6 +26,20 @@ class JobService {
     } catch (e) {
       debugPrint('Failed to fetch job with ID $jobId: $e');
       throw Exception('Failed to fetch job details: $e');
+    }
+  }
+
+  /// Appply to a job by ID.
+  Future<Map<String, dynamic>> applyToJob(dynamic jobId) async {
+    try {
+      final response = await _apiClient.post(
+        '${ApiConstants.jobDetails}/$jobId/apply',
+        {},
+      );
+      return response;
+    } catch (e) {
+      debugPrint('Failed to apply to job $jobId: $e');
+      rethrow;
     }
   }
 }

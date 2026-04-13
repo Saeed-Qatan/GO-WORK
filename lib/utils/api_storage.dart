@@ -117,7 +117,7 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     try {
-      String fileName = file.path.split('/').last;
+      String fileName = file.path.split(RegExp(r'[/\\]')).last;
       FormData formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(file.path, filename: fileName),
       });
@@ -160,7 +160,7 @@ class ApiClient {
               entry.key,
               await MultipartFile.fromFile(
                 entry.value.path,
-                filename: entry.value.path.split('/').last,
+                filename: entry.value.path.split(RegExp(r'[/\\]')).last,
               ),
             ),
           );
@@ -205,7 +205,7 @@ class ApiClient {
               entry.key,
               await MultipartFile.fromFile(
                 entry.value.path,
-                filename: entry.value.path.split('/').last,
+                filename: entry.value.path.split(RegExp(r'[/\\]')).last,
               ),
             ),
           );
@@ -250,7 +250,7 @@ class ApiClient {
               entry.key,
               await MultipartFile.fromFile(
                 entry.value.path,
-                filename: entry.value.path.split('/').last,
+                filename: entry.value.path.split(RegExp(r'[/\\]')).last,
               ),
             ),
           );

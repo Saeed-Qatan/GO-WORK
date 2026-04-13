@@ -26,10 +26,10 @@ class _SplashViewState extends State<SplashView> {
     final token = await LocalStorage().getString('token');
 
     if (mounted) {
-      if (token != null && token.isNotEmpty) {
-        NavigationService.pushReplacement(const MainView());
-      } else {
+      if (token == null || token.isEmpty) {
         NavigationService.pushReplacement(const LoginView());
+      } else {
+        NavigationService.pushReplacement(const MainView());
       }
     }
   }

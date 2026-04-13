@@ -16,6 +16,20 @@ class RegisterCVViewModel extends ChangeNotifier {
 
   bool isLoading = false;
 
+  final List<Map<String, String>> categories = [
+    {'id': '101', 'name': 'تطوير برمجيات'},
+    {'id': '102', 'name': 'البيانات (Data)'},
+    {'id': '103', 'name': 'التصميم (Design)'},
+    {'id': '104', 'name': 'تطوير تطبيقات الجوال'},
+    {'id': '105', 'name': 'المبيعات والتسويق'},
+  ];
+
+  String? selectedCategoryId;
+
+  void setCategory(String? id) {
+    selectedCategoryId = id;
+    notifyListeners();
+  }
   final suggestedSkills = [
     'Flutter',
     'Dart',
@@ -74,6 +88,7 @@ class RegisterCVViewModel extends ChangeNotifier {
       final data = base.copyWith(
         skills: _skills,
         cvFile: cvFile,
+        categoryId: selectedCategoryId,
       );
 
       await RegisterService().register(data);
