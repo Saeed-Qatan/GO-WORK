@@ -9,7 +9,10 @@ class RegisterPhotoViewModel extends ChangeNotifier {
   bool isLoading = false;
 
   Future<void> pickFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowCompression: false,
+    );
     if (result?.files.single.path != null) {
       selectedImage = File(result!.files.single.path!);
       notifyListeners();

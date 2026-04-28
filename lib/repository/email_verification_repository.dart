@@ -21,7 +21,7 @@ class EmailVerificationRepository {
 
   Future<void> resendCode(String email) async {
     try {
-      final response = await _apiClient.post(ApiConstants.resendCode, {
+      final response = await _apiClient.post(ApiConstants.resendOtp, {
         'email': email,
       });
       if (response['success'] != true) {

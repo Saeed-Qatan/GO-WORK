@@ -135,7 +135,7 @@ class EditProfileView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           disabledBackgroundColor: AppColors.primary
-                              .withOpacity(0.5),
+                              .withValues(alpha: 0.5),
                         ),
                         child: viewModel.isLoading
                             ? const SizedBox(

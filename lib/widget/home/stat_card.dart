@@ -20,7 +20,6 @@ class StatCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 24.0),
       child: Container(
-        width: 100, // Fixed width for uniformity
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,

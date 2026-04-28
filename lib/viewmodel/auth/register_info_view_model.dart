@@ -31,9 +31,10 @@ class RegisterInfoViewModel extends ChangeNotifier {
 
   String? validatePhone(String? v) {
     if (v == null || v.trim().isEmpty) return 'الرجاء إدخال رقم الهاتف';
-    if (!RegExp(r'^[0-9]+$').hasMatch(v))
+    if (!RegExp(r'^[0-9]+$').hasMatch(v)) {
       return 'رقم الهاتف يجب أن يحتوي على أرقام فقط';
-    if (v.length < 9) return 'رقم الهاتف قصير جداً';
+    }
+    if (v.length < 8) return 'رقم الهاتف قصير جداً';
     return null;
   }
 
@@ -43,14 +44,12 @@ class RegisterInfoViewModel extends ChangeNotifier {
 
     // Check for English characters and complexity
     bool hasUppercase = v.contains(RegExp(r'[A-Z]'));
+    bool hasLowercase = v.contains(RegExp(r'[a-z]'));
     bool hasDigits = v.contains(RegExp(r'[0-9]'));
-    bool hasSpecialCharacters = v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-    bool isEnglish = v.contains(RegExp(r'^[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]+$'));
 
-    if (!isEnglish) return 'كلمة المرور يجب أن تكون باللغة الإنجليزية';
     if (!hasUppercase) return 'يجب أن تحتوي على حرف كبير واحد على الأقل';
+    if (!hasLowercase) return 'يجب أن تحتوي على حرف صغير واحد على الأقل';
     if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل';
-    if (!hasSpecialCharacters) return 'يجب أن تحتوي على رمز خاص (@#\$%)';
 
     return null;
   }

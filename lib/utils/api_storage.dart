@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:gowork/core/constants/api_constants.dart';
 import 'dart:io';
 import 'package:gowork/utils/local_storage.dart';
@@ -19,12 +20,17 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Skip auth for public endpoints (e.g. registration)
+          if (options.extra['skipAuth'] == true) {
+            debugPrint('--- SKIP AUTH (public endpoint) ---');
+            return handler.next(options);
+          }
           final token = await LocalStorage().getString('token');
-          if (token != null) {
+          if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
-            print('--- JWT SENT ---: Bearer $token');
+            debugPrint('--- JWT SENT ---');
           } else {
-            print('--- NO JWT TOKEN FOUND IN STORAGE ---');
+            debugPrint('--- NO JWT TOKEN FOUND IN STORAGE ---');
           }
           return handler.next(options);
         },
@@ -49,11 +55,16 @@ class ApiClient {
   Future<Map<String, dynamic>> get(
     String endpoint, {
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final response = await _dio.get(
         endpoint,
-        options: Options(headers: headers, contentType: 'application/json'),
+        options: Options(
+          headers: headers,
+          contentType: 'application/json',
+          extra: {'skipAuth': skipAuth},
+        ),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -116,7 +127,7 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     try {
-      String fileName = file.path.split('/').last;
+      String fileName = file.path.split(RegExp(r'[/\\]')).last;
       FormData formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(file.path, filename: fileName),
       });
@@ -138,6 +149,7 @@ class ApiClient {
     List<MapEntry<String, String>>? repeatedFields,
     Map<String, File>? files,
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final formData = FormData();
@@ -159,17 +171,26 @@ class ApiClient {
               entry.key,
               await MultipartFile.fromFile(
                 entry.value.path,
-                filename: entry.value.path.split('/').last,
+                filename: entry.value.path.split(RegExp(r'[/\\]')).last,
               ),
             ),
           );
         }
       }
 
+      debugPrint('=== MULTIPART REQUEST ===');
+      debugPrint('Endpoint: $endpoint');
+      debugPrint('Fields: ${formData.fields}');
+      debugPrint(
+        'Files: ${formData.files.map((f) => '${f.key}: ${f.value.filename}').toList()}',
+      );
+      debugPrint('skipAuth: $skipAuth');
+      debugPrint('=========================');
+
       final response = await _dio.post(
         endpoint,
         data: formData,
-        options: Options(headers: headers),
+        options: Options(headers: headers, extra: {'skipAuth': skipAuth}),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -204,7 +225,7 @@ class ApiClient {
               entry.key,
               await MultipartFile.fromFile(
                 entry.value.path,
-                filename: entry.value.path.split('/').last,
+                filename: entry.value.path.split(RegExp(r'[/\\]')).last,
               ),
             ),
           );
@@ -249,7 +270,7 @@ class ApiClient {
               entry.key,
               await MultipartFile.fromFile(
                 entry.value.path,
-                filename: entry.value.path.split('/').last,
+                filename: entry.value.path.split(RegExp(r'[/\\]')).last,
               ),
             ),
           );
@@ -274,8 +295,10 @@ class ApiClient {
       if (response.data is Map<String, dynamic>) {
         return response.data;
       }
-      // If data is somehow not a Map (e.g. empty or list), we might return empty map or throw.
-      // Assuming API always returns JSON object as per return type.
+      if (response.data is List) {
+        return {'data': response.data};
+      }
+      // If data is somehow not a Map (e.g. empty), return empty map.
       return <String, dynamic>{};
     } else {
       throw Exception('Error ${response.statusCode}: ${response.data}');

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import 'package:gowork/view/splash_view.dart';
 
@@ -19,9 +20,12 @@ import 'viewmodel/home_view_model.dart';
 import 'viewmodel/applications_view_model.dart';
 import 'viewmodel/interviews_view_model.dart';
 import 'viewmodel/profile_view_model.dart';
+import 'viewmodel/job_details_view_model.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   runApp(const MyApp());
 }
 
@@ -37,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(create: (_) => InterviewsViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ChangeNotifierProvider(create: (_) => JobDetailsViewModel()),
       ],
       child: MaterialApp(
         title: 'Go Work',

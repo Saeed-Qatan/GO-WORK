@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:gowork/services/profile_service.dart';
 import 'package:gowork/model/profile_model.dart';
 import 'package:gowork/utils/local_storage.dart';
@@ -13,8 +14,8 @@ class ProfileRepository {
     // The API may nest data under 'user', 'data', or return it directly
     final data = response['user'] ?? response['data'] ?? response;
 
-    print('--- RAW PROFILE RESPONSE ---');
-    print(data);
+    debugPrint('--- RAW PROFILE RESPONSE ---');
+    debugPrint(data.toString());
 
     // Extract email from JWT token if not in the API response
     if ((data['email'] == null || data['email'] == '') &&

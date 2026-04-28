@@ -3,6 +3,7 @@ import 'package:gowork/theme/app_colors.dart';
 import 'package:gowork/viewmodel/auth/register_cv_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
+import 'package:gowork/widget/filter_dropdown.dart';
 
 class RegisterCVPage extends StatefulWidget {
   const RegisterCVPage({super.key});
@@ -33,7 +34,8 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
               builder: (context, viewModel, child) {
                 final isFormComplete =
                     (viewModel.cvFileName?.isNotEmpty ?? false) &&
-                    viewModel.skills.isNotEmpty;
+                    viewModel.skills.isNotEmpty &&
+                    (viewModel.categories.isNotEmpty ? viewModel.selectedCategoryId != null : true);
 
                 final availableSuggestedSkills = viewModel.suggestedSkills
                     .where((skill) => !viewModel.skills.contains(skill))
@@ -261,9 +263,45 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         ),
                       ),
                       const SizedBox(height: 25),
-
-
-
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "المجال المناسب",
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      if (viewModel.isCategoriesLoading)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (viewModel.categories.isNotEmpty)
+                        FilterDropdown(
+                          label: 'اختر مجالك المهني',
+                          hint: 'لم يتم الاختيار',
+                          value: viewModel.selectedCategoryId != null
+                              ? viewModel.categories.firstWhere(
+                                  (cat) => cat['id'].toString() == viewModel.selectedCategoryId,
+                                  orElse: () => <String, dynamic>{},
+                                )['name']?.toString()
+                              : null,
+                          items: viewModel.categories.map((cat) => cat['name'].toString()).toList(),
+                          onChanged: (String? newFieldValue) {
+                            if (newFieldValue != null) {
+                              final chosenCat = viewModel.categories.firstWhere(
+                                (cat) => cat['name'].toString() == newFieldValue,
+                              );
+                              viewModel.setCategory(chosenCat['id'].toString());
+                            } else {
+                              viewModel.setCategory(null);
+                            }
+                          },
+                        ),
+                      const SizedBox(height: 35),
                       Consumer<RegisterCVViewModel>(
                         builder: (context, cvViewModel, child) {
                           return cvViewModel.isLoading

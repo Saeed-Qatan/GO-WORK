@@ -39,7 +39,7 @@ class FilterDropdown extends StatelessWidget {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value,
+              value: items.contains(value) ? value : null,
               isExpanded: true,
               hint: Text(
                 hint,

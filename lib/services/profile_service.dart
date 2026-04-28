@@ -7,7 +7,7 @@ class ProfileService {
 
   /// GET /Account/Me — fetch the authenticated user's profile
   Future<Map<String, dynamic>> getUserProfile() async {
-    return await _apiClient.get(ApiConstants.me);
+    return await _apiClient.get(ApiConstants.getProfile);
   }
 
   /// GET /Account/candidate/me/resume — fetch resume
@@ -18,7 +18,7 @@ class ProfileService {
   /// POST /Account/candidate/uploadfile — upload file (resume or photo)
   Future<Map<String, dynamic>> uploadFile(File file) async {
     return await _apiClient.postMultipart(
-      ApiConstants.uploadResume,
+      ApiConstants.uploadFile,
       files: {'file': file},
     );
   }
@@ -32,7 +32,7 @@ class ProfileService {
     Map<String, File>? files,
   }) async {
     return await _apiClient.patchMultipart(
-      ApiConstants.updateCandidateProfile,
+      ApiConstants.updateProfile,
       fields: fields,
       repeatedFields: repeatedFields,
       files: files,

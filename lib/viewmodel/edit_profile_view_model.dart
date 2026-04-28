@@ -133,26 +133,29 @@ class EditProfileViewModel extends ChangeNotifier {
 
       // Build form-data fields
       final fields = <String, String>{
-        'FirstName': _formData.firstName,
-        'MiddleName': _formData.middleName,
-        'LastName': _formData.lastName,
+        'firstName': _formData.firstName,
+        'midName': _formData.middleName,
+        'lastName': _formData.lastName,
       };
 
-      if (_formData.jobTitle.isNotEmpty)
-        fields['JobTitle'] = _formData.jobTitle;
-      if (_formData.phone.isNotEmpty) fields['PhoneNo'] = _formData.phone;
+      if (_formData.jobTitle.isNotEmpty) {
+        fields['jobTitle'] = _formData.jobTitle;
+      }
+      if (_formData.phone.isNotEmpty) fields['phoneNumber'] = _formData.phone;
 
       // Skills as repeated form-data fields
       final repeatedFields = _formData.skills
-          .map((s) => MapEntry('Skills', s))
+          .map((s) => MapEntry('listOfSkills', s))
           .toList();
 
-      // Files: ProfilePhoto and ResumeFile
+      // Files: ProfilePhoto and Resume
       final files = <String, File>{};
-      if (_formData.newAvatarFile != null)
+      if (_formData.newAvatarFile != null) {
         files['ProfilePhoto'] = _formData.newAvatarFile!;
-      if (_formData.newCvFile != null)
-        files['ResumeFile'] = _formData.newCvFile!;
+      }
+      if (_formData.newCvFile != null) {
+        files['Resume'] = _formData.newCvFile!;
+      }
 
       // Single PATCH request with everything
       await _profileViewModel.updateProfile(

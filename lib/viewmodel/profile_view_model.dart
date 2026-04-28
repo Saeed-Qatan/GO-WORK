@@ -45,16 +45,16 @@ class ProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('--- STARTING PROFILE UPDATE (PATCH) ---');
+      debugPrint('--- STARTING PROFILE UPDATE (PATCH) ---');
       await _repository.updateProfile(
         fields: fields,
         repeatedFields: repeatedFields,
         files: files,
       );
-      print('--- PROFILE UPDATE SUCCESS. REFETCHING PROFILE ---');
+      debugPrint('--- PROFILE UPDATE SUCCESS. REFETCHING PROFILE ---');
       await fetchProfile();
     } catch (e) {
-      print('--- ERROR IN UPDATE PROFILE: $e ---');
+      debugPrint('--- ERROR IN UPDATE PROFILE: $e ---');
       _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
     } finally {
       _isLoading = false;
@@ -69,12 +69,12 @@ class ProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('--- STARTING FILE UPLOAD ---');
+      debugPrint('--- STARTING FILE UPLOAD ---');
       await _repository.uploadFile(file);
-      print('--- FILE UPLOAD SUCCESS. REFETCHING PROFILE ---');
+      debugPrint('--- FILE UPLOAD SUCCESS. REFETCHING PROFILE ---');
       await fetchProfile();
     } catch (e) {
-      print('--- ERROR IN UPLOAD FILE: $e ---');
+      debugPrint('--- ERROR IN UPLOAD FILE: $e ---');
       _errorMessage = 'حدث خطأ أثناء رفع الملف: $e';
     } finally {
       _isLoading = false;

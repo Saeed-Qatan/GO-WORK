@@ -37,13 +37,13 @@ class CustomBottomNavigationBar extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 24,
             spreadRadius: 4,
             offset: const Offset(0, -8),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -102,12 +102,12 @@ class _NavBarItemWidget extends StatelessWidget {
         duration: const Duration(milliseconds: 400),
         curve: Curves.fastLinearToSlowEaseIn,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 12,
+          horizontal: isSelected ? 16 : 8,
           vertical: 10,
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.12)
+              ? AppColors.primary.withValues(alpha: 0.12)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -125,25 +125,27 @@ class _NavBarItemWidget extends StatelessWidget {
                 size: 26,
                 color: isSelected
                     ? AppColors.primary
-                    : AppColors.textSecondary.withOpacity(0.7),
+                    : AppColors.textSecondary.withValues(alpha: 0.7),
               ),
             ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOutBack,
-              child: SizedBox(
-                width: isSelected ? null : 0,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 8.0), // RTL spacing
-                  child: Text(
-                    item.label,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
+            Flexible(
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutBack,
+                child: SizedBox(
+                  width: isSelected ? null : 0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0), // RTL spacing
+                    child: Text(
+                      item.label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.fade,
-                    softWrap: false,
                   ),
                 ),
               ),
