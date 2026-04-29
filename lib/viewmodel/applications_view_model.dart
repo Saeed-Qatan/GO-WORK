@@ -6,6 +6,14 @@ class ApplicationsViewModel extends ChangeNotifier {
   final ApplicationsRepository _repository = ApplicationsRepository();
   List<ApplicationModel> _allApplications = [];
   List<ApplicationModel> _filteredApplications = [];
+  
+  List<dynamic> _statuses = [];
+  List<String> get filterTabs {
+    if (_statuses.isEmpty) {
+      return ['الكل', 'مُرسل', 'قيد المراجعة', 'مقبول', 'مرفوض'];
+    }
+    return ['الكل', ..._statuses.map((s) => s['name']?.toString() ?? s.toString())];
+  }
 
   List<ApplicationModel> get applications => _filteredApplications;
 
@@ -28,6 +36,7 @@ class ApplicationsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _statuses = await _repository.getApplicationStatuses();
       _allApplications = await _repository.getApplications();
       _applyFilter();
     } catch (e) {
@@ -48,23 +57,34 @@ class ApplicationsViewModel extends ChangeNotifier {
     if (_selectedFilterIndex == 0) {
       _filteredApplications = List.from(_allApplications);
     } else {
-      ApplicationStatus targetStatus;
-      switch (_selectedFilterIndex) {
-        case 1:
-          targetStatus = ApplicationStatus.sent;
-          break;
-        case 2:
-          targetStatus = ApplicationStatus.inReview;
-          break;
-        case 3:
-          targetStatus = ApplicationStatus.accepted;
-          break;
-        default:
-          targetStatus = ApplicationStatus.sent;
-      }
-      _filteredApplications = _allApplications
-          .where((app) => app.status == targetStatus)
-          .toList();
+      final selectedTabName = filterTabs[_selectedFilterIndex];
+      _filteredApplications = _allApplications.where((app) {
+        // Fallback for hardcoded status enums if api statuses are empty
+        if (_statuses.isEmpty) {
+            ApplicationStatus targetStatus;
+            switch (_selectedFilterIndex) {
+              case 1:
+                targetStatus = ApplicationStatus.sent;
+                break;
+              case 2:
+                targetStatus = ApplicationStatus.inReview;
+                break;
+              case 3:
+                targetStatus = ApplicationStatus.accepted;
+                break;
+              case 4:
+                targetStatus = ApplicationStatus.rejected;
+                break;
+              default:
+                targetStatus = ApplicationStatus.sent;
+            }
+            return app.status == targetStatus;
+        }
+        
+        // Dynamic filtering by matching statusName
+        return app.statusName.toLowerCase() == selectedTabName.toLowerCase() ||
+               app.statusName == selectedTabName;
+      }).toList();
     }
   }
 }

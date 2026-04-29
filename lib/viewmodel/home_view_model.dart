@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/home_model.dart';
 import '../repository/home_repository.dart';
+import '../repository/profile_repository.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final HomeRepository _repository = HomeRepository();
@@ -14,6 +15,9 @@ class HomeViewModel extends ChangeNotifier {
   String _userName = '';
   String get userName => _userName;
 
+  String _userProfileImage = '';
+  String get userProfileImage => _userProfileImage;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -25,16 +29,29 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Fetch in parallel
       final results = await Future.wait([
         _repository.getStats(),
         _repository.getRecommendedJobs(),
         _repository.getUserName(),
       ]);
 
+      // Fetch profile to guarantee we get the correct avatarUrl
+      final profileRepo = ProfileRepository();
+      try {
+        final profile = await profileRepo.getUserProfile();
+        _userProfileImage = profile.avatarUrl;
+        if (_userName.isEmpty) {
+          _userName = profile.name;
+        }
+      } catch (e) {
+        debugPrint('Failed to load profile for avatar: $e');
+      }
+
       _stats = results[0] as List<StatModel>;
       _jobs = results[1] as List<JobModel>;
-      _userName = results[2] as String;
+      if (_userName.isEmpty) {
+        _userName = results[2] as String;
+      }
     } catch (e) {
       debugPrint('Error fetching home data: $e');
     } finally {

@@ -43,28 +43,14 @@ class ApplicationsHeader extends StatelessWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: [
-                _FilterChip(
-                  label: AppConstants.filterAll,
-                  index: 0,
+              children: List.generate(
+                viewModel.filterTabs.length,
+                (index) => _FilterChip(
+                  label: viewModel.filterTabs[index],
+                  index: index,
                   viewModel: viewModel,
                 ),
-                _FilterChip(
-                  label: AppConstants.filterSent,
-                  index: 1,
-                  viewModel: viewModel,
-                ),
-                _FilterChip(
-                  label: AppConstants.filterReview,
-                  index: 2,
-                  viewModel: viewModel,
-                ),
-                _FilterChip(
-                  label: AppConstants.filterAccepted,
-                  index: 3,
-                  viewModel: viewModel,
-                ),
-              ],
+              ),
             ),
           ),
         ],

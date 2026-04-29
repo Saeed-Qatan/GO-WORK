@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodel/home_view_model.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../view/profile_view.dart';
+import '../../view/settings_view.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
@@ -71,19 +73,32 @@ class HomeHeader extends StatelessWidget {
                     Row(
                       children: [
                         // Profile Avatar (Right in RTL)
-                        Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 2,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const ProfileView()),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 2,
+                              ),
                             ),
-                          ),
-                          child: const CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.white,
-                            child: Icon(Icons.person, color: AppColors.primary),
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Colors.white,
+                              backgroundImage: viewModel.userProfileImage.isNotEmpty
+                                  ? NetworkImage(viewModel.userProfileImage)
+                                  : null,
+                              child: viewModel.userProfileImage.isEmpty
+                                  ? const Icon(Icons.person, color: AppColors.primary)
+                                  : null,
+                            ),
                           ),
                         ),
 
@@ -129,7 +144,12 @@ class HomeHeader extends StatelessWidget {
                           color: Colors.white,
                           size: 20,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SettingsView()),
+                          );
+                        },
                       ),
                     ),
                   ],

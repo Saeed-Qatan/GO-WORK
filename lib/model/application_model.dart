@@ -6,6 +6,7 @@ class ApplicationModel {
   final String company;
   final String companyLogo;
   final String date;
+  final String statusName;
   final ApplicationStatus status;
 
   ApplicationModel({
@@ -14,20 +15,35 @@ class ApplicationModel {
     required this.company,
     required this.companyLogo,
     required this.date,
+    required this.statusName,
     required this.status,
   });
 
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
+    // Determine status
+    final statusStr = json['status']?.toString().toLowerCase() ?? '';
+    final statusNameRaw = json['statusName'] ?? json['status'] ?? 'قيد المراجعة';
+    
+    ApplicationStatus appStatus = ApplicationStatus.sent;
+    if (statusStr.contains('review') || statusStr == '2') {
+      appStatus = ApplicationStatus.inReview;
+    } else if (statusStr.contains('accept') || statusStr == '3') {
+      appStatus = ApplicationStatus.accepted;
+    } else if (statusStr.contains('reject') || statusStr == '4') {
+      appStatus = ApplicationStatus.rejected;
+    }
+
+    // Handle nested job object if present
+    final jobObj = json['job'] as Map<String, dynamic>?;
+
     return ApplicationModel(
       id: json['id']?.toString() ?? '',
-      role: json['role'] ?? '',
-      company: json['company'] ?? '',
-      companyLogo: json['companyLogo'] ?? '',
-      date: json['date'] ?? '',
-      status: ApplicationStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == json['status'],
-        orElse: () => ApplicationStatus.sent,
-      ),
+      role: jobObj?['title'] ?? json['jobTitle'] ?? json['role'] ?? 'بدون مسمى',
+      company: jobObj?['companyName'] ?? json['companyName'] ?? json['company'] ?? 'غير معروف',
+      companyLogo: jobObj?['companyLogo'] ?? json['companyLogo'] ?? '',
+      date: json['appliedAt'] ?? json['createdAt'] ?? json['date'] ?? '',
+      statusName: statusNameRaw.toString(),
+      status: appStatus,
     );
   }
 }

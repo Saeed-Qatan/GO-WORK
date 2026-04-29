@@ -49,4 +49,11 @@ class HomeRepository {
     }
     return '';
   }
+  Future<String> getProfilePhoto() async {
+    final data = await _fetchHomeData();
+    if (data['seekerProfilePhoto'] != null) {
+      return data['seekerProfilePhoto'] as String;
+    }
+    return '';
+  }
 }

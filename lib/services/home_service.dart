@@ -9,6 +9,7 @@ class HomeService {
     List<dynamic> jobsList = [];
     List<Map<String, String>> statsList = [];
     String userName = '';
+    String profilePhoto = '';
     
     try {
       final response = await _apiClient.get(ApiConstants.recommendedJobs);
@@ -18,6 +19,7 @@ class HomeService {
         
         if (dataStr is Map<String, dynamic>) {
           userName = dataStr['seekerFullName'] ?? '';
+          profilePhoto = dataStr['seekerProfilePhoto'] ?? dataStr['profilPhotoUrl'] ?? '';
           
           // Parse jobs
           if (dataStr.containsKey('recommendations')) {
@@ -70,6 +72,7 @@ class HomeService {
 
     return {
       'seekerFullName': userName,
+      'seekerProfilePhoto': profilePhoto,
       'stats': statsList,
       'jobs': jobsList,
     };
