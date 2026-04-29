@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:gowork/utils/local_storage.dart';
-import 'package:gowork/utils/navigations.dart';
-import 'package:gowork/view/auth/login_view.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 
-import 'package:gowork/view/main_view.dart';
 import 'package:gowork/theme/app_colors.dart';
 
 class SplashView extends StatefulWidget {
@@ -33,9 +32,9 @@ class _SplashViewState extends State<SplashView> {
 
     if (mounted) {
       if (token == null || token.isEmpty) {
-        NavigationService.pushReplacement(const LoginView());
+        context.go(AppRoutes.login);
       } else {
-        NavigationService.pushReplacement(const MainView());
+        context.go(AppRoutes.home);
       }
     }
   }
@@ -53,7 +52,7 @@ class _SplashViewState extends State<SplashView> {
               duration: const Duration(milliseconds: 1200),
               curve: Curves.easeOutCubic,
               builder: (context, value, child) {
-                return UI_SplashLogo(value: value);
+                return _SplashLogo(value: value);
               },
             ),
             const SizedBox(height: 50),
@@ -80,9 +79,9 @@ class _SplashViewState extends State<SplashView> {
   }
 }
 
-class UI_SplashLogo extends StatelessWidget {
+class _SplashLogo extends StatelessWidget {
   final double value;
-  const UI_SplashLogo({super.key, required this.value});
+  const _SplashLogo({required this.value});
 
   @override
   Widget build(BuildContext context) {

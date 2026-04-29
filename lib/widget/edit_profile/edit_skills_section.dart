@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../viewmodel/edit_profile_view_model.dart';
@@ -32,13 +33,13 @@ class EditSkillsSection extends StatelessWidget {
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () => ctx.pop(),
                           child: const Text(AppConstants.cancel),
                         ),
                         ElevatedButton(
                           onPressed: () {
                             viewModel.addSkill();
-                            Navigator.pop(ctx);
+                            ctx.pop();
                           },
                           child: const Text(AppConstants.addSkill),
                         ),

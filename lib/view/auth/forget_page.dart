@@ -3,13 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:gowork/core/constants/app_constants.dart';
 import 'package:gowork/theme/app_colors.dart';
 import 'package:gowork/theme/app_theme.dart';
-import 'package:gowork/utils/navigations.dart';
-import 'package:gowork/view/auth/login_view.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:gowork/widget/display_box_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 
-import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/viewmodel/auth/forget_view_model.dart';
 
 class ForgetPage extends StatelessWidget {
@@ -21,19 +20,6 @@ class ForgetPage extends StatelessWidget {
       create: (_) => ForgetViewModel(),
       child: Consumer<ForgetViewModel>(
         builder: (context, vm, child) {
-          // Listen to state changes
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (vm.state == ForgetState.success) {
-              SnackbarService.showSuccess(
-                'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني',
-              );
-              NavigationService.pushReplacement(const LoginView());
-            }
-            if (vm.state == ForgetState.error && vm.error != null) {
-              SnackbarService.showError(vm.error!);
-            }
-          });
-
           return Scaffold(
             backgroundColor: AppColors.background,
             appBar: AppBar(
@@ -41,6 +27,10 @@ class ForgetPage extends StatelessWidget {
               elevation: 0,
               iconTheme: IconThemeData(
                 color: AppTheme.lightTheme.colorScheme.onSurface,
+              ),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
               ),
             ),
             body: Center(
@@ -61,7 +51,7 @@ class ForgetPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        "أدخل بريدك الإلكتروني لاستعادة كلمة المرور", // Note: This isn't in AppConstants yet, but I'll leave it or find a close match
+                        "أدخل بريدك الإلكتروني لاستعادة كلمة المرور",
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textPrimary,
@@ -103,7 +93,7 @@ class ForgetPage extends StatelessWidget {
                       const SizedBox(height: 15),
                       TextButton(
                         onPressed: () {
-                          NavigationService.navigateTo(const LoginView());
+                          context.go(AppRoutes.login);
                         },
                         child: Text(
                           "العودة لتسجيل الدخول",

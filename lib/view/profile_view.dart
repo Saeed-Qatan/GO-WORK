@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../utils/navigations.dart';
 import '../widget/profile/profile_header_card.dart';
 import '../widget/profile/profile_action_buttons.dart';
 import '../widget/profile/profile_contact_info_card.dart';
@@ -48,7 +49,7 @@ class _ProfileViewState extends State<ProfileView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
@@ -95,7 +96,7 @@ class _ProfileViewState extends State<ProfileView> {
                 // ── Action Buttons ──
                 ProfileActionButtons(
                   onEditProfile: () {
-                    Navigator.pushNamed(context, Routes.editProfile);
+                    context.push(AppRoutes.editProfile);
                   },
                   onDownloadCV: () async {
                     final cvUrl = profile.cvUrl;

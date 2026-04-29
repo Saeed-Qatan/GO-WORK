@@ -4,9 +4,12 @@ import 'package:gowork/viewmodel/auth/register_upload_photo.dart';
 import 'package:gowork/theme/app_colors.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:gowork/widget/display_box_widget.dart';
+import 'package:gowork/model/auth/register_data_model.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterPhotoPage extends StatelessWidget {
-  const RegisterPhotoPage({super.key});
+  final RegisterDataModel data;
+  const RegisterPhotoPage({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +23,7 @@ class RegisterPhotoPage extends StatelessWidget {
           scrolledUnderElevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ),
         body: Center(
@@ -104,11 +107,11 @@ class RegisterPhotoPage extends StatelessWidget {
                           : CustomButton(
                               text: 'متابعة',
                               onPressed: () =>
-                                  viewModel.onContinuePressed(context),
+                                  viewModel.onContinuePressed(context, data),
                             ),
                       const SizedBox(height: 15),
                       TextButton(
-                        onPressed: () => viewModel.onSkipPressed(context),
+                        onPressed: () => viewModel.onSkipPressed(context, data),
                         child: Text(
                           'تخطي الآن',
                           style: TextStyle(

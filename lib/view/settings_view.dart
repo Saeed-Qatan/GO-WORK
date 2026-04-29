@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 import '../theme/app_colors.dart';
-import '../utils/navigations.dart';
 import '../viewmodel/profile_view_model.dart';
 
 class SettingsView extends StatelessWidget {
@@ -25,7 +26,7 @@ class SettingsView extends StatelessWidget {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
@@ -39,7 +40,7 @@ class SettingsView extends StatelessWidget {
                 icon: Icons.person_outline,
                 title: 'تعديل الملف الشخصي',
                 onTap: () {
-                  Navigator.pushNamed(context, Routes.editProfile);
+                  context.push(AppRoutes.editProfile);
                 },
               ),
               _buildDivider(),
@@ -124,7 +125,7 @@ class SettingsView extends StatelessWidget {
                   if (shouldLogout == true && context.mounted) {
                     await context.read<ProfileViewModel>().logout();
                     if (context.mounted) {
-                      Navigator.pushNamedAndRemoveUntil(context, Routes.login, (route) => false);
+                      context.go(AppRoutes.login);
                     }
                   }
                 },

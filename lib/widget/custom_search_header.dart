@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class CustomSearchHeader extends StatelessWidget {
   final VoidCallback? onBackTap;
@@ -42,7 +43,7 @@ class CustomSearchHeader extends StatelessWidget {
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.arrow_forward, color: Colors.white),
-                  onPressed: onBackTap ?? () => Navigator.maybePop(context),
+                  onPressed: onBackTap ?? () => context.pop(),
                   constraints: const BoxConstraints(
                     minWidth: 40,
                     minHeight: 40,

@@ -4,9 +4,12 @@ import 'package:gowork/viewmodel/auth/register_cv_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/widget/filter_dropdown.dart';
+import 'package:gowork/model/auth/register_data_model.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterCVPage extends StatefulWidget {
-  const RegisterCVPage({super.key});
+  final RegisterDataModel data;
+  const RegisterCVPage({super.key, required this.data});
 
   @override
   State<RegisterCVPage> createState() => _RegisterCVPageState();
@@ -25,7 +28,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
           scrolledUnderElevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ),
         body: Center(
@@ -319,6 +322,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   onPressed: isFormComplete
                                       ? () => cvViewModel.finishRegistration(
                                           context,
+                                          widget.data,
                                         )
                                       : null,
                                 );

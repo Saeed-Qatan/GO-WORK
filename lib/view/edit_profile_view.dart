@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../viewmodel/edit_profile_view_model.dart';
 import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
@@ -35,7 +36,7 @@ class EditProfileView extends StatelessWidget {
           centerTitle: true,
           automaticallyImplyLeading: false,
           leading: TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             child: Text(
               AppConstants.cancel,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -47,7 +48,7 @@ class EditProfileView extends StatelessWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.pop(),
             ),
           ],
         ),
@@ -124,7 +125,7 @@ class EditProfileView extends StatelessWidget {
                             : () async {
                                 final success = await viewModel.saveProfile();
                                 if (success && context.mounted) {
-                                  Navigator.pop(context);
+                                  context.pop();
                                 }
                               },
                         style: ElevatedButton.styleFrom(

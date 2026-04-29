@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../viewmodel/search_view_model.dart';
 import '../widget/custom_search_header.dart';
 import '../widget/filter_dropdown.dart';
 import '../widget/search_job_card.dart';
 import '../theme/app_colors.dart';
-import 'job_details_view.dart';
+import '../routing/app_router.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -39,7 +40,6 @@ class _SearchViewState extends State<SearchView> {
                   onSearchChanged: viewModel.onSearchChanged,
                   onFilterTap: () {
                     // Logic to show advanced filters or bottom sheet if needed
-                    // For now, toggle visibility or scroll to filters
                   },
                 ),
 
@@ -215,13 +215,7 @@ class _SearchViewState extends State<SearchView> {
                                 isUrgent: index == 0,
                                 showBookmark: true,
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          JobDetailsView(job: jobItem),
-                                    ),
-                                  );
+                                  context.push(AppRoutes.jobDetails, extra: jobItem);
                                 },
                               );
                             },

@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
-import 'package:gowork/utils/navigations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 
 class RegisterPhotoViewModel extends ChangeNotifier {
   File? selectedImage;
@@ -19,21 +20,14 @@ class RegisterPhotoViewModel extends ChangeNotifier {
     }
   }
 
-  void onContinuePressed(BuildContext context) {
-    final base =
-        ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
-
-    Navigator.pushNamed(
-      context,
-      Routes.registerCV,
-      arguments: base.copyWith(profilePhoto: selectedImage),
+  void onContinuePressed(BuildContext context, RegisterDataModel base) {
+    context.push(
+      AppRoutes.registerCV,
+      extra: base.copyWith(profilePhoto: selectedImage),
     );
   }
 
-  void onSkipPressed(BuildContext context) {
-    final base =
-        ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
-
-    Navigator.pushNamed(context, Routes.registerCV, arguments: base);
+  void onSkipPressed(BuildContext context, RegisterDataModel base) {
+    context.push(AppRoutes.registerCV, extra: base);
   }
 }

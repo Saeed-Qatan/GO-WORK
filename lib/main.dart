@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-
-import 'package:gowork/view/splash_view.dart';
-
 import 'package:provider/provider.dart';
-import 'theme/app_theme.dart';
 
-import 'package:gowork/utils/navigations.dart';
-import 'package:gowork/utils/snackbar_service.dart';
-import 'package:gowork/view/auth/login_view.dart';
-import 'package:gowork/view/auth/register_info_page.dart';
-import 'package:gowork/view/auth/register_photo_page.dart';
-import 'package:gowork/view/auth/register_cv_skills_page.dart';
-import 'package:gowork/view/auth/email_verification_page.dart';
-import 'package:gowork/view/edit_profile_view.dart';
+import 'theme/app_theme.dart';
+import 'routing/app_router.dart';
+import 'utils/snackbar_service.dart';
 
 import 'viewmodel/auth/login_view_model.dart';
 import 'viewmodel/home_view_model.dart';
@@ -21,7 +13,6 @@ import 'viewmodel/applications_view_model.dart';
 import 'viewmodel/interviews_view_model.dart';
 import 'viewmodel/profile_view_model.dart';
 import 'viewmodel/job_details_view_model.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -43,28 +34,23 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
         ChangeNotifierProvider(create: (_) => JobDetailsViewModel()),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'Go Work',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        navigatorKey: NavigationService.navigatorKey,
         scaffoldMessengerKey: SnackbarService.messengerKey,
-        locale: const Locale('ar', 'AE'), // Default to Arabic as per screenshot
+        
+        // GoRouter Configuration
+        routerConfig: appRouter,
+        
+        // Localization
+        locale: const Locale('ar', 'AE'), // Default to Arabic
         supportedLocales: const [Locale('en', 'US'), Locale('ar', 'AE')],
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        routes: {
-          Routes.login: (context) => const LoginView(),
-          Routes.registerInfo: (context) => const RegisterPage(),
-          Routes.registerPhoto: (context) => const RegisterPhotoPage(),
-          Routes.registerCV: (context) => const RegisterCVPage(),
-          Routes.verifyEmail: (context) => const EmailVerificationPage(),
-          Routes.editProfile: (context) => const EditProfileView(),
-        },
-        home: const SplashView(),
       ),
     );
   }

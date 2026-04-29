@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 import '../../viewmodel/home_view_model.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
-import '../../view/profile_view.dart';
-import '../../view/settings_view.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
@@ -75,10 +75,7 @@ class HomeHeader extends StatelessWidget {
                         // Profile Avatar (Right in RTL)
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ProfileView()),
-                            );
+                            context.push(AppRoutes.profile);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(2),
@@ -119,49 +116,44 @@ class HomeHeader extends StatelessWidget {
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                AppConstants.homeSubtitle,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: Colors.white70),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            AppConstants.homeSubtitle,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Settings Button (Left in RTL)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: 0.2,
-                        ), // Glassy effect
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.settings_outlined,
-                          color: Colors.white,
-                          size: 20,
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SettingsView()),
-                          );
-                        },
-                      ),
+
+                        // Settings Button (Left in RTL)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(
+                              alpha: 0.2,
+                            ), // Glassy effect
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.settings_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              context.push(AppRoutes.settings);
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-
-
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
-    );
+          ],
+        );
       },
     );
   }

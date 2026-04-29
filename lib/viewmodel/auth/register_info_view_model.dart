@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
-import 'package:gowork/utils/navigations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 
 class RegisterInfoViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
@@ -72,11 +73,11 @@ class RegisterInfoViewModel extends ChangeNotifier {
       confirmPassword: confirmPasswordController.text,
     );
 
-    Navigator.pushNamed(context, Routes.registerPhoto, arguments: data);
+    context.push(AppRoutes.registerPhoto, extra: data);
   }
 
   void onLoginPressed(BuildContext context) {
-    Navigator.pushReplacementNamed(context, Routes.login);
+    context.go(AppRoutes.login);
   }
 
   @override

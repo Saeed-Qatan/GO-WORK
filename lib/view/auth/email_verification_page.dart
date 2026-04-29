@@ -5,17 +5,16 @@ import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
 
 class EmailVerificationPage extends StatelessWidget {
-  const EmailVerificationPage({super.key});
+  final String? email;
+  const EmailVerificationPage({super.key, this.email});
 
   @override
   Widget build(BuildContext context) {
-    final email = ModalRoute.of(context)?.settings.arguments as String?;
-
     return ChangeNotifierProvider(
       create: (_) {
         final viewModel = EmailVerificationViewModel();
         if (email != null) {
-          viewModel.setArgs(email);
+          viewModel.setArgs(email!);
         }
         return viewModel;
       },

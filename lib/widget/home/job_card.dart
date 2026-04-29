@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../model/home_model.dart';
-import '../../view/job_details_view.dart';
+import '../../routing/app_router.dart';
 
 class JobCard extends StatelessWidget {
   final JobModel job;
@@ -185,12 +186,7 @@ class JobCard extends StatelessWidget {
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => JobDetailsView(job: job),
-                    ),
-                  );
+                  context.push(AppRoutes.jobDetails, extra: job);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(

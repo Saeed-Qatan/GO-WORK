@@ -5,7 +5,8 @@ import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/services/auth/register_service.dart';
 import 'package:gowork/utils/api_storage.dart';
-import 'package:gowork/utils/navigations.dart';
+import 'package:gowork/routing/app_router.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
 
 class RegisterCVViewModel extends ChangeNotifier {
@@ -148,14 +149,11 @@ class RegisterCVViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> finishRegistration(BuildContext context) async {
+  Future<void> finishRegistration(BuildContext context, RegisterDataModel base) async {
     isLoading = true;
     notifyListeners();
 
     try {
-      final base =
-          ModalRoute.of(context)!.settings.arguments as RegisterDataModel;
-
       final data = base.copyWith(
         skills: _skills,
         cvFile: cvFile,
@@ -170,10 +168,9 @@ class RegisterCVViewModel extends ChangeNotifier {
         'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',
       );
 
-      NavigationService.pushNamedAndRemoveUntil(
-        Routes.verifyEmail,
-        arguments: data.email,
-      );
+      if (context.mounted) {
+        context.go(AppRoutes.verifyEmail, extra: data.email);
+      }
     } catch (e) {
       SnackbarService.showError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
