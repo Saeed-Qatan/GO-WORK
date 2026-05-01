@@ -1,59 +1,83 @@
+import 'package:flutter/foundation.dart';
 import '../model/home_model.dart';
 import '../services/home_service.dart';
 
+/// Repository that caches home data and provides it to the ViewModel.
 class HomeRepository {
   final HomeService _service = HomeService();
 
   // Cache for home data to avoid duplicate API calls
   Map<String, dynamic>? _cachedData;
 
-  /// Fetch all home data at once
+  // In-flight future to prevent concurrent duplicate requests
+  Future<Map<String, dynamic>>? _activeFetch;
+
+  /// Fetch all home data at once (single request, shared across callers).
   Future<Map<String, dynamic>> _fetchHomeData() async {
     if (_cachedData != null) {
       return _cachedData!;
     }
 
+    // If a fetch is already in progress, wait for it instead of duplicating
+    if (_activeFetch != null) {
+      return _activeFetch!;
+    }
+
+    _activeFetch = _service.getHomeData();
     try {
-      _cachedData = await _service.getHomeData();
+      _cachedData = await _activeFetch;
       return _cachedData!;
     } catch (e) {
-      // Return empty structure on error
+      debugPrint('HomeRepository._fetchHomeData error: $e');
       return {'stats': [], 'jobs': []};
+    } finally {
+      _activeFetch = null;
     }
   }
 
-  /// Clear cache (call when refreshing data)
+  /// Clear cache (call when refreshing data).
   void clearCache() {
     _cachedData = null;
+    _activeFetch = null;
   }
 
+  /// Returns parsed stat models from the cached home data.
   Future<List<StatModel>> getStats() async {
     final data = await _fetchHomeData();
-    if (data['stats'] != null) {
-      return (data['stats'] as List).map((e) => StatModel.fromJson(e)).toList();
+    if (data['stats'] != null && data['stats'] is List) {
+      return (data['stats'] as List)
+          .map((e) => StatModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     return [];
   }
 
+  /// Returns parsed job models from the cached home data.
   Future<List<JobModel>> getRecommendedJobs() async {
     final data = await _fetchHomeData();
-    if (data['jobs'] != null) {
-      return (data['jobs'] as List).map((e) => JobModel.fromJson(e)).toList();
+    if (data['jobs'] != null && data['jobs'] is List) {
+      final jobs = <JobModel>[];
+      for (var e in (data['jobs'] as List)) {
+        try {
+          jobs.add(JobModel.fromJson(e as Map<String, dynamic>));
+        } catch (err) {
+          debugPrint('Error parsing job: $err');
+        }
+      }
+      return jobs;
     }
     return [];
   }
+
+  /// Returns the user's full name from the cached home data.
   Future<String> getUserName() async {
     final data = await _fetchHomeData();
-    if (data['seekerFullName'] != null) {
-      return data['seekerFullName'] as String;
-    }
-    return '';
+    return data['seekerFullName']?.toString() ?? '';
   }
+
+  /// Returns the user's profile photo URL from the cached home data.
   Future<String> getProfilePhoto() async {
     final data = await _fetchHomeData();
-    if (data['seekerProfilePhoto'] != null) {
-      return data['seekerProfilePhoto'] as String;
-    }
-    return '';
+    return data['seekerProfilePhoto']?.toString() ?? '';
   }
 }
