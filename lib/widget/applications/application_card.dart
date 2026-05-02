@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../core/constants/app_constants.dart';
-import '../model/application_model.dart';
+import '../../theme/app_colors.dart';
+import '../../core/constants/app_constants.dart';
+import '../../model/application_model.dart';
 
 class ApplicationCard extends StatelessWidget {
   final ApplicationModel application;

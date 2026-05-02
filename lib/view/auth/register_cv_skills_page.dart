@@ -3,7 +3,7 @@ import 'package:gowork/theme/app_colors.dart';
 import 'package:gowork/viewmodel/auth/register_cv_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
-import 'package:gowork/widget/filter_dropdown.dart';
+import 'package:gowork/widget/search/filter_dropdown.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:go_router/go_router.dart';
 

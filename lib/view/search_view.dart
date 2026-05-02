@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../viewmodel/search_view_model.dart';
-import '../widget/custom_search_header.dart';
-import '../widget/filter_dropdown.dart';
-import '../widget/search_job_card.dart';
+import '../widget/search/custom_search_header.dart';
+import '../widget/search/filter_dropdown.dart';
+import '../widget/search/search_job_card.dart';
 import '../theme/app_colors.dart';
 import '../routing/app_router.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../core/constants/app_constants.dart';
-import '../model/interview_model.dart';
+import '../../theme/app_colors.dart';
+import '../../core/constants/app_constants.dart';
+import '../../model/interview_model.dart';
 
 class InterviewCard extends StatelessWidget {
   final InterviewModel interview;

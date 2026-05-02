@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../viewmodel/applications_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../widget/application_card.dart';
-import '../widget/applications_header.dart';
+import '../widget/applications/application_card.dart';
+import '../widget/applications/applications_header.dart';
 
 class ApplicationsView extends StatefulWidget {
   const ApplicationsView({super.key});

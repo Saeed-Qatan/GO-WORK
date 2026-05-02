@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodel/interviews_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../widget/interview_card.dart';
+import '../widget/interviews/interview_card.dart';
 
 class InterviewsView extends StatefulWidget {
   const InterviewsView({super.key});
