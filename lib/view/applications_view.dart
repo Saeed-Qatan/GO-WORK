@@ -127,14 +127,14 @@ class _ApplicationsViewState extends State<ApplicationsView> {
   }
 
   Widget _buildListContent(ApplicationsViewModel viewModel) {
-    if (viewModel.viewState == ApplicationsViewState.loading || viewModel.viewState == ApplicationsViewState.initial) {
+    if (viewModel.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (viewModel.viewState == ApplicationsViewState.error) {
+    if (viewModel.errorMessage != null) {
       return Center(
         child: Text(
-          viewModel.errorMessage ?? 'حدث خطأ غير معروف',
+          viewModel.errorMessage!,
           style: const TextStyle(color: Colors.red),
         ),
       );

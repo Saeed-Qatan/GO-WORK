@@ -88,46 +88,17 @@ class ApplicationsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> withdrawApplication(String applicationId, BuildContext context) async {
+  Future<bool> withdrawApplication(String applicationId) async {
     try {
-      // show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
       await _repository.withdrawApplication(applicationId);
       
-      // hide loading indicator
-      if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-      
-      // show success message
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم سحب الطلب بنجاح')),
-        );
-      }
-
       // refresh applications
       await fetchApplications();
+      return true;
     } catch (e) {
-      // hide loading indicator
-      if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-      
-      // show error message
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('فشل سحب الطلب: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _errorMessage = 'فشل سحب الطلب: $e';
+      notifyListeners();
+      return false;
     }
   }
 }
