@@ -48,3 +48,41 @@ class ApplicationModel {
     );
   }
 }
+
+extension ApplicationStatusExt on ApplicationStatus {
+  String get label {
+    switch (this) {
+      case ApplicationStatus.inReview: return 'قيد المراجعة';
+      case ApplicationStatus.accepted: return 'مقبول';
+      case ApplicationStatus.rejected: return 'مرفوض';
+      case ApplicationStatus.sent: return 'مُرسل';
+    }
+  }
+
+  int get colorHex {
+    switch (this) {
+      case ApplicationStatus.inReview: return 0xFFB79C12; // Goldish
+      case ApplicationStatus.accepted: return 0xFF2E7D32; // Green
+      case ApplicationStatus.rejected: return 0xFFC62828; // Red
+      case ApplicationStatus.sent: return 0xFF1565C0; // Blue
+    }
+  }
+
+  int get bgColorHex {
+    switch (this) {
+      case ApplicationStatus.inReview: return 0xFFFFF9C4; // Light Yellow
+      case ApplicationStatus.accepted: return 0xFFE8F5E9; // Light Green
+      case ApplicationStatus.rejected: return 0xFFFFEBEE; // Light Red
+      case ApplicationStatus.sent: return 0xFFE3F2FD; // Light Blue
+    }
+  }
+
+  int? get iconCodePoint {
+    switch (this) {
+      case ApplicationStatus.inReview: return 0xe03a; // Icons.access_time
+      case ApplicationStatus.accepted: return 0xe156; // Icons.check
+      case ApplicationStatus.rejected: return 0xe14c; // Icons.close
+      case ApplicationStatus.sent: return null;
+    }
+  }
+}

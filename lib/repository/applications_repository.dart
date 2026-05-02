@@ -4,7 +4,10 @@ import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/utils/api_storage.dart';
 
 class ApplicationsRepository {
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
+
+  ApplicationsRepository({ApiClient? apiClient}) 
+      : _apiClient = apiClient ?? ApiClient();
 
   Future<List<ApplicationModel>> getApplications() async {
     try {

@@ -17,7 +17,61 @@ class _ApplicationsViewState extends State<ApplicationsView> {
   @override
   void initState() {
     super.initState();
-    // Fetch data on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ApplicationsViewModel>().fetchApplications();
+    });
+  }
+
+  void _handleWithdraw(BuildContext context, ApplicationsViewModel viewModel, String applicationId) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('تأكيد سحب الطلب', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('هل أنت متأكد أنك تريد سحب هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.', textAlign: TextAlign.right),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('تراجع', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('نعم، سحب الطلب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final success = await viewModel.withdrawApplication(applicationId);
+
+    // Close loading dialog
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'تم سحب الطلب بنجاح' : viewModel.errorMessage ?? 'فشل سحب الطلب'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -59,22 +113,7 @@ class _ApplicationsViewState extends State<ApplicationsView> {
                       ),
                       const SizedBox(height: 16),
                       Expanded(
-                        child: viewModel.isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : ListView.builder(
-                                itemCount: viewModel.applications.length,
-                                itemBuilder: (context, index) {
-                                  return ApplicationCard(
-                                    application: viewModel.applications[index],
-                                    onWithdraw: () {
-                                      viewModel.withdrawApplication(
-                                        viewModel.applications[index].id,
-                                        context,
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
+                        child: _buildListContent(viewModel),
                       ),
                     ],
                   ),
@@ -84,6 +123,40 @@ class _ApplicationsViewState extends State<ApplicationsView> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildListContent(ApplicationsViewModel viewModel) {
+    if (viewModel.viewState == ApplicationsViewState.loading || viewModel.viewState == ApplicationsViewState.initial) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (viewModel.viewState == ApplicationsViewState.error) {
+      return Center(
+        child: Text(
+          viewModel.errorMessage ?? 'حدث خطأ غير معروف',
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    if (viewModel.applications.isEmpty) {
+      return const Center(
+        child: Text(
+          'لا توجد طلبات لعرضها',
+          style: TextStyle(color: Colors.grey, fontSize: 16),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: viewModel.applications.length,
+      itemBuilder: (context, index) {
+        return ApplicationCard(
+          application: viewModel.applications[index],
+          onWithdraw: () => _handleWithdraw(context, viewModel, viewModel.applications[index].id),
+        );
+      },
     );
   }
 }
