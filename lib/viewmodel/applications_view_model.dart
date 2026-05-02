@@ -10,7 +10,7 @@ class ApplicationsViewModel extends ChangeNotifier {
   List<dynamic> _statuses = [];
   List<String> get filterTabs {
     if (_statuses.isEmpty) {
-      return ['الكل', 'مُرسل', 'قيد المراجعة', 'مقبول', 'مرفوض'];
+      return ['الكل', 'Sent', 'PendingReview', 'Accepted', 'Rejected'];
     }
     return ['الكل', ..._statuses.map((s) => s['name']?.toString() ?? s.toString())];
   }
@@ -85,6 +85,49 @@ class ApplicationsViewModel extends ChangeNotifier {
         return app.statusName.toLowerCase() == selectedTabName.toLowerCase() ||
                app.statusName == selectedTabName;
       }).toList();
+    }
+  }
+
+  Future<void> withdrawApplication(String applicationId, BuildContext context) async {
+    try {
+      // show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      await _repository.withdrawApplication(applicationId);
+      
+      // hide loading indicator
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      // show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم سحب الطلب بنجاح')),
+        );
+      }
+
+      // refresh applications
+      await fetchApplications();
+    } catch (e) {
+      // hide loading indicator
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      // show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل سحب الطلب: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

@@ -29,8 +29,9 @@ class ApiConstants {
   static const String jobSkills = 'Jobs/skills'; // Appended with ?search=query
   static const String jobCurrencies = 'Jobs/currencies';
   static const String jobDetails = 'Jobs'; // Will append /{id}
-  static const String applications = 'Account/applications';
+  static const String applications = 'Applications';
   static const String applicationStatuses = 'Applications/statuses';
+  static const String withdrawApplication = 'Applications/withdraw';
   static const String interviews = 'Account/interviews';
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';

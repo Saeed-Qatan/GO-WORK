@@ -66,6 +66,12 @@ class _ApplicationsViewState extends State<ApplicationsView> {
                                 itemBuilder: (context, index) {
                                   return ApplicationCard(
                                     application: viewModel.applications[index],
+                                    onWithdraw: () {
+                                      viewModel.withdrawApplication(
+                                        viewModel.applications[index].id,
+                                        context,
+                                      );
+                                    },
                                   );
                                 },
                               ),
