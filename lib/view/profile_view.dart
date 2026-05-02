@@ -45,7 +45,10 @@ class _ProfileViewState extends State<ProfileView> {
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
-        leading: const SizedBox.shrink(),
+        leading: IconButton(
+          icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+          onPressed: () => context.push(AppRoutes.settings),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_forward, color: AppColors.primary),

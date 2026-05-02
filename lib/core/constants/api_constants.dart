@@ -36,6 +36,14 @@ class ApiConstants {
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';
 
+  // ================= Notifications Endpoints =================
+  /// جلب قائمة الإشعارات من الباك اند
+  static const String notifications = 'Notifications';
+  /// تحديث حالة إشعار معين كـ"مقروء"
+  static const String markNotificationRead = 'Notifications/mark-read';
+  /// تسجيل رمز الجهاز (FCM Token) في الباك اند
+  static const String registerFcmToken = 'Notifications/register-token';
+
   // Headers عامة
   static const Map<String, String> headers = {'Accept': 'application/json'};
 }

@@ -16,6 +16,7 @@ import 'package:gowork/view/main_view.dart';
 import 'package:gowork/view/edit_profile_view.dart';
 import 'package:gowork/view/profile_view.dart';
 import 'package:gowork/view/settings_view.dart';
+import 'package:gowork/view/notifications_view.dart';
 import 'package:gowork/model/home_model.dart';
 
 /// Centralized route names
@@ -33,6 +34,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String settings = '/settings';
   static const String jobDetails = '/jobDetails';
+  static const String notifications = '/notifications';
 }
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -101,6 +103,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.settings,
       builder: (context, state) => const SettingsView(),
+    ),
+    GoRoute(
+      path: AppRoutes.notifications,
+      builder: (context, state) => const NotificationsView(),
     ),
     GoRoute(
       path: AppRoutes.jobDetails,

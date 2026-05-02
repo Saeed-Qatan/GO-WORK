@@ -5,6 +5,7 @@ import 'package:gowork/routing/app_router.dart';
 import '../../viewmodel/home_view_model.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../widget/notifications/notification_badge.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
@@ -127,24 +128,11 @@ class HomeHeader extends StatelessWidget {
                           ),
                         ),
 
-                        // Settings Button (Left in RTL)
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(
-                              alpha: 0.2,
-                            ), // Glassy effect
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.settings_outlined,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            onPressed: () {
-                              context.push(AppRoutes.settings);
-                            },
-                          ),
+                        // Notification Badge (Left in RTL)
+                        NotificationBadge(
+                          onTap: () {
+                            context.push(AppRoutes.notifications);
+                          },
                         ),
                       ],
                     ),
