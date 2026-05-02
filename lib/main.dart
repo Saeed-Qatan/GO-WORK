@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'Go Work',
+        title: 'Masarak',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         scaffoldMessengerKey: SnackbarService.messengerKey,

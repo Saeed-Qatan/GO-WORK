@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'Go Work';
+  static const String appName = 'Masarak';
   static const String welcomeBack = 'مرحباً بعودتك';
   static const String loginSubtitle = 'سجل دخولك للوصول إلى حسابك';
   static const String emailLabel = 'البريد الإلكتروني';
