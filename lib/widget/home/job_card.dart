@@ -3,10 +3,13 @@ import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../model/home_model.dart';
 import '../../routing/app_router.dart';
+import '../common/pressable_button.dart';
 
+/// Job listing card used in HomeView's job feed.
+/// Uses [PressableButton] on the Apply action for a tactile micro-interaction.
 class JobCard extends StatelessWidget {
   final JobModel job;
-  final String applyButtonText; // To use constant
+  final String applyButtonText;
 
   const JobCard({super.key, required this.job, required this.applyButtonText});
 
@@ -184,26 +187,30 @@ class JobCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () {
-                  context.push(AppRoutes.jobDetails, extra: job);
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
+              // PressableButton provides scale-press + haptic; navigation
+              // is handled by the child ElevatedButton.
+              PressableButton(
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.push(AppRoutes.jobDetails, extra: job);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
                   ),
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  applyButtonText,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                  child: Text(
+                    applyButtonText,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:animations/animations.dart';
 
 // Views
 import 'package:gowork/model/auth/register_data_model.dart';
@@ -110,9 +111,20 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.jobDetails,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final job = state.extra as JobModel;
-        return JobDetailsView(job: job);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: JobDetailsView(job: job),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SharedAxisTransition(
+              animation: animation,
+              secondaryAnimation: secondaryAnimation,
+              transitionType: SharedAxisTransitionType.scaled,
+              child: child,
+            );
+          },
+        );
       },
     ),
   ],

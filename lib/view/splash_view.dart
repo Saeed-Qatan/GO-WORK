@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gowork/utils/local_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
@@ -47,56 +48,30 @@ class _SplashViewState extends State<SplashView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 1200),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, child) {
-                return _SplashLogo(value: value);
-              },
-            ),
+            Image.asset(
+              'assets/logo_cropped.png',
+              width: 160,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.work_outline_rounded,
+                size: 80,
+                color: AppColors.primary,
+              ),
+            )
+                .animate()
+                .fade(duration: 800.ms)
+                .scale(begin: const Offset(0.8, 0.8), duration: 800.ms, curve: Curves.easeOutBack)
+                .shimmer(delay: 800.ms, duration: 1500.ms, color: Colors.white54),
             const SizedBox(height: 50),
-            TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeIn,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primary,
-                    ),
-                    strokeWidth: 3,
-                  ),
-                );
-              },
-            ),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
+              strokeWidth: 3,
+            )
+                .animate(delay: 500.ms)
+                .fade(duration: 400.ms)
+                .slideY(begin: 0.5, duration: 400.ms),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SplashLogo extends StatelessWidget {
-  final double value;
-  const _SplashLogo({required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.scale(
-      scale: 0.8 + (value * 0.2), // Scales from 0.8 to 1.0
-      child: Opacity(
-        opacity: value,
-        child: Image.asset(
-          'assets/logo_cropped.png',
-          width: 160,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.work_outline_rounded,
-            size: 80,
-            color: AppColors.primary,
-          ),
         ),
       ),
     );
