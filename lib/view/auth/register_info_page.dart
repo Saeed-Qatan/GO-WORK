@@ -82,7 +82,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         CustomTextField(
                           controller: viewModel.firstNameController,
                           label: 'اسم الاول',
-                          hint: 'علي',
+                          hint: 'الاسم الاول',
                           validator: (val) =>
                               viewModel.validateNotEmpty(val, 'الاسم الاول'),
                         ),
@@ -90,7 +90,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         CustomTextField(
                           controller: viewModel.fatherNameController,
                           label: 'اسم الاب',
-                          hint: 'ناصر',
+                          hint: 'الاسم الثاني',
                           validator: (val) =>
                               viewModel.validateNotEmpty(val, 'اسم الاب'),
                         ),
@@ -98,7 +98,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         CustomTextField(
                           controller: viewModel.familyNameController,
                           label: 'اسم العائلة',
-                          hint: 'محمد',
+                          hint: 'اللقب',
                           validator: (val) =>
                               viewModel.validateNotEmpty(val, 'اسم العائلة'),
                         ),
@@ -106,14 +106,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         CustomTextField(
                           controller: viewModel.emailController,
                           label: 'البريد الإلكتروني',
-                          hint: 'ali@gmail.com',
+                          hint: 'yourmail@gmail.com',
                           validator: viewModel.validateEmail,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.phoneController,
                           label: 'رقم الهاتف',
-                          hint: '+967774165326',
+                          hint: 'رقم الهاتف',
                           validator: viewModel.validatePhone,
                         ),
                         const SizedBox(height: 10),
