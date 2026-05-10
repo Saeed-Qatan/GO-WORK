@@ -1,7 +1,10 @@
-enum ApplicationStatus { sent, inReview, accepted, rejected }
+import '../utils/status_translator.dart';
+
+enum ApplicationStatus { sent, inReview, accepted, rejected, withdrawn }
 
 class ApplicationModel {
   final String id;
+  final String jobId;
   final String role;
   final String company;
   final String companyLogo;
@@ -11,6 +14,7 @@ class ApplicationModel {
 
   ApplicationModel({
     required this.id,
+    required this.jobId,
     required this.role,
     required this.company,
     required this.companyLogo,
@@ -22,67 +26,23 @@ class ApplicationModel {
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
     // Determine status
     final statusStrRaw = json['applicationStatus'] ?? json['status'] ?? json['statusName'];
-    final statusStr = statusStrRaw?.toString().toLowerCase() ?? '';
-    final statusNameRaw = statusStrRaw ?? 'قيد المراجعة';
+    final statusStr = statusStrRaw?.toString() ?? '';
     
-    ApplicationStatus appStatus = ApplicationStatus.sent;
-    if (statusStr.contains('review') || statusStr == '2') {
-      appStatus = ApplicationStatus.inReview;
-    } else if (statusStr.contains('accept') || statusStr == '3') {
-      appStatus = ApplicationStatus.accepted;
-    } else if (statusStr.contains('reject') || statusStr == '4') {
-      appStatus = ApplicationStatus.rejected;
-    }
-
+    ApplicationStatus appStatus = StatusTranslator.getEnum(statusStr);
+    
     // Handle nested job object if present
     final jobObj = json['job'] as Map<String, dynamic>?;
 
     return ApplicationModel(
       id: json['applicationId']?.toString() ?? json['id']?.toString() ?? '',
+      jobId: jobObj?['id']?.toString() ?? json['jobId']?.toString() ?? '',
       role: jobObj?['title'] ?? json['jobTitle'] ?? json['role'] ?? 'بدون مسمى',
       company: jobObj?['companyName'] ?? json['companyName'] ?? json['company'] ?? 'غير معروف',
       companyLogo: jobObj?['companyLogo'] ?? json['companyLogo'] ?? '',
       date: json['appliedDate'] ?? json['appliedAt'] ?? json['createdAt'] ?? json['date'] ?? '',
-      statusName: statusNameRaw.toString(),
+      statusName: appStatus.arabicLabel,
       status: appStatus,
     );
   }
 }
 
-extension ApplicationStatusExt on ApplicationStatus {
-  String get label {
-    switch (this) {
-      case ApplicationStatus.inReview: return 'قيد المراجعة';
-      case ApplicationStatus.accepted: return 'مقبول';
-      case ApplicationStatus.rejected: return 'مرفوض';
-      case ApplicationStatus.sent: return 'مُرسل';
-    }
-  }
-
-  int get colorHex {
-    switch (this) {
-      case ApplicationStatus.inReview: return 0xFFB79C12; // Goldish
-      case ApplicationStatus.accepted: return 0xFF2E7D32; // Green
-      case ApplicationStatus.rejected: return 0xFFC62828; // Red
-      case ApplicationStatus.sent: return 0xFF1565C0; // Blue
-    }
-  }
-
-  int get bgColorHex {
-    switch (this) {
-      case ApplicationStatus.inReview: return 0xFFFFF9C4; // Light Yellow
-      case ApplicationStatus.accepted: return 0xFFE8F5E9; // Light Green
-      case ApplicationStatus.rejected: return 0xFFFFEBEE; // Light Red
-      case ApplicationStatus.sent: return 0xFFE3F2FD; // Light Blue
-    }
-  }
-
-  int? get iconCodePoint {
-    switch (this) {
-      case ApplicationStatus.inReview: return 0xe03a; // Icons.access_time
-      case ApplicationStatus.accepted: return 0xe156; // Icons.check
-      case ApplicationStatus.rejected: return 0xe14c; // Icons.close
-      case ApplicationStatus.sent: return null;
-    }
-  }
-}

@@ -76,12 +76,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-//ALI NASSER
-class  ali extends StatelessWidget {
-  const ali({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
-}

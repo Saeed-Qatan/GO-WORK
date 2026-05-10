@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../model/application_model.dart';
+import '../../model/home_model.dart';
+import '../../utils/status_translator.dart';
+import '../../view/job_details_view.dart';
 
 class ApplicationCard extends StatelessWidget {
   final ApplicationModel application;
   final VoidCallback? onWithdraw;
 
   const ApplicationCard({
-    super.key, 
+    super.key,
     required this.application,
     this.onWithdraw,
   });
@@ -60,16 +63,22 @@ class ApplicationCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  application.statusName.isNotEmpty ? application.statusName : application.status.label,
+                  application.statusName.isNotEmpty
+                      ? application.statusName
+                      : application.status.arabicLabel,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                        height: 1.5,
-                      ),
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                    height: 1.5,
+                  ),
                 ),
                 if (iconCode != null) ...[
                   const SizedBox(width: 4),
-                  Icon(IconData(iconCode, fontFamily: 'MaterialIcons'), size: 12, color: statusColor),
+                  Icon(
+                    IconData(iconCode, fontFamily: 'MaterialIcons'),
+                    size: 12,
+                    color: statusColor,
+                  ),
                 ],
               ],
             ),
@@ -80,9 +89,9 @@ class ApplicationCard extends StatelessWidget {
               Text(
                 '${AppConstants.datePrefix} ${_formatDate(application.date)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(width: 4),
               const Icon(
@@ -119,7 +128,11 @@ class ApplicationCard extends StatelessWidget {
                       application.companyLogo,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.business, color: Colors.white, size: 28);
+                        return const Icon(
+                          Icons.business,
+                          color: Colors.white,
+                          size: 28,
+                        );
                       },
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
@@ -145,25 +158,29 @@ class ApplicationCard extends StatelessWidget {
                 Text(
                   application.role,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                        height: 1.5,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    height: 1.5,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.business_center_outlined, size: 14, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.business_center_outlined,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         application.company,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -179,7 +196,10 @@ class ApplicationCard extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
-    final canWithdraw = application.status != ApplicationStatus.rejected && application.status != ApplicationStatus.accepted;
+    final canWithdraw =
+        application.status != ApplicationStatus.rejected &&
+        application.status != ApplicationStatus.accepted &&
+        application.status != ApplicationStatus.withdrawn;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -196,7 +216,38 @@ class ApplicationCard extends StatelessWidget {
           Expanded(
             child: InkWell(
               onTap: () {
-                // Navigate to details if needed
+                if (application.jobId.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'معرف الوظيفة غير متاح',
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                final dummyJob = JobModel(
+                  id: application.jobId,
+                  title: application.role,
+                  company: application.company,
+                  companyLogoUrl: application.companyLogo,
+                  category: '',
+                  location: '',
+                  country: '',
+                  type: '',
+                  workMode: '',
+                  minSalary: '',
+                  maxSalary: '',
+                );
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => JobDetailsView(job: dummyJob),
+                  ),
+                );
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
@@ -205,22 +256,27 @@ class ApplicationCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.visibility_outlined, size: 18, color: AppColors.primary),
+                    const Icon(
+                      Icons.visibility_outlined,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'عرض التفاصيل',
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                            height: 1.5,
-                          ),
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          if (canWithdraw) Container(width: 1, height: 24, color: Colors.grey.shade300),
+          if (canWithdraw)
+            Container(width: 1, height: 24, color: Colors.grey.shade300),
           if (canWithdraw)
             Expanded(
               child: InkWell(
@@ -232,15 +288,19 @@ class ApplicationCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.cancel_outlined, size: 18, color: Colors.red),
+                      const Icon(
+                        Icons.cancel_outlined,
+                        size: 18,
+                        color: Colors.red,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'سحب الطلب',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                              height: 1.5,
-                            ),
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          height: 1.5,
+                        ),
                       ),
                     ],
                   ),

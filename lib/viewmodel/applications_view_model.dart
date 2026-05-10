@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import '../model/application_model.dart';
 import '../repository/applications_repository.dart';
+import '../utils/status_translator.dart';
 
 class ApplicationsViewModel extends ChangeNotifier {
   final ApplicationsRepository _repository = ApplicationsRepository();
   List<ApplicationModel> _allApplications = [];
   List<ApplicationModel> _filteredApplications = [];
-  
-  List<dynamic> _statuses = [];
+
   List<String> get filterTabs {
-    if (_statuses.isEmpty) {
-      return ['الكل', 'Sent', 'PendingReview', 'Accepted', 'Rejected'];
-    }
-    return ['الكل', ..._statuses.map((s) => s['name']?.toString() ?? s.toString())];
+    return [
+      'الكل',
+      ApplicationStatus.sent.arabicLabel,
+      ApplicationStatus.inReview.arabicLabel,
+      ApplicationStatus.accepted.arabicLabel,
+      ApplicationStatus.rejected.arabicLabel,
+      ApplicationStatus.withdrawn.arabicLabel,
+    ];
   }
 
   List<ApplicationModel> get applications => _filteredApplications;
@@ -36,7 +40,7 @@ class ApplicationsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _statuses = await _repository.getApplicationStatuses();
+      await _repository.getApplicationStatuses();
       _allApplications = await _repository.getApplications();
       _applyFilter();
     } catch (e) {
@@ -57,33 +61,29 @@ class ApplicationsViewModel extends ChangeNotifier {
     if (_selectedFilterIndex == 0) {
       _filteredApplications = List.from(_allApplications);
     } else {
-      final selectedTabName = filterTabs[_selectedFilterIndex];
+      ApplicationStatus targetStatus;
+      switch (_selectedFilterIndex) {
+        case 1:
+          targetStatus = ApplicationStatus.sent;
+          break;
+        case 2:
+          targetStatus = ApplicationStatus.inReview;
+          break;
+        case 3:
+          targetStatus = ApplicationStatus.accepted;
+          break;
+        case 4:
+          targetStatus = ApplicationStatus.rejected;
+          break;
+        case 5:
+          targetStatus = ApplicationStatus.withdrawn;
+          break;
+        default:
+          targetStatus = ApplicationStatus.sent;
+      }
+      
       _filteredApplications = _allApplications.where((app) {
-        // Fallback for hardcoded status enums if api statuses are empty
-        if (_statuses.isEmpty) {
-            ApplicationStatus targetStatus;
-            switch (_selectedFilterIndex) {
-              case 1:
-                targetStatus = ApplicationStatus.sent;
-                break;
-              case 2:
-                targetStatus = ApplicationStatus.inReview;
-                break;
-              case 3:
-                targetStatus = ApplicationStatus.accepted;
-                break;
-              case 4:
-                targetStatus = ApplicationStatus.rejected;
-                break;
-              default:
-                targetStatus = ApplicationStatus.sent;
-            }
-            return app.status == targetStatus;
-        }
-        
-        // Dynamic filtering by matching statusName
-        return app.statusName.toLowerCase() == selectedTabName.toLowerCase() ||
-               app.statusName == selectedTabName;
+        return app.status == targetStatus;
       }).toList();
     }
   }
@@ -91,7 +91,7 @@ class ApplicationsViewModel extends ChangeNotifier {
   Future<bool> withdrawApplication(String applicationId) async {
     try {
       await _repository.withdrawApplication(applicationId);
-      
+
       // refresh applications
       await fetchApplications();
       return true;

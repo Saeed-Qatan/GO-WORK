@@ -48,6 +48,7 @@ class ApplicationsRepository {
           debugPrint('=== APPLICATIONS: Error parsing item: $e ===');
           return ApplicationModel(
             id: '', 
+            jobId: '',
             role: 'Error', 
             company: 'Error', 
             companyLogo: '', 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gowork/widget/Delete_account.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../routing/app_router.dart';
@@ -75,7 +76,9 @@ class SettingsView extends StatelessWidget {
                         activeThumbColor: AppColors.primary,
                       ),
                       onTap: () {
-                        viewModel.toggleNotifications(!viewModel.notificationsEnabled);
+                        viewModel.toggleNotifications(
+                          !viewModel.notificationsEnabled,
+                        );
                       },
                     ),
                     const SettingsDivider(),
@@ -120,8 +123,10 @@ class SettingsView extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
                 const LogoutButton(),
+                const SizedBox(height: 20),
+                const DeleteAccount(),
                 const SizedBox(height: 40),
               ],
             ),
