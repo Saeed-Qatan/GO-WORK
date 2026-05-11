@@ -24,11 +24,13 @@ class NotificationCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: notification.isRead ? Colors.white : AppColors.primary.withValues(alpha: 0.06),
+          color: notification.isRead
+              ? Colors.white
+              : AppColors.primary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: notification.isRead
-                ? Colors.grey.shade200
+                ? AppColors.border
                 : AppColors.primary.withValues(alpha: 0.3),
           ),
           boxShadow: [
@@ -58,13 +60,13 @@ class NotificationCard extends StatelessWidget {
       height: 46,
       decoration: BoxDecoration(
         color: notification.isRead
-            ? Colors.grey.shade100
+            ? AppColors.inputBackground
             : AppColors.primary.withValues(alpha: 0.12),
         shape: BoxShape.circle,
       ),
       child: Icon(
         Icons.notifications_outlined,
-        color: notification.isRead ? Colors.grey.shade400 : AppColors.primary,
+        color: notification.isRead ? AppColors.textHint : AppColors.primary,
         size: 22,
       ),
     );
@@ -77,10 +79,12 @@ class NotificationCard extends StatelessWidget {
         Text(
           notification.title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.bold,
-                color: notification.isRead ? Colors.grey.shade700 : const Color(0xFF1A1A2E),
-                height: 1.4,
-              ),
+            fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.bold,
+            color: notification.isRead
+                ? AppColors.textPrimary
+                : AppColors.textPrimary,
+            height: 1.4,
+          ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -88,18 +92,18 @@ class NotificationCard extends StatelessWidget {
         Text(
           notification.body,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade500,
-                height: 1.5,
-              ),
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 8),
         Text(
           _formatDate(notification.createdAt),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.grey.shade400,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: AppColors.textHint),
         ),
       ],
     );

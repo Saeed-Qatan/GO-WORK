@@ -49,25 +49,31 @@ class _SplashViewState extends State<SplashView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/logo_cropped.png',
-              width: 160,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.work_outline_rounded,
-                size: 80,
-                color: AppColors.primary,
-              ),
-            )
+                  'assets/logo_cropped.png',
+                  width: 160,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.work_outline_rounded,
+                    size: 80,
+                    color: AppColors.primary,
+                  ),
+                )
                 .animate()
                 .fade(duration: 800.ms)
-                .scale(begin: const Offset(0.8, 0.8), duration: 800.ms, curve: Curves.easeOutBack)
-                .shimmer(delay: 800.ms, duration: 1500.ms, color: Colors.white54),
+                .scale(
+                  begin: const Offset(0.8, 0.8),
+                  duration: 800.ms,
+                  curve: Curves.easeOutBack,
+                )
+                .shimmer(
+                  delay: 800.ms,
+                  duration: 1500.ms,
+                  color: Colors.white54,
+                ),
             const SizedBox(height: 50),
             const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(
-                AppColors.primary,
-              ),
-              strokeWidth: 3,
-            )
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  strokeWidth: 3,
+                )
                 .animate(delay: 500.ms)
                 .fade(duration: 400.ms)
                 .slideY(begin: 0.5, duration: 400.ms),

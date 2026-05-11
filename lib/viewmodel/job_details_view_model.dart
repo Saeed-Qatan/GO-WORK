@@ -106,7 +106,7 @@ class JobDetailsViewModel extends ChangeNotifier {
         if (response['data'] != null && response['data']['message'] != null) {
           msg = response['data']['message'];
         }
-        
+
         // Show premium animated bottom sheet instead of simple snackbar
         if (context.mounted) {
           showSuccessBottomSheet(

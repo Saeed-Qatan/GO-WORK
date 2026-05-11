@@ -45,7 +45,7 @@ class JobCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: AppColors.inputBackground,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: job.companyLogoUrl.isNotEmpty

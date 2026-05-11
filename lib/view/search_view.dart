@@ -7,6 +7,7 @@ import '../widget/search/filter_dropdown.dart';
 import '../widget/search/search_job_card.dart';
 import '../theme/app_colors.dart';
 import '../routing/app_router.dart';
+import '../widget/common/animated_empty_state.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -160,9 +161,7 @@ class _SearchViewState extends State<SearchView> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.grey.shade300,
-                                  ),
+                                  border: Border.all(color: AppColors.border),
                                 ),
                                 child: const Icon(
                                   Icons.sort,
@@ -193,13 +192,13 @@ class _SearchViewState extends State<SearchView> {
                             ),
                           )
                         else if (viewModel.jobs.isEmpty)
-                          const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(32.0),
-                              child: Text(
-                                'لا توجد وظائف مطابقة للبحث',
-                                style: TextStyle(color: Colors.grey),
-                              ),
+                          const Padding(
+                            padding: EdgeInsets.only(top: 64.0),
+                            child: AnimatedEmptyState(
+                              icon: Icons.search_off_rounded,
+                              title: 'لا توجد نتائج',
+                              subtitle:
+                                  'لم نعثر على وظائف تطابق معايير البحث الخاصة بك.\nجرب تغيير الفلاتر أو كلمات البحث.',
                             ),
                           )
                         else
@@ -215,7 +214,10 @@ class _SearchViewState extends State<SearchView> {
                                 isUrgent: index == 0,
                                 showBookmark: true,
                                 onTap: () {
-                                  context.push(AppRoutes.jobDetails, extra: jobItem);
+                                  context.push(
+                                    AppRoutes.jobDetails,
+                                    extra: jobItem,
+                                  );
                                 },
                               );
                             },

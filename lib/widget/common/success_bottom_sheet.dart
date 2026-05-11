@@ -47,33 +47,33 @@ class SuccessBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 32),
-          
+
           // Animated Checkmark Icon
           Container(
-            width: 90,
-            height: 90,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9), // Light green
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withValues(alpha: 0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9), // Light green
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: Color(0xFF4CAF50), // Green
-              size: 50,
-            ),
-          )
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: Color(0xFF4CAF50), // Green
+                  size: 50,
+                ),
+              )
               .animate()
               .scale(curve: Curves.elasticOut, duration: 1000.ms)
               .shimmer(delay: 400.ms, duration: 1000.ms, color: Colors.white),
@@ -82,66 +82,84 @@ class SuccessBottomSheet extends StatelessWidget {
 
           // Title
           Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          )
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              )
               .animate()
               .fade(delay: 200.ms, duration: 400.ms)
-              .slideY(begin: 0.5, end: 0, delay: 200.ms, duration: 400.ms, curve: Curves.easeOut),
+              .slideY(
+                begin: 0.5,
+                end: 0,
+                delay: 200.ms,
+                duration: 400.ms,
+                curve: Curves.easeOut,
+              ),
 
           const SizedBox(height: 12),
 
           // Message
           Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          )
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              )
               .animate()
               .fade(delay: 300.ms, duration: 400.ms)
-              .slideY(begin: 0.5, end: 0, delay: 300.ms, duration: 400.ms, curve: Curves.easeOut),
+              .slideY(
+                begin: 0.5,
+                end: 0,
+                delay: 300.ms,
+                duration: 400.ms,
+                curve: Curves.easeOut,
+              ),
 
           const SizedBox(height: 40),
 
           // Action Button
           SizedBox(
-            width: double.infinity,
-            child: PressableButton(
-              hapticType: HapticFeedbackType.medium,
-              child: ElevatedButton(
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  onButtonPressed();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50), // Green
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                width: double.infinity,
+                child: PressableButton(
+                  hapticType: HapticFeedbackType.medium,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      onButtonPressed();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50), // Green
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      buttonText,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                  elevation: 0,
                 ),
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          )
+              )
               .animate()
               .fade(delay: 400.ms, duration: 400.ms)
-              .slideY(begin: 0.5, end: 0, delay: 400.ms, duration: 400.ms, curve: Curves.easeOut),
+              .slideY(
+                begin: 0.5,
+                end: 0,
+                delay: 400.ms,
+                duration: 400.ms,
+                curve: Curves.easeOut,
+              ),
 
           const SizedBox(height: 16),
         ],

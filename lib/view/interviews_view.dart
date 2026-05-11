@@ -74,8 +74,9 @@ class _InterviewsViewState extends State<InterviewsView> {
       body: Consumer<InterviewsViewModel>(
         builder: (context, viewModel, child) {
           final isLoading = viewModel.isLoading;
-          final interviews =
-              isLoading ? _dummyInterviews : viewModel.interviews;
+          final interviews = isLoading
+              ? _dummyInterviews
+              : viewModel.interviews;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,7 +116,8 @@ class _InterviewsViewState extends State<InterviewsView> {
       return const AnimatedEmptyState(
         icon: Icons.event_busy_rounded,
         title: 'لا توجد مقابلات',
-        subtitle: 'لا يوجد لديك أي مقابلات مجدولة حالياً.\nسيتم إشعارك فور تحديد موعد جديد.',
+        subtitle:
+            'لا يوجد لديك أي مقابلات مجدولة حالياً.\nسيتم إشعارك فور تحديد موعد جديد.',
       );
     }
 

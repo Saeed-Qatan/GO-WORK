@@ -112,7 +112,6 @@ class ProfileHeaderCard extends StatelessWidget {
               fontSize: 22,
             ),
           ),
-
         ],
       ),
     );

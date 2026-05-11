@@ -7,15 +7,17 @@ class ApiConstants {
   static const String verifyEmail = 'Account/Candidate/VerifyEmail';
   static const String login = 'Account/Candidate/Login';
   static const String forgetPassword = 'Account/ForgetPassword';
-  static const String resetPassword = 'https://gowork.runasp.net/api/Account/ResetPassword';
+  static const String resetPassword =
+      'https://gowork.runasp.net/api/Account/ResetPassword';
   static const String resendOtp = 'Account/ResendOtp';
   static const String resendLink = 'Account/ResendLink';
 
   // ================= Profile Endpoints =================
-  static const String getProfile = 'Account/Me'; 
-  static const String updateProfile = 'Account/Candidate/UpdateProfile'; 
+  static const String getProfile = 'Account/Me';
+  static const String updateProfile = 'Account/Candidate/UpdateProfile';
   static const String getResume = 'Account/candidate/me/resume';
-  static const String updateProfilePicture = 'Account/candidate/me/profilepicture';
+  static const String updateProfilePicture =
+      'Account/candidate/me/profilepicture';
   static const String uploadFile = 'Account/candidate/uploadfile';
 
   // ================= Jobs & Other Endpoints =================
@@ -25,7 +27,8 @@ class ApiConstants {
   static const String jobCountries = 'Jobs/countries';
   static const String jobTypes = 'Jobs/job-types';
   static const String locationTypes = 'Jobs/location-types';
-  static const String governates = 'Jobs/governates/156'; // Ensure 156 is the base governate ID
+  static const String governates =
+      'Jobs/governates/156'; // Ensure 156 is the base governate ID
   static const String jobSkills = 'Jobs/skills'; // Appended with ?search=query
   static const String jobCurrencies = 'Jobs/currencies';
   static const String jobDetails = 'Jobs'; // Will append /{id}
@@ -39,8 +42,10 @@ class ApiConstants {
   // ================= Notifications Endpoints =================
   /// جلب قائمة الإشعارات من الباك اند
   static const String notifications = 'Notifications';
+
   /// تحديث حالة إشعار معين كـ"مقروء"
   static const String markNotificationRead = 'Notifications/mark-read';
+
   /// تسجيل رمز الجهاز (FCM Token) في الباك اند
   static const String registerFcmToken = 'Notifications/register-token';
 

@@ -75,7 +75,9 @@ class SettingsView extends StatelessWidget {
                         activeThumbColor: AppColors.primary,
                       ),
                       onTap: () {
-                        viewModel.toggleNotifications(!viewModel.notificationsEnabled);
+                        viewModel.toggleNotifications(
+                          !viewModel.notificationsEnabled,
+                        );
                       },
                     ),
                     const SettingsDivider(),

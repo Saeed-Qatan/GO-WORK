@@ -43,7 +43,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
     const Color onSurface = AppColors.textPrimary;
     const Color onSurfaceVariant = AppColors.textSecondary;
     final Color secondary = AppColors.primary.withValues(alpha: 0.8);
-    const Color outlineVariant = AppColors.inputBorder;
+    const Color outlineVariant = AppColors.border;
 
     return Scaffold(
       backgroundColor: surface,
@@ -457,8 +457,12 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                               child: PressableButton(
                                 hapticType: HapticFeedbackType.medium,
                                 child: ElevatedButton(
-                                  onPressed: (job.canApply == true && !isLoading)
-                                      ? () => viewModel.applyToJob(context, job.id)
+                                  onPressed:
+                                      (job.canApply == true && !isLoading)
+                                      ? () => viewModel.applyToJob(
+                                          context,
+                                          job.id,
+                                        )
                                       : null,
                                   style: ElevatedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
@@ -511,24 +515,25 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                                       : Colors.transparent,
                                   border: Border.all(
                                     color: _isSaved
-                                        ? AppColors.primary.withValues(alpha: 0.4)
+                                        ? AppColors.primary.withValues(
+                                            alpha: 0.4,
+                                          )
                                         : outlineVariant.withValues(alpha: 0.2),
                                     width: 2,
                                   ),
                                   borderRadius: BorderRadius.circular(32),
                                 ),
                                 child: Center(
-                                  child: Icon(
-                                    _isSaved
-                                        ? Icons.bookmark
-                                        : Icons.bookmark_outline,
-                                    key: ValueKey(_isSaved),
-                                    color: _isSaved
-                                        ? AppColors.primary
-                                        : onSurfaceVariant,
-                                  )
-                                      .animate()
-                                      .scale(
+                                  child:
+                                      Icon(
+                                        _isSaved
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_outline,
+                                        key: ValueKey(_isSaved),
+                                        color: _isSaved
+                                            ? AppColors.primary
+                                            : onSurfaceVariant,
+                                      ).animate().scale(
                                         begin: const Offset(0.6, 0.6),
                                         end: const Offset(1.0, 1.0),
                                         duration: 350.ms,

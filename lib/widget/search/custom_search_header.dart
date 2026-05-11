@@ -1,3 +1,4 @@
+import 'package:gowork/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -88,7 +89,11 @@ class CustomSearchHeader extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.search, color: Colors.grey, size: 24),
+                      const Icon(
+                        Icons.search,
+                        color: AppColors.textSecondary,
+                        size: 24,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
@@ -99,7 +104,7 @@ class CustomSearchHeader extends StatelessWidget {
                             border: InputBorder.none,
                             hintText: 'ابحث عن وظيفة أو شركة...',
                             hintStyle: TextStyle(
-                              color: Colors.grey,
+                              color: AppColors.textSecondary,
                               fontSize: 14,
                             ),
                             contentPadding: EdgeInsets.zero,

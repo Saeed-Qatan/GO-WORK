@@ -22,7 +22,9 @@ class HomeService {
     try {
       debugPrint('=== HOME: Fetching ${ApiConstants.recommendedJobs} ===');
       final response = await _apiClient.get(ApiConstants.recommendedJobs);
-      debugPrint('=== HOME: recommendations keys: ${response.keys.toList()} ===');
+      debugPrint(
+        '=== HOME: recommendations keys: ${response.keys.toList()} ===',
+      );
 
       if (response.containsKey('data')) {
         final data = response['data'];
@@ -33,12 +35,14 @@ class HomeService {
 
           // Extract user info
           userName = data['seekerFullName']?.toString() ?? '';
-          profilePhoto = data['seekerProfilePhoto']?.toString() ??
+          profilePhoto =
+              data['seekerProfilePhoto']?.toString() ??
               data['profilPhotoUrl']?.toString() ??
               '';
 
           // Extract recommended jobs
-          if (data.containsKey('recommendations') && data['recommendations'] is List) {
+          if (data.containsKey('recommendations') &&
+              data['recommendations'] is List) {
             jobsList = data['recommendations'];
             debugPrint('=== HOME: Found ${jobsList.length} jobs ===');
           }
@@ -51,13 +55,16 @@ class HomeService {
             pendingApps = _toInt(data['pendingReviewApplicationsCount']);
             totalApps = _toInt(data['totalApplicationsCount']);
             statsFromRecommendations = true;
-            debugPrint('=== HOME: Stats from recommendations: interviews=$interviewsCount, pending=$pendingApps, total=$totalApps ===');
+            debugPrint(
+              '=== HOME: Stats from recommendations: interviews=$interviewsCount, pending=$pendingApps, total=$totalApps ===',
+            );
           }
         } else if (data is List) {
           jobsList = data;
           debugPrint('=== HOME: data is List with ${data.length} items ===');
         }
-      } else if (response.containsKey('recommendations') && response['recommendations'] is List) {
+      } else if (response.containsKey('recommendations') &&
+          response['recommendations'] is List) {
         jobsList = response['recommendations'];
       } else if (response.containsKey('jobs') && response['jobs'] is List) {
         jobsList = response['jobs'];
@@ -69,7 +76,9 @@ class HomeService {
     // 1b. Fallback: if no recommendations, fetch from Jobs/search
     if (jobsList.isEmpty) {
       try {
-        debugPrint('=== HOME: No recommendations, trying ${ApiConstants.searchJobs} ===');
+        debugPrint(
+          '=== HOME: No recommendations, trying ${ApiConstants.searchJobs} ===',
+        );
         final searchResp = await _apiClient.get(ApiConstants.searchJobs);
         debugPrint('=== HOME: search keys: ${searchResp.keys.toList()} ===');
 
@@ -87,7 +96,9 @@ class HomeService {
         } else if (searchResp['items'] is List) {
           jobsList = searchResp['items'];
         }
-        debugPrint('=== HOME: Search fallback found ${jobsList.length} jobs ===');
+        debugPrint(
+          '=== HOME: Search fallback found ${jobsList.length} jobs ===',
+        );
       } catch (e) {
         debugPrint('=== HOME ERROR: search fallback: $e ===');
       }
@@ -95,7 +106,9 @@ class HomeService {
 
     // 2. If stats were NOT in the recommendations response, try individual endpoints
     if (!statsFromRecommendations) {
-      debugPrint('=== HOME: Stats not in recommendations, fetching individually ===');
+      debugPrint(
+        '=== HOME: Stats not in recommendations, fetching individually ===',
+      );
 
       // Fetch interviews count
       try {
@@ -133,7 +146,9 @@ class HomeService {
         if (totalApps == 0 && resp.containsKey('totalCount')) {
           totalApps = _toInt(resp['totalCount']);
         }
-        debugPrint('=== HOME: totalApps=$totalApps, pendingApps=$pendingApps ===');
+        debugPrint(
+          '=== HOME: totalApps=$totalApps, pendingApps=$pendingApps ===',
+        );
       } catch (e) {
         debugPrint('=== HOME ERROR: applications: $e ===');
       }
@@ -141,12 +156,22 @@ class HomeService {
 
     // Build stats list
     statsList = [
-      {'count': interviewsCount.toString(), 'label': 'مقابلات', 'type': 'interview'},
-      {'count': pendingApps.toString(), 'label': 'قيد المراجعة', 'type': 'review'},
+      {
+        'count': interviewsCount.toString(),
+        'label': 'مقابلات',
+        'type': 'interview',
+      },
+      {
+        'count': pendingApps.toString(),
+        'label': 'قيد المراجعة',
+        'type': 'review',
+      },
       {'count': totalApps.toString(), 'label': 'طلبات مرسلة', 'type': 'sent'},
     ];
 
-    debugPrint('=== HOME FINAL: user=$userName, jobs=${jobsList.length}, stats=$statsList ===');
+    debugPrint(
+      '=== HOME FINAL: user=$userName, jobs=${jobsList.length}, stats=$statsList ===',
+    );
 
     return {
       'seekerFullName': userName,

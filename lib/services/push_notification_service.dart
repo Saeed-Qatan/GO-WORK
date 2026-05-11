@@ -31,8 +31,9 @@ class PushNotificationService {
   PushNotificationService({
     FlutterLocalNotificationsPlugin? localNotifications,
     NotificationsRepository? repository,
-  })  : _localNotifications = localNotifications ?? FlutterLocalNotificationsPlugin(),
-        _repository = repository ?? NotificationsRepository();
+  }) : _localNotifications =
+           localNotifications ?? FlutterLocalNotificationsPlugin(),
+       _repository = repository ?? NotificationsRepository();
 
   /// Initializes the service: requests permissions, sets up local notifications,
   /// registers FCM token, and starts listening to message streams.
@@ -55,7 +56,9 @@ class PushNotificationService {
   // ────────────────────────────────────────────────────
 
   Future<void> _setupLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -83,7 +86,9 @@ class PushNotificationService {
       playSound: true,
     );
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 
@@ -122,7 +127,8 @@ class PushNotificationService {
         id: message.messageId,
         title: notification.title ?? 'إشعار جديد',
         body: notification.body ?? '',
-        imageUrl: notification.android?.imageUrl ?? notification.apple?.imageUrl,
+        imageUrl:
+            notification.android?.imageUrl ?? notification.apple?.imageUrl,
       );
 
       // Display local notification banner while app is in foreground
@@ -136,7 +142,9 @@ class PushNotificationService {
   void _listenToNotificationTaps() {
     // When user taps a notification while app is in background (but not terminated)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('=== NOTIFICATION TAPPED FROM BACKGROUND: ${message.messageId} ===');
+      debugPrint(
+        '=== NOTIFICATION TAPPED FROM BACKGROUND: ${message.messageId} ===',
+      );
       // Navigation on tap can be handled via the ViewModel or a navigation service
     });
   }
@@ -156,7 +164,10 @@ class PushNotificationService {
       presentBadge: true,
       presentSound: true,
     );
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
 
     await _localNotifications.show(
       model.id.hashCode,

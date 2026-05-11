@@ -35,7 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color: AppColors.textSecondary.withValues(alpha: 0.1),
                         spreadRadius: 5,
                         blurRadius: 7,
                         offset: const Offset(0, 3),
@@ -56,7 +56,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             borderRadius: BorderRadius.circular(25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withValues(alpha: 0.5),
+                                color: AppColors.textSecondary.withValues(
+                                  alpha: 0.5,
+                                ),
                                 blurRadius: 5,
                                 spreadRadius: 1,
                                 offset: const Offset(0, 7),
@@ -188,7 +190,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             "بالتسجيل، أنت توافق على سياسة الخصوصية والشروط والأحكام",
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey.shade500),
+                                ?.copyWith(color: AppColors.textSecondary),
                           ),
                         ),
                         const SizedBox(height: 10),

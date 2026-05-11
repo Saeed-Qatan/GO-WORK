@@ -21,10 +21,11 @@ class ApplicationModel {
 
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
     // Determine status
-    final statusStrRaw = json['applicationStatus'] ?? json['status'] ?? json['statusName'];
+    final statusStrRaw =
+        json['applicationStatus'] ?? json['status'] ?? json['statusName'];
     final statusStr = statusStrRaw?.toString().toLowerCase() ?? '';
     final statusNameRaw = statusStrRaw ?? 'قيد المراجعة';
-    
+
     ApplicationStatus appStatus = ApplicationStatus.sent;
     if (statusStr.contains('review') || statusStr == '2') {
       appStatus = ApplicationStatus.inReview;
@@ -40,9 +41,18 @@ class ApplicationModel {
     return ApplicationModel(
       id: json['applicationId']?.toString() ?? json['id']?.toString() ?? '',
       role: jobObj?['title'] ?? json['jobTitle'] ?? json['role'] ?? 'بدون مسمى',
-      company: jobObj?['companyName'] ?? json['companyName'] ?? json['company'] ?? 'غير معروف',
+      company:
+          jobObj?['companyName'] ??
+          json['companyName'] ??
+          json['company'] ??
+          'غير معروف',
       companyLogo: jobObj?['companyLogo'] ?? json['companyLogo'] ?? '',
-      date: json['appliedDate'] ?? json['appliedAt'] ?? json['createdAt'] ?? json['date'] ?? '',
+      date:
+          json['appliedDate'] ??
+          json['appliedAt'] ??
+          json['createdAt'] ??
+          json['date'] ??
+          '',
       statusName: statusNameRaw.toString(),
       status: appStatus,
     );
@@ -52,37 +62,53 @@ class ApplicationModel {
 extension ApplicationStatusExt on ApplicationStatus {
   String get label {
     switch (this) {
-      case ApplicationStatus.inReview: return 'قيد المراجعة';
-      case ApplicationStatus.accepted: return 'مقبول';
-      case ApplicationStatus.rejected: return 'مرفوض';
-      case ApplicationStatus.sent: return 'مُرسل';
+      case ApplicationStatus.inReview:
+        return 'قيد المراجعة';
+      case ApplicationStatus.accepted:
+        return 'مقبول';
+      case ApplicationStatus.rejected:
+        return 'مرفوض';
+      case ApplicationStatus.sent:
+        return 'مُرسل';
     }
   }
 
   int get colorHex {
     switch (this) {
-      case ApplicationStatus.inReview: return 0xFFB79C12; // Goldish
-      case ApplicationStatus.accepted: return 0xFF2E7D32; // Green
-      case ApplicationStatus.rejected: return 0xFFC62828; // Red
-      case ApplicationStatus.sent: return 0xFF1565C0; // Blue
+      case ApplicationStatus.inReview:
+        return 0xFFB79C12; // Goldish
+      case ApplicationStatus.accepted:
+        return 0xFF2E7D32; // Green
+      case ApplicationStatus.rejected:
+        return 0xFFC62828; // Red
+      case ApplicationStatus.sent:
+        return 0xFF1565C0; // Blue
     }
   }
 
   int get bgColorHex {
     switch (this) {
-      case ApplicationStatus.inReview: return 0xFFFFF9C4; // Light Yellow
-      case ApplicationStatus.accepted: return 0xFFE8F5E9; // Light Green
-      case ApplicationStatus.rejected: return 0xFFFFEBEE; // Light Red
-      case ApplicationStatus.sent: return 0xFFE3F2FD; // Light Blue
+      case ApplicationStatus.inReview:
+        return 0xFFFFF9C4; // Light Yellow
+      case ApplicationStatus.accepted:
+        return 0xFFE8F5E9; // Light Green
+      case ApplicationStatus.rejected:
+        return 0xFFFFEBEE; // Light Red
+      case ApplicationStatus.sent:
+        return 0xFFE3F2FD; // Light Blue
     }
   }
 
   int? get iconCodePoint {
     switch (this) {
-      case ApplicationStatus.inReview: return 0xe03a; // Icons.access_time
-      case ApplicationStatus.accepted: return 0xe156; // Icons.check
-      case ApplicationStatus.rejected: return 0xe14c; // Icons.close
-      case ApplicationStatus.sent: return null;
+      case ApplicationStatus.inReview:
+        return 0xe03a; // Icons.access_time
+      case ApplicationStatus.accepted:
+        return 0xe156; // Icons.check
+      case ApplicationStatus.rejected:
+        return 0xe14c; // Icons.close
+      case ApplicationStatus.sent:
+        return null;
     }
   }
 }

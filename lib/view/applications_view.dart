@@ -39,25 +39,50 @@ class _ApplicationsViewState extends State<ApplicationsView> {
     });
   }
 
-  void _handleWithdraw(BuildContext context, ApplicationsViewModel viewModel, String applicationId) async {
+  void _handleWithdraw(
+    BuildContext context,
+    ApplicationsViewModel viewModel,
+    String applicationId,
+  ) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('تأكيد سحب الطلب', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('هل أنت متأكد أنك تريد سحب هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.', textAlign: TextAlign.right),
+        title: const Text(
+          'تأكيد سحب الطلب',
+          textAlign: TextAlign.right,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'هل أنت متأكد أنك تريد سحب هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
+          textAlign: TextAlign.right,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('تراجع', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'تراجع',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text('نعم، سحب الطلب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'نعم، سحب الطلب',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -84,7 +109,11 @@ class _ApplicationsViewState extends State<ApplicationsView> {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'تم سحب الطلب بنجاح' : viewModel.errorMessage ?? 'فشل سحب الطلب'),
+          content: Text(
+            success
+                ? 'تم سحب الطلب بنجاح'
+                : viewModel.errorMessage ?? 'فشل سحب الطلب',
+          ),
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
@@ -115,9 +144,12 @@ class _ApplicationsViewState extends State<ApplicationsView> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey.shade300),
+                              border: Border.all(color: AppColors.border),
                             ),
-                            child: const Icon(Icons.tune, color: Colors.grey),
+                            child: const Icon(
+                              Icons.tune,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                           Text(
                             '${viewModel.applications.length} ${AppConstants.applicationsCount}',
@@ -156,13 +188,16 @@ class _ApplicationsViewState extends State<ApplicationsView> {
       );
     }
 
-    final apps = viewModel.isLoading ? _dummyApplications : viewModel.applications;
+    final apps = viewModel.isLoading
+        ? _dummyApplications
+        : viewModel.applications;
 
     if (apps.isEmpty && !viewModel.isLoading) {
       return const AnimatedEmptyState(
         icon: Icons.folder_open_rounded,
         title: 'لا توجد طلبات',
-        subtitle: 'لم تقم بتقديم أي طلبات توظيف حتى الآن.\nتصفح الوظائف المتاحة وابدأ مسيرتك المهنية!',
+        subtitle:
+            'لم تقم بتقديم أي طلبات توظيف حتى الآن.\nتصفح الوظائف المتاحة وابدأ مسيرتك المهنية!',
       );
     }
 
@@ -170,9 +205,15 @@ class _ApplicationsViewState extends State<ApplicationsView> {
       itemCount: apps.length,
       itemBuilder: (context, index) {
         return ApplicationCard(
-          application: apps[index],
-          onWithdraw: () => _handleWithdraw(context, viewModel, apps[index].id),
-        ).animate(key: ValueKey('app_\${viewModel.isLoading}_\${apps[index].id}')).fade(duration: 400.ms, delay: (index * 100).ms).slideX(begin: 0.1, duration: 400.ms);
+              application: apps[index],
+              onWithdraw: () =>
+                  _handleWithdraw(context, viewModel, apps[index].id),
+            )
+            .animate(
+              key: ValueKey('app_\${viewModel.isLoading}_\${apps[index].id}'),
+            )
+            .fade(duration: 400.ms, delay: (index * 100).ms)
+            .slideX(begin: 0.1, duration: 400.ms);
       },
     );
   }

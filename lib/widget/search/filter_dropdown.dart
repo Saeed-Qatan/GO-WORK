@@ -35,7 +35,7 @@ class FilterDropdown extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: AppColors.border),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -48,7 +48,10 @@ class FilterDropdown extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.textSecondary,
+              ),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,

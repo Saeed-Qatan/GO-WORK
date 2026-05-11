@@ -19,31 +19,43 @@ class SearchRepository {
       // Construct query parameters
       final Map<String, String> queryParams = {};
       if (query != null && query.isNotEmpty) queryParams['query'] = query;
-      if (category != null && category != 'جميع المجالات') queryParams['category'] = category;
-      if (location != null && location != 'الكل') queryParams['location'] = location;
+      if (category != null && category != 'جميع المجالات')
+        queryParams['category'] = category;
+      if (location != null && location != 'الكل')
+        queryParams['location'] = location;
       if (type != null && type != 'الكل') queryParams['type'] = type;
-      if (country != null && country != 'الكل') queryParams['country'] = country;
+      if (country != null && country != 'الكل')
+        queryParams['country'] = country;
 
       String queryString = '';
       if (queryParams.isNotEmpty) {
-        queryString = '?${queryParams.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
+        queryString =
+            '?${queryParams.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
       }
 
       // Use the searchJobs endpoint
-      final response = await _apiClient.get('${ApiConstants.searchJobs}$queryString');
-      
+      final response = await _apiClient.get(
+        '${ApiConstants.searchJobs}$queryString',
+      );
+
       if (response.containsKey('data')) {
         final data = response['data'] as Map<String, dynamic>;
         if (data.containsKey('jobs')) {
           final listMap = data['jobs'] as List<dynamic>? ?? [];
-          fetchedJobs = listMap.map((item) => JobModel.fromJson(item as Map<String, dynamic>)).toList();
+          fetchedJobs = listMap
+              .map((item) => JobModel.fromJson(item as Map<String, dynamic>))
+              .toList();
         } else if (data.containsKey('recommendations')) {
           final listMap = data['recommendations'] as List<dynamic>? ?? [];
-          fetchedJobs = listMap.map((item) => JobModel.fromJson(item as Map<String, dynamic>)).toList();
+          fetchedJobs = listMap
+              .map((item) => JobModel.fromJson(item as Map<String, dynamic>))
+              .toList();
         }
       } else if (response.containsKey('jobs')) {
         final listMap = response['jobs'] as List<dynamic>? ?? [];
-        fetchedJobs = listMap.map((item) => JobModel.fromJson(item as Map<String, dynamic>)).toList();
+        fetchedJobs = listMap
+            .map((item) => JobModel.fromJson(item as Map<String, dynamic>))
+            .toList();
       }
     } catch (e) {
       debugPrint('Failed to fetch jobs for search: $e');
@@ -67,7 +79,11 @@ class SearchRepository {
           country == null || country == 'الكل' || job.country == country;
       final matchesType = type == null || type == 'الكل' || job.type == type;
 
-      return matchesQuery && matchesCategory && matchesLocation && matchesCountry && matchesType;
+      return matchesQuery &&
+          matchesCategory &&
+          matchesLocation &&
+          matchesCountry &&
+          matchesType;
     }).toList();
   }
 }

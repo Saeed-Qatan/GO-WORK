@@ -6,13 +6,16 @@ class ApplicationsViewModel extends ChangeNotifier {
   final ApplicationsRepository _repository = ApplicationsRepository();
   List<ApplicationModel> _allApplications = [];
   List<ApplicationModel> _filteredApplications = [];
-  
+
   List<dynamic> _statuses = [];
   List<String> get filterTabs {
     if (_statuses.isEmpty) {
       return ['الكل', 'Sent', 'PendingReview', 'Accepted', 'Rejected'];
     }
-    return ['الكل', ..._statuses.map((s) => s['name']?.toString() ?? s.toString())];
+    return [
+      'الكل',
+      ..._statuses.map((s) => s['name']?.toString() ?? s.toString()),
+    ];
   }
 
   List<ApplicationModel> get applications => _filteredApplications;
@@ -61,29 +64,29 @@ class ApplicationsViewModel extends ChangeNotifier {
       _filteredApplications = _allApplications.where((app) {
         // Fallback for hardcoded status enums if api statuses are empty
         if (_statuses.isEmpty) {
-            ApplicationStatus targetStatus;
-            switch (_selectedFilterIndex) {
-              case 1:
-                targetStatus = ApplicationStatus.sent;
-                break;
-              case 2:
-                targetStatus = ApplicationStatus.inReview;
-                break;
-              case 3:
-                targetStatus = ApplicationStatus.accepted;
-                break;
-              case 4:
-                targetStatus = ApplicationStatus.rejected;
-                break;
-              default:
-                targetStatus = ApplicationStatus.sent;
-            }
-            return app.status == targetStatus;
+          ApplicationStatus targetStatus;
+          switch (_selectedFilterIndex) {
+            case 1:
+              targetStatus = ApplicationStatus.sent;
+              break;
+            case 2:
+              targetStatus = ApplicationStatus.inReview;
+              break;
+            case 3:
+              targetStatus = ApplicationStatus.accepted;
+              break;
+            case 4:
+              targetStatus = ApplicationStatus.rejected;
+              break;
+            default:
+              targetStatus = ApplicationStatus.sent;
+          }
+          return app.status == targetStatus;
         }
-        
+
         // Dynamic filtering by matching statusName
         return app.statusName.toLowerCase() == selectedTabName.toLowerCase() ||
-               app.statusName == selectedTabName;
+            app.statusName == selectedTabName;
       }).toList();
     }
   }
@@ -91,7 +94,7 @@ class ApplicationsViewModel extends ChangeNotifier {
   Future<bool> withdrawApplication(String applicationId) async {
     try {
       await _repository.withdrawApplication(applicationId);
-      
+
       // refresh applications
       await fetchApplications();
       return true;

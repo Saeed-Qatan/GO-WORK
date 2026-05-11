@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../viewmodel/notifications_view_model.dart';
 import '../theme/app_colors.dart';
 import '../widget/notifications/notification_card.dart';
+import '../widget/common/animated_empty_state.dart';
+import '../widget/common/animated_error_state.dart';
 
 class NotificationsView extends StatefulWidget {
   const NotificationsView({super.key});
@@ -106,74 +108,23 @@ class _NotificationsViewState extends State<NotificationsView> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.notifications_off_outlined,
-              size: 50,
-              color: AppColors.primary.withValues(alpha: 0.4),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'لا توجد إشعارات',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A2E),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'ستظهر هنا إشعاراتك عند وصولها',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
-          ),
-        ],
-      ),
+    return const AnimatedEmptyState(
+      icon: Icons.notifications_off_rounded,
+      title: 'لا توجد إشعارات',
+      subtitle: 'ستظهر هنا إشعاراتك عند وصولها.\nأنت الآن مطلع على كل شيء!',
     );
   }
 
-  Widget _buildErrorState(BuildContext context, NotificationsViewModel viewModel) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 60, color: Colors.red.shade300),
-            const SizedBox(height: 16),
-            Text(
-              viewModel.errorMessage ?? 'حدث خطأ غير متوقع',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, height: 1.5),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => viewModel.fetchNotifications(),
-              icon: const Icon(Icons.refresh),
-              label: const Text('إعادة المحاولة'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
+  Widget _buildErrorState(
+    BuildContext context,
+    NotificationsViewModel viewModel,
+  ) {
+    return AnimatedErrorState(
+      title: 'حدث خطأ',
+      message:
+          viewModel.errorMessage ??
+          'لم نتمكن من جلب الإشعارات. يرجى المحاولة لاحقاً.',
+      onRetry: () => viewModel.fetchNotifications(),
     );
   }
 }

@@ -53,7 +53,9 @@ class _LoginViewState extends State<LoginView> {
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).shadowColor.withValues(alpha: 0.5),
+                            color: Theme.of(
+                              context,
+                            ).shadowColor.withValues(alpha: 0.5),
                             blurRadius: 5,
                             spreadRadius: 1,
                             offset: const Offset(0, 7),
@@ -119,9 +121,7 @@ class _LoginViewState extends State<LoginView> {
                               value: viewModel.rememberMe,
                               activeColor: cs.primary,
                               onChanged: viewModel.toggleRememberMe,
-                              side: BorderSide(
-                                color: cs.onSurfaceVariant,
-                              ),
+                              side: BorderSide(color: cs.onSurfaceVariant),
                             ),
                             Text(
                               AppConstants.rememberMe,
@@ -150,8 +150,9 @@ class _LoginViewState extends State<LoginView> {
                         padding: const EdgeInsets.only(bottom: 16.0),
                         child: Text(
                           viewModel.errorMessage!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: cs.error),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: cs.error),
                         ),
                       ),
                     CustomButton(
@@ -174,7 +175,9 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(height: 32),
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                        Expanded(
+                          child: Divider(color: Theme.of(context).dividerColor),
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
@@ -182,7 +185,9 @@ class _LoginViewState extends State<LoginView> {
                             style: TextStyle(color: cs.onSurfaceVariant),
                           ),
                         ),
-                        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+                        Expanded(
+                          child: Divider(color: Theme.of(context).dividerColor),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 32),

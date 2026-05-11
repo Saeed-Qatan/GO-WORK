@@ -38,7 +38,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                 final isFormComplete =
                     (viewModel.cvFileName?.isNotEmpty ?? false) &&
                     viewModel.skills.isNotEmpty &&
-                    (viewModel.categories.isNotEmpty ? viewModel.selectedCategoryId != null : true);
+                    (viewModel.categories.isNotEmpty
+                        ? viewModel.selectedCategoryId != null
+                        : true);
 
                 final availableSuggestedSkills = viewModel.suggestedSkills
                     .where((skill) => !viewModel.skills.contains(skill))
@@ -52,7 +54,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color: AppColors.textSecondary.withValues(alpha: 0.1),
                         spreadRadius: 5,
                         blurRadius: 7,
                         offset: const Offset(0, 3),
@@ -71,7 +73,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withValues(alpha: 0.5),
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.5,
+                              ),
                               blurRadius: 5,
                               spreadRadius: 1,
                               offset: const Offset(0, 7),
@@ -119,7 +123,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           width: double.infinity,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: AppColors.inputBorder,
+                              color: AppColors.border,
                               width: 2,
                             ),
                             borderRadius: BorderRadius.circular(15),
@@ -131,7 +135,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                               const Icon(
                                 Icons.upload_file_outlined,
                                 size: 40,
-                                color: Colors.grey,
+                                color: AppColors.textSecondary,
                               ),
                               const SizedBox(height: 10),
                               if (viewModel.cvFileName != null &&
@@ -162,7 +166,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                               const Text(
                                 "(الحد الأقصى 10MB - PDF, DOC, DOCX)",
                                 style: TextStyle(
-                                  color: Colors.grey,
+                                  color: AppColors.textSecondary,
                                   fontSize: 12,
                                 ),
                               ),
@@ -240,7 +244,10 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           "مهارات مقترحة:",
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       Align(
@@ -255,7 +262,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   label: Text(skill),
                                   backgroundColor: AppColors.inputBackground,
                                   labelStyle: TextStyle(
-                                    color: Colors.grey.shade800,
+                                    color: AppColors.textPrimary,
                                   ),
                                   side: BorderSide.none,
                                   onPressed: () =>
@@ -287,16 +294,23 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           label: 'اختر مجالك المهني',
                           hint: 'لم يتم الاختيار',
                           value: viewModel.selectedCategoryId != null
-                              ? viewModel.categories.firstWhere(
-                                  (cat) => cat['id'].toString() == viewModel.selectedCategoryId,
-                                  orElse: () => <String, dynamic>{},
-                                )['name']?.toString()
+                              ? viewModel.categories
+                                    .firstWhere(
+                                      (cat) =>
+                                          cat['id'].toString() ==
+                                          viewModel.selectedCategoryId,
+                                      orElse: () => <String, dynamic>{},
+                                    )['name']
+                                    ?.toString()
                               : null,
-                          items: viewModel.categories.map((cat) => cat['name'].toString()).toList(),
+                          items: viewModel.categories
+                              .map((cat) => cat['name'].toString())
+                              .toList(),
                           onChanged: (String? newFieldValue) {
                             if (newFieldValue != null) {
                               final chosenCat = viewModel.categories.firstWhere(
-                                (cat) => cat['name'].toString() == newFieldValue,
+                                (cat) =>
+                                    cat['name'].toString() == newFieldValue,
                               );
                               viewModel.setCategory(chosenCat['id'].toString());
                             } else {
@@ -317,7 +331,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   text: 'إنهاء التسجيل',
                                   color: isFormComplete
                                       ? Theme.of(context).primaryColor
-                                      : Colors.grey.shade400,
+                                      : AppColors.textHint,
                                   textColor: Colors.white,
                                   onPressed: isFormComplete
                                       ? () => cvViewModel.finishRegistration(
@@ -338,7 +352,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
+                              color: AppColors.border,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -347,7 +361,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
+                              color: AppColors.border,
                               shape: BoxShape.circle,
                             ),
                           ),

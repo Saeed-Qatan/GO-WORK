@@ -42,7 +42,10 @@ class NotificationBadge extends StatelessWidget {
                       color: Color(0xFFFF4444),
                       shape: BoxShape.circle,
                     ),
-                    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
                     child: Text(
                       count > 99 ? '99+' : '$count',
                       style: const TextStyle(
@@ -96,7 +99,10 @@ class NotificationBellDark extends StatelessWidget {
                       color: Color(0xFFFF4444),
                       shape: BoxShape.circle,
                     ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
                     child: Text(
                       count > 99 ? '99+' : '$count',
                       style: const TextStyle(

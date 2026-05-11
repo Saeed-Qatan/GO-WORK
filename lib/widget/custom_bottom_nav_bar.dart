@@ -108,8 +108,12 @@ class CustomBottomNavigationBar extends StatelessWidget {
                   // Uses AnimatedPositionedDirectional to support RTL languages (Arabic).
                   AnimatedPositionedDirectional(
                     duration: const Duration(milliseconds: 400),
-                    curve: Curves.fastLinearToSlowEaseIn, // Apple-like fluid snap
-                    start: (itemWidth * currentIndex) + (itemWidth / 2) - 20, // Center 40px circle
+                    curve:
+                        Curves.fastLinearToSlowEaseIn, // Apple-like fluid snap
+                    start:
+                        (itemWidth * currentIndex) +
+                        (itemWidth / 2) -
+                        20, // Center 40px circle
                     top: 6, // Centered perfectly behind the icon (not the text)
                     width: 40,
                     height: 40,
@@ -197,17 +201,21 @@ class _NavTabItemState extends State<_NavTabItem>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    
+
     // High-quality fluid spring pop using TweenSequence
     _scaleAnim = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.25)
-            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.25,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
         weight: 30,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.25, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
+        tween: Tween<double>(
+          begin: 1.25,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.elasticOut)),
         weight: 70,
       ),
     ]).animate(_controller);
@@ -251,19 +259,14 @@ class _NavTabItemState extends State<_NavTabItem>
             AnimatedBuilder(
               animation: _scaleAnim,
               builder: (context, child) {
-                return Transform.scale(
-                  scale: _scaleAnim.value,
-                  child: child,
-                );
+                return Transform.scale(scale: _scaleAnim.value, child: child);
               },
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
                 transitionBuilder: (child, anim) =>
                     FadeTransition(opacity: anim, child: child),
                 child: Icon(
-                  widget.isSelected
-                      ? widget.item.activeIcon
-                      : widget.item.icon,
+                  widget.isSelected ? widget.item.activeIcon : widget.item.icon,
                   key: ValueKey<bool>(widget.isSelected),
                   size: 22,
                   color: iconColor,

@@ -98,14 +98,20 @@ class RegisterCVViewModel extends ChangeNotifier {
     isSkillsLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.get(ApiConstants.jobSkills, skipAuth: true);
+      final response = await _apiClient.get(
+        ApiConstants.jobSkills,
+        skipAuth: true,
+      );
       List<dynamic>? skillsList;
       if (response['data'] is List) {
         skillsList = response['data'];
       }
-      
+
       if (skillsList != null) {
-        suggestedSkills = skillsList.map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString()).take(15).toList();
+        suggestedSkills = skillsList
+            .map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString())
+            .take(15)
+            .toList();
       }
     } catch (e) {
       debugPrint('Error fetching suggested skills: $e');
@@ -149,7 +155,10 @@ class RegisterCVViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> finishRegistration(BuildContext context, RegisterDataModel base) async {
+  Future<void> finishRegistration(
+    BuildContext context,
+    RegisterDataModel base,
+  ) async {
     isLoading = true;
     notifyListeners();
 

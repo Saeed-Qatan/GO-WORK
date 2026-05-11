@@ -29,8 +29,8 @@ class NotificationsViewModel extends ChangeNotifier {
   NotificationsViewModel({
     NotificationsRepository? repository,
     PushNotificationService? pushService,
-  })  : _repository = repository ?? NotificationsRepository(),
-        _pushService = pushService ?? PushNotificationService() {
+  }) : _repository = repository ?? NotificationsRepository(),
+       _pushService = pushService ?? PushNotificationService() {
     _subscribeToLiveNotifications();
   }
 
@@ -102,13 +102,17 @@ class NotificationsViewModel extends ChangeNotifier {
   /// Subscribes to the live push notification stream from [PushNotificationService].
   /// When a new notification arrives, it is prepended to the list in real-time.
   void _subscribeToLiveNotifications() {
-    _pushSubscription = _pushService.onNotificationReceived.listen((notification) {
+    _pushSubscription = _pushService.onNotificationReceived.listen((
+      notification,
+    ) {
       _notifications = [notification, ..._notifications];
       if (_viewState == NotificationsViewState.empty) {
         _viewState = NotificationsViewState.loaded;
       }
       notifyListeners();
-      debugPrint('=== VM: New live notification received: ${notification.title} ===');
+      debugPrint(
+        '=== VM: New live notification received: ${notification.title} ===',
+      );
     });
   }
 

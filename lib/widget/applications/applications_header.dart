@@ -93,17 +93,19 @@ class _FilterChip extends StatelessWidget {
                     color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : [],
         ),
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: isSelected ? AppColors.primary : Colors.white.withValues(alpha: 0.7),
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                letterSpacing: 0.3,
-              ),
+            color: isSelected
+                ? AppColors.primary
+                : Colors.white.withValues(alpha: 0.7),
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
         ),
       ),
     );

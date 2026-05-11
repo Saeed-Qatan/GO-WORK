@@ -34,7 +34,13 @@ class SettingsTile extends StatelessWidget {
           color: AppColors.textPrimary,
         ),
       ),
-      trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+      trailing:
+          trailing ??
+          const Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: AppColors.textSecondary,
+          ),
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
@@ -49,7 +55,7 @@ class SettingsDivider extends StatelessWidget {
     return Divider(
       height: 1,
       thickness: 1,
-      color: Colors.grey.withValues(alpha: 0.1),
+      color: AppColors.textSecondary.withValues(alpha: 0.1),
       indent: 60,
     );
   }
