@@ -7,6 +7,7 @@ class ProfileModel {
   final String email;
   final String phone;
   final String cvUrl;
+  final String categoryId;
   final List<String> skills;
 
   ProfileModel({
@@ -18,6 +19,7 @@ class ProfileModel {
     required this.email,
     required this.phone,
     required this.cvUrl,
+    required this.categoryId,
     required this.skills,
   });
 
@@ -46,6 +48,7 @@ class ProfileModel {
           json['PhoneNumber'] ??
           '',
       cvUrl: json['resumeUrl'] ?? json['cvUrl'] ?? json['CvUrl'] ?? '',
+      categoryId: (json['categoryId'] ?? json['CategoryId'] ?? '').toString(),
       skills: List<String>.from(json['skills'] ?? json['Skills'] ?? []),
     );
   }
@@ -58,6 +61,7 @@ class ProfileModel {
       'JobTitle': jobTitle,
       'Email': email,
       'PhoneNumber': phone,
+      'CategoryId': categoryId,
       'Skills': skills,
     };
   }
