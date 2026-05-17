@@ -20,7 +20,8 @@ import 'viewmodel/settings_view_model.dart';
 import 'viewmodel/notifications_view_model.dart';
 
 /// Singleton service instance — shared across the app lifetime.
-final PushNotificationService pushNotificationService = PushNotificationService();
+final PushNotificationService pushNotificationService =
+    PushNotificationService();
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => LoginViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => LoginViewModel(
+            pushNotificationService: pushNotificationService,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(create: (_) => InterviewsViewModel()),
@@ -50,9 +55,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => JobDetailsViewModel()),
         ChangeNotifierProvider(create: (_) => SettingsViewModel()),
         ChangeNotifierProvider(
-          create: (_) => NotificationsViewModel(
-            pushService: pushNotificationService,
-          ),
+          create: (_) =>
+              NotificationsViewModel(pushService: pushNotificationService),
         ),
       ],
       child: MaterialApp.router(
@@ -60,10 +64,17 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         scaffoldMessengerKey: SnackbarService.messengerKey,
-        
+
         // GoRouter Configuration
         routerConfig: appRouter,
-        
+
+        // Global Premium Scroll Physics
+        scrollBehavior: const MaterialScrollBehavior().copyWith(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+        ),
+
         // Localization
         locale: const Locale('ar', 'AE'), // Default to Arabic
         supportedLocales: const [Locale('en', 'US'), Locale('ar', 'AE')],

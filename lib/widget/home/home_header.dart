@@ -28,7 +28,9 @@ class HomeHeader extends StatelessWidget {
                     AppColors.primary, // Deep Blue
                   ],
                 ),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(10),
+                ),
               ),
             ),
             // Decorative Circles (to match the "rich" look)
@@ -90,11 +92,15 @@ class HomeHeader extends StatelessWidget {
                             child: CircleAvatar(
                               radius: 24,
                               backgroundColor: Colors.white,
-                              backgroundImage: viewModel.userProfileImage.isNotEmpty
+                              backgroundImage:
+                                  viewModel.userProfileImage.isNotEmpty
                                   ? NetworkImage(viewModel.userProfileImage)
                                   : null,
                               child: viewModel.userProfileImage.isEmpty
-                                  ? const Icon(Icons.person, color: AppColors.primary)
+                                  ? const Icon(
+                                      Icons.person,
+                                      color: AppColors.primary,
+                                    )
                                   : null,
                             ),
                           ),

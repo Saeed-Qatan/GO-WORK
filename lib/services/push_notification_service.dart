@@ -1,27 +1,94 @@
 import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
 import '../model/notification_model.dart';
 import '../repository/notifications_repository.dart';
 
-/// Top-level handler required by Firebase for background messages.
-/// Must be a top-level function (not a class method).
+const String _notificationChannelId = 'gowork_notifications_channel';
+const String _notificationChannelName = 'GoWork Notifications';
+const String _notificationChannelDescription =
+    'Notifications from GoWork application';
+
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Background messages are handled silently here.
-  // The system tray notification is shown automatically by Firebase on Android.
-  debugPrint('=== BACKGROUND NOTIFICATION: ${message.notification?.title} ===');
+  await Firebase.initializeApp();
+  debugPrint(
+    '=== BACKGROUND NOTIFICATION: ${message.notification?.title ?? message.data['title']} ===',
+  );
+
+  if (message.notification == null) {
+    await _showBackgroundLocalNotification(message);
+  }
 }
 
-/// Service responsible for all push notification interactions.
-/// Isolates platform SDKs (Firebase, FlutterLocalNotifications) from the rest of the app.
+Future<void> _showBackgroundLocalNotification(RemoteMessage message) async {
+  final title =
+      message.data['title']?.toString() ??
+      message.data['notification_title']?.toString();
+  final body =
+      message.data['body']?.toString() ??
+      message.data['message']?.toString() ??
+      message.data['notification_body']?.toString();
+
+  if (title == null && body == null) return;
+
+  final localNotifications = FlutterLocalNotificationsPlugin();
+  const initSettings = InitializationSettings(
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    iOS: DarwinInitializationSettings(),
+  );
+  await localNotifications.initialize(initSettings);
+
+  const channel = AndroidNotificationChannel(
+    _notificationChannelId,
+    _notificationChannelName,
+    description: _notificationChannelDescription,
+    importance: Importance.max,
+    playSound: true,
+  );
+  final androidNotifications = localNotifications
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+  await androidNotifications?.createNotificationChannel(channel);
+
+  const details = NotificationDetails(
+    android: AndroidNotificationDetails(
+      _notificationChannelId,
+      _notificationChannelName,
+      channelDescription: _notificationChannelDescription,
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: true,
+      icon: '@mipmap/ic_launcher',
+    ),
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    ),
+  );
+
+  await localNotifications.show(
+    (message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString())
+        .hashCode,
+    title ?? 'New notification',
+    body ?? '',
+    details,
+    payload: message.messageId,
+  );
+}
+
 class PushNotificationService {
   late final FirebaseMessaging _firebaseMessaging;
   final FlutterLocalNotificationsPlugin _localNotifications;
   final NotificationsRepository _repository;
+  StreamSubscription<String>? _tokenRefreshSubscription;
 
-  /// Stream that broadcasts newly received [NotificationModel] to listeners (e.g., ViewModel).
   final StreamController<NotificationModel> _notificationStreamController =
       StreamController<NotificationModel>.broadcast();
 
@@ -31,30 +98,43 @@ class PushNotificationService {
   PushNotificationService({
     FlutterLocalNotificationsPlugin? localNotifications,
     NotificationsRepository? repository,
-  })  : _localNotifications = localNotifications ?? FlutterLocalNotificationsPlugin(),
-        _repository = repository ?? NotificationsRepository();
+  }) : _localNotifications =
+           localNotifications ?? FlutterLocalNotificationsPlugin(),
+       _repository = repository ?? NotificationsRepository();
 
-  /// Initializes the service: requests permissions, sets up local notifications,
-  /// registers FCM token, and starts listening to message streams.
   Future<void> initialize() async {
     _firebaseMessaging = FirebaseMessaging.instance;
     await _setupLocalNotifications();
     await _requestPermissions();
-    await _registerToken();
+    await registerCurrentToken();
     _listenToForegroundMessages();
     _listenToNotificationTaps();
   }
 
-  /// Disposes resources when the service is no longer needed.
+  Future<void> registerCurrentToken() async {
+    try {
+      final token = await _firebaseMessaging.getToken();
+      if (token != null) {
+        debugPrint('=== FCM TOKEN: $token ===');
+        await _repository.registerFcmToken(token);
+      }
+
+      _tokenRefreshSubscription ??= _firebaseMessaging.onTokenRefresh.listen((
+        newToken,
+      ) {
+        debugPrint('=== FCM TOKEN REFRESHED: $newToken ===');
+        _repository.registerFcmToken(newToken);
+      });
+    } catch (e) {
+      debugPrint('=== FCM TOKEN ERROR: $e ===');
+    }
+  }
+
   void dispose() {
+    _tokenRefreshSubscription?.cancel();
     _notificationStreamController.close();
   }
 
-  // ────────────────────────────────────────────────────
-  // Topic Management (Categories)
-  // ────────────────────────────────────────────────────
-
-  /// Subscribes the device to a specific FCM topic (e.g., category_102)
   Future<void> subscribeToTopic(String topic) async {
     try {
       await _firebaseMessaging.subscribeToTopic(topic);
@@ -64,7 +144,6 @@ class PushNotificationService {
     }
   }
 
-  /// Unsubscribes the device from a specific FCM topic
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _firebaseMessaging.unsubscribeFromTopic(topic);
@@ -74,12 +153,10 @@ class PushNotificationService {
     }
   }
 
-  // ────────────────────────────────────────────────────
-  // Private Methods
-  // ────────────────────────────────────────────────────
-
   Future<void> _setupLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -98,17 +175,21 @@ class PushNotificationService {
       },
     );
 
-    // Create Android notification channel for heads-up display
     const channel = AndroidNotificationChannel(
-      'gowork_notifications_channel',
-      'GoWork Notifications',
-      description: 'Notifications from GoWork application',
+      _notificationChannelId,
+      _notificationChannelName,
+      description: _notificationChannelDescription,
       importance: Importance.max,
       playSound: true,
     );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+
+    final androidNotifications = _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    await androidNotifications?.createNotificationChannel(channel);
+    await androidNotifications?.requestNotificationsPermission();
   }
 
   Future<void> _requestPermissions() async {
@@ -117,59 +198,41 @@ class PushNotificationService {
       badge: true,
       sound: true,
     );
+    await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     debugPrint('=== FCM PERMISSION: ${settings.authorizationStatus} ===');
-  }
-
-  Future<void> _registerToken() async {
-    try {
-      final token = await _firebaseMessaging.getToken();
-      if (token != null) {
-        await _repository.registerFcmToken(token);
-      }
-      // Listen for token refresh (e.g. after app reinstall)
-      _firebaseMessaging.onTokenRefresh.listen((newToken) {
-        _repository.registerFcmToken(newToken);
-      });
-    } catch (e) {
-      debugPrint('=== FCM TOKEN ERROR: $e ===');
-    }
   }
 
   void _listenToForegroundMessages() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      final notification = message.notification;
-      if (notification == null) return;
+      final model = _modelFromMessage(message);
+      if (model == null) {
+        debugPrint('=== FCM: MESSAGE WITHOUT TITLE/BODY: ${message.data} ===');
+        return;
+      }
 
-      debugPrint('=== FOREGROUND NOTIFICATION: ${notification.title} ===');
-
-      final model = NotificationModel.fromFcm(
-        id: message.messageId,
-        title: notification.title ?? 'إشعار جديد',
-        body: notification.body ?? '',
-        imageUrl: notification.android?.imageUrl ?? notification.apple?.imageUrl,
-      );
-
-      // Display local notification banner while app is in foreground
+      debugPrint('=== FOREGROUND NOTIFICATION: ${model.title} ===');
       _showLocalNotification(model);
-
-      // Broadcast to ViewModel stream
       _notificationStreamController.add(model);
     });
   }
 
   void _listenToNotificationTaps() {
-    // When user taps a notification while app is in background (but not terminated)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('=== NOTIFICATION TAPPED FROM BACKGROUND: ${message.messageId} ===');
-      // Navigation on tap can be handled via the ViewModel or a navigation service
+      debugPrint(
+        '=== NOTIFICATION TAPPED FROM BACKGROUND: ${message.messageId} ===',
+      );
     });
   }
 
   Future<void> _showLocalNotification(NotificationModel model) async {
     const androidDetails = AndroidNotificationDetails(
-      'gowork_notifications_channel',
-      'GoWork Notifications',
-      channelDescription: 'Notifications from GoWork application',
+      _notificationChannelId,
+      _notificationChannelName,
+      channelDescription: _notificationChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       showWhen: true,
@@ -180,7 +243,10 @@ class PushNotificationService {
       presentBadge: true,
       presentSound: true,
     );
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
 
     await _localNotifications.show(
       model.id.hashCode,
@@ -188,6 +254,37 @@ class PushNotificationService {
       model.body,
       details,
       payload: model.id,
+    );
+  }
+
+  NotificationModel? _modelFromMessage(RemoteMessage message) {
+    final notification = message.notification;
+    final data = message.data;
+
+    final title =
+        notification?.title ??
+        data['title']?.toString() ??
+        data['notification_title']?.toString();
+    final body =
+        notification?.body ??
+        data['body']?.toString() ??
+        data['message']?.toString() ??
+        data['notification_body']?.toString();
+
+    if (title == null && body == null) return null;
+
+    return NotificationModel.fromFcm(
+      id:
+          message.messageId ??
+          data['id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title ?? 'New notification',
+      body: body ?? '',
+      imageUrl:
+          notification?.android?.imageUrl ??
+          notification?.apple?.imageUrl ??
+          data['imageUrl']?.toString() ??
+          data['image']?.toString(),
     );
   }
 }

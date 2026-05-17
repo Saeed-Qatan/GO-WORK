@@ -33,7 +33,7 @@ class EmailVerificationPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color: AppColors.textSecondary.withValues(alpha: 0.1),
                         spreadRadius: 5,
                         blurRadius: 7,
                         offset: const Offset(0, 3),
@@ -52,7 +52,9 @@ class EmailVerificationPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withValues(alpha: 0.5),
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.5,
+                              ),
                               blurRadius: 5,
                               spreadRadius: 1,
                               offset: const Offset(0, 7),
@@ -78,9 +80,9 @@ class EmailVerificationPage extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         "تم إرسال رمز التحقق إلى بريدك الإلكتروني\n${viewModel.email ?? ''}",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 30),
@@ -107,7 +109,7 @@ class EmailVerificationPage extends StatelessWidget {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                     borderSide: BorderSide(
-                                      color: Colors.grey.shade300,
+                                      color: AppColors.border,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -118,7 +120,7 @@ class EmailVerificationPage extends StatelessWidget {
                                     ),
                                   ),
                                   filled: true,
-                                  fillColor: Colors.grey.shade50,
+                                  fillColor: AppColors.inputBackground,
                                   contentPadding: EdgeInsets.zero,
                                 ),
                                 onChanged: (value) =>
@@ -143,7 +145,7 @@ class EmailVerificationPage extends StatelessWidget {
                         children: [
                           Text(
                             "لم يصلك الرمز؟",
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: AppColors.textSecondary),
                           ),
                           TextButton(
                             onPressed: viewModel.countdown > 0
@@ -155,7 +157,7 @@ class EmailVerificationPage extends StatelessWidget {
                                   : "إعادة إرسال",
                               style: TextStyle(
                                 color: viewModel.countdown > 0
-                                    ? Colors.grey
+                                    ? AppColors.textSecondary
                                     : AppColors.primary,
                                 fontWeight: FontWeight.bold,
                               ),

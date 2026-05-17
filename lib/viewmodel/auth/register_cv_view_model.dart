@@ -99,14 +99,20 @@ class RegisterCVViewModel extends ChangeNotifier {
     isSkillsLoading = true;
     notifyListeners();
     try {
-      final response = await _apiClient.get(ApiConstants.jobSkills, skipAuth: true);
+      final response = await _apiClient.get(
+        ApiConstants.jobSkills,
+        skipAuth: true,
+      );
       List<dynamic>? skillsList;
       if (response['data'] is List) {
         skillsList = response['data'];
       }
-      
+
       if (skillsList != null) {
-        suggestedSkills = skillsList.map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString()).take(15).toList();
+        suggestedSkills = skillsList
+            .map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString())
+            .take(15)
+            .toList();
       }
     } catch (e) {
       debugPrint('Error fetching suggested skills: $e');
@@ -150,7 +156,10 @@ class RegisterCVViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> finishRegistration(BuildContext context, RegisterDataModel base) async {
+  Future<void> finishRegistration(
+    BuildContext context,
+    RegisterDataModel base,
+  ) async {
     isLoading = true;
     notifyListeners();
 
@@ -168,7 +177,9 @@ class RegisterCVViewModel extends ChangeNotifier {
       // --- اشترك في موضوع (Topic) القسم الخاص بالمستخدم ---
       try {
         final chosenCategoryId = data.categoryId ?? '101';
-        await pushNotificationService.subscribeToTopic('category_$chosenCategoryId');
+        await pushNotificationService.subscribeToTopic(
+          'category_$chosenCategoryId',
+        );
       } catch (e) {
         debugPrint('Topic subscription failed: $e');
       }

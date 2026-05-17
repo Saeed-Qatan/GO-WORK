@@ -53,3 +53,46 @@ User profile and settings.
 ## Verification
 - **Build**: Validated that the project compiles and runs without errors.
 - **Static Analysis**: Ran `flutter analyze` and achieved **0 issues**.
+
+---
+
+## UI/UX Animation Strategy — Implementation Log
+
+> Packages: `flutter_animate`, `animations`, `skeletonizer`
+
+### Phase 1 ✅ — Foundations (Skeleton & Entrance)
+
+| Screen / Widget | What was implemented |
+|:--|:--|
+| `SplashView` | Logo: `fade` + `scale` + `shimmer` using `flutter_animate`. Loading indicator: `fade` + `slideY`. |
+| `HomeView` | Replaced `CircularProgressIndicator` with `Skeletonizer`. Staggered `fade` + `slideY` on stat cards and job cards. |
+| `ApplicationsView` | `Skeletonizer` for list loading. `slideX` + `fade` stagger per card. Animated empty-state with `scale` + `fade`. |
+| `InterviewsView` | `Skeletonizer` + `slideX` + `fade` stagger (completed in Phase 3). |
+
+### Phase 2 ✅ — Transitions & Routing
+
+| Navigation | Implementation |
+|:--|:--|
+| **Job Details** | `SharedAxisTransition` (Scaled) via `CustomTransitionPage` in `app_router.dart`. |
+| **Main Tabs** | `FadeThroughTransition` via `PageTransitionSwitcher` in `MainView`. |
+
+### Phase 3 ✅ — Micro-interactions
+
+| Component | Implementation |
+|:--|:--|
+| `PressableButton` (new widget) | Reusable `GestureDetector` + `AnimatedScale` (0.95 press) + configurable `HapticFeedback`. |
+| **Apply button** — `JobDetailsView` | Wrapped with `PressableButton` (medium haptic + scale-down on press). |
+| **Bookmark button** — `JobDetailsView` | Stateful toggle (`_isSaved`): `AnimatedContainer` border/color + elastic bounce (`Curves.elasticOut`) on icon swap via `flutter_animate`. |
+| **Apply button** — `JobCard` | Wrapped with `PressableButton` (light haptic + scale-down). |
+| **Bottom Nav Bar** | `HapticFeedback.selectionClick()` on every tab tap. |
+| **Bottom Nav Bar design** | Redesigned to **Premium Floating Glassmorphism**: frosted-glass pill, `AnimatedPositioned` gradient indicator that slides between tabs, elastic spring icon pop on selection, brand-colored glow shadow. |
+
+### Phase 4 ✅ — Empty & Success States
+
+| Component | Implementation |
+|:--|:--|
+| `AnimatedEmptyState` | Reusable procedural animation widget replacing static "no data" text. Features a bouncing/floating icon with an expanding glow, staggered sliding text, and an optional action button. Applied to `ApplicationsView` and `InterviewsView`. |
+| `SuccessBottomSheet` | A celebratory bottom sheet replacing standard Toasts. Features an elastic scaling checkmark, shimmering light effects, staggered text entrance, and heavy/medium sequential haptic feedback. Integrated into `JobDetailsViewModel.applyToJob()`. |
+
+---
+**UI/UX Modernization Plan Complete!** 🎉

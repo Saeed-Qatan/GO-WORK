@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../model/home_model.dart';
 import '../theme/app_colors.dart';
 import '../viewmodel/job_details_view_model.dart';
+import '../widget/common/pressable_button.dart';
 import 'dart:ui';
 
 class JobDetailsView extends StatefulWidget {
@@ -15,6 +18,8 @@ class JobDetailsView extends StatefulWidget {
 }
 
 class _JobDetailsViewState extends State<JobDetailsView> {
+  /// Local UI state for the bookmark/save toggle.
+  bool _isSaved = false;
   @override
   void initState() {
     super.initState();
@@ -38,7 +43,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
     const Color onSurface = AppColors.textPrimary;
     const Color onSurfaceVariant = AppColors.textSecondary;
     final Color secondary = AppColors.primary.withValues(alpha: 0.8);
-    const Color outlineVariant = AppColors.inputBorder;
+    const Color outlineVariant = AppColors.border;
 
     return Scaffold(
       backgroundColor: surface,
@@ -447,59 +452,94 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                         child: Row(
                           children: [
                             Expanded(
-                              child: ElevatedButton(
-                                onPressed: (job.canApply == true && !isLoading)
-                                    ? () =>
-                                          viewModel.applyToJob(context, job.id)
-                                    : null,
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 20,
-                                  ),
-                                  backgroundColor: AppColors.primary,
-                                  disabledBackgroundColor: AppColors.primary
-                                      .withValues(alpha: 0.5),
-                                  disabledForegroundColor: Colors.white
-                                      .withValues(alpha: 0.8),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(32),
-                                  ),
-                                  elevation: (job.canApply == true) ? 10 : 0,
-                                  shadowColor: AppColors.primary.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'قدم الآن',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                      ),
+                              // PressableButton (Listener-based) adds scale + haptic
+                              // without blocking ElevatedButton's own gesture handling.
+                              child: PressableButton(
+                                hapticType: HapticFeedbackType.medium,
+                                child: ElevatedButton(
+                                  onPressed:
+                                      (job.canApply == true && !isLoading)
+                                      ? () => viewModel.applyToJob(
+                                          context,
+                                          job.id,
+                                        )
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
                                     ),
-                                    const SizedBox(width: 12),
-                                    const Icon(Icons.send, size: 20),
-                                  ],
+                                    backgroundColor: AppColors.primary,
+                                    disabledBackgroundColor: AppColors.primary
+                                        .withValues(alpha: 0.5),
+                                    disabledForegroundColor: Colors.white
+                                        .withValues(alpha: 0.8),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(32),
+                                    ),
+                                    elevation: (job.canApply == true) ? 10 : 0,
+                                    shadowColor: AppColors.primary.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        'قدم الآن',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Icon(Icons.send, size: 20),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 16),
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: outlineVariant.withValues(alpha: 0.2),
-                                  width: 2,
+                            // Animated bookmark button with bounce + haptic + toggle
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                setState(() => _isSaved = !_isSaved);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: _isSaved
+                                      ? AppColors.primary.withValues(alpha: 0.1)
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: _isSaved
+                                        ? AppColors.primary.withValues(
+                                            alpha: 0.4,
+                                          )
+                                        : outlineVariant.withValues(alpha: 0.2),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(32),
                                 ),
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                              child: IconButton(
-                                onPressed: () {},
-                                icon: const Icon(Icons.bookmark_outline),
-                                color: onSurfaceVariant,
+                                child: Center(
+                                  child:
+                                      Icon(
+                                        _isSaved
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_outline,
+                                        key: ValueKey(_isSaved),
+                                        color: _isSaved
+                                            ? AppColors.primary
+                                            : onSurfaceVariant,
+                                      ).animate().scale(
+                                        begin: const Offset(0.6, 0.6),
+                                        end: const Offset(1.0, 1.0),
+                                        duration: 350.ms,
+                                        curve: Curves.elasticOut,
+                                      ),
+                                ),
                               ),
                             ),
                           ],

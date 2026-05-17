@@ -24,25 +24,36 @@ class ApplicationModel {
   });
 
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
-    // Determine status
-    final statusStrRaw = json['applicationStatus'] ?? json['status'] ?? json['statusName'];
-    final statusStr = statusStrRaw?.toString() ?? '';
-    
-    ApplicationStatus appStatus = StatusTranslator.getEnum(statusStr);
-    
-    // Handle nested job object if present
+    final statusStrRaw =
+        json['applicationStatus'] ?? json['status'] ?? json['statusName'];
+    final appStatus = StatusTranslator.getEnum(statusStrRaw?.toString());
     final jobObj = json['job'] as Map<String, dynamic>?;
 
     return ApplicationModel(
       id: json['applicationId']?.toString() ?? json['id']?.toString() ?? '',
       jobId: jobObj?['id']?.toString() ?? json['jobId']?.toString() ?? '',
-      role: jobObj?['title'] ?? json['jobTitle'] ?? json['role'] ?? 'بدون مسمى',
-      company: jobObj?['companyName'] ?? json['companyName'] ?? json['company'] ?? 'غير معروف',
-      companyLogo: jobObj?['companyLogo'] ?? json['companyLogo'] ?? '',
-      date: json['appliedDate'] ?? json['appliedAt'] ?? json['createdAt'] ?? json['date'] ?? '',
+      role:
+          jobObj?['title']?.toString() ??
+          json['jobTitle']?.toString() ??
+          json['role']?.toString() ??
+          'بدون مسمى',
+      company:
+          jobObj?['companyName']?.toString() ??
+          json['companyName']?.toString() ??
+          json['company']?.toString() ??
+          'غير معروف',
+      companyLogo:
+          jobObj?['companyLogo']?.toString() ??
+          json['companyLogo']?.toString() ??
+          '',
+      date:
+          json['appliedDate']?.toString() ??
+          json['appliedAt']?.toString() ??
+          json['createdAt']?.toString() ??
+          json['date']?.toString() ??
+          '',
       statusName: appStatus.arabicLabel,
       status: appStatus,
     );
   }
 }
-

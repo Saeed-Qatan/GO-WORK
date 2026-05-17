@@ -102,8 +102,6 @@ class EditProfileView extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-
-
                     // ── Phone Number ──
                     EditPhoneField(viewModel: viewModel),
                     const SizedBox(height: 24),
@@ -135,8 +133,9 @@ class EditProfileView extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          disabledBackgroundColor: AppColors.primary
-                              .withValues(alpha: 0.5),
+                          disabledBackgroundColor: AppColors.primary.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         child: viewModel.isLoading
                             ? const SizedBox(

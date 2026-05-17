@@ -1,3 +1,4 @@
+import 'package:gowork/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../model/home_model.dart';
 
@@ -28,7 +29,7 @@ class StatUiHelper {
       case StatType.sent:
         return const Color(0xFF2962FF); // Blue
       case StatType.unknown:
-        return Colors.grey;
+        return AppColors.textSecondary;
     }
   }
 }

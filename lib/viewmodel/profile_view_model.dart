@@ -26,17 +26,19 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       _profile = await _repository.getUserProfile();
-      
-      // --- تفعيل اشتراك الإشعارات بعد جلب بيانات المستخدم ---
+
       if (_profile != null && _profile!.categoryId.isNotEmpty) {
         try {
-          await FirebaseMessaging.instance.subscribeToTopic('category_${_profile!.categoryId}');
-          debugPrint('=== FCM: Resubscribed to category_${_profile!.categoryId} on profile load ===');
+          await FirebaseMessaging.instance.subscribeToTopic(
+            'category_${_profile!.categoryId}',
+          );
+          debugPrint(
+            '=== FCM: Resubscribed to category_${_profile!.categoryId} on profile load ===',
+          );
         } catch (e) {
           debugPrint('=== FCM: Error resubscribing to topic: $e ===');
         }
       }
-      // --------------------------------------------------------
     } catch (e) {
       debugPrint('Error fetching profile: $e');
       _errorMessage = 'حدث خطأ أثناء تحميل الملف الشخصي: $e';
@@ -46,7 +48,7 @@ class ProfileViewModel extends ChangeNotifier {
     }
   }
 
-  /// PATCH /Account/Candidate/UpdateProfile — form-data with all fields + files
+  /// PATCH /Account/Candidate/UpdateProfile - form-data with all fields + files.
   Future<void> updateProfile({
     required Map<String, String> fields,
     List<MapEntry<String, String>>? repeatedFields,
@@ -95,14 +97,12 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    // --- إيقاف الإشعارات: حذف التوكن الخاص بالجهاز ---
     try {
       await FirebaseMessaging.instance.deleteToken();
       debugPrint('=== FCM: Token deleted on logout ===');
     } catch (e) {
       debugPrint('=== FCM: Error deleting token: $e ===');
     }
-    // ------------------------------------------------
 
     await _storage.clear();
     _profile = null;

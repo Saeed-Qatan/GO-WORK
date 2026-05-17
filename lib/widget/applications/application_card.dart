@@ -23,7 +23,7 @@ class ApplicationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -118,7 +118,7 @@ class ApplicationCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF0D47A1),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: AppColors.border),
             ),
             child: application.companyLogo.isEmpty
                 ? const Icon(Icons.business, color: Colors.white, size: 28)
@@ -204,12 +204,12 @@ class ApplicationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: AppColors.background,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
         ),
-        border: Border(top: BorderSide(color: Colors.grey.shade100)),
+        border: Border(top: BorderSide(color: AppColors.inputBackground)),
       ),
       child: Row(
         children: [

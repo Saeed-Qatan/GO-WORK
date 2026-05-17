@@ -65,7 +65,7 @@ class ForgetPage extends StatelessWidget {
                           labelText: AppConstants.emailLabel,
                           suffixIcon: const Icon(Icons.email_outlined),
                           filled: true,
-                          fillColor: Colors.grey.shade100,
+                          fillColor: AppColors.inputBackground,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -81,7 +81,7 @@ class ForgetPage extends StatelessWidget {
                         ),
                         color: vm.canSubmit
                             ? AppColors.primary
-                            : Colors.grey.shade400,
+                            : AppColors.textHint,
                         textColor: Colors.white,
                         onPressed: vm.canSubmit
                             ? () {

@@ -27,7 +27,7 @@ class InterviewsService {
           'interviewerRole': 'مديرة الموارد البشرية',
           'status': 'waiting',
         },
-      ]
+      ],
     };
   }
 }

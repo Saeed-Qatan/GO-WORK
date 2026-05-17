@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/home_model.dart';
 import '../services/job_service.dart';
 import '../utils/snackbar_service.dart';
+import '../widget/common/success_bottom_sheet.dart';
 
 class JobDetailsViewModel extends ChangeNotifier {
   final JobService _jobService = JobService();
@@ -101,11 +102,19 @@ class JobDetailsViewModel extends ChangeNotifier {
         }
 
         // Show success msg
-        String msg = 'تم التقديم بنجاح';
+        String msg = 'تم استلام طلبك بنجاح، نتمنى لك التوفيق!';
         if (response['data'] != null && response['data']['message'] != null) {
           msg = response['data']['message'];
         }
-        SnackbarService.showSuccess(msg);
+
+        // Show premium animated bottom sheet instead of simple snackbar
+        if (context.mounted) {
+          showSuccessBottomSheet(
+            context: context,
+            title: 'تم التقديم بنجاح!',
+            message: msg,
+          );
+        }
       } else {
         // Extract errors
         String errorMsg = 'Failed to apply';

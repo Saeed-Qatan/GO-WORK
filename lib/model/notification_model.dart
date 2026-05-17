@@ -23,7 +23,9 @@ class NotificationModel {
       title: json['title']?.toString() ?? 'إشعار جديد',
       body: json['body']?.toString() ?? json['message']?.toString() ?? '',
       imageUrl: json['imageUrl']?.toString(),
-      createdAt: _parseDate(json['createdAt'] ?? json['date'] ?? json['timestamp']),
+      createdAt: _parseDate(
+        json['createdAt'] ?? json['date'] ?? json['timestamp'],
+      ),
       isRead: json['isRead'] == true || json['read'] == true,
     );
   }

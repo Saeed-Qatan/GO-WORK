@@ -9,7 +9,7 @@ class NotificationsRepository {
   final ApiClient _apiClient;
 
   NotificationsRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   /// Fetches the list of notifications from the backend.
   Future<List<NotificationModel>> getNotifications() async {
@@ -17,7 +17,9 @@ class NotificationsRepository {
       final response = await _apiClient.get(ApiConstants.notifications);
       final rawList = _extractList(response);
       return rawList
-          .map((json) => NotificationModel.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) => NotificationModel.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       debugPrint('=== NOTIFICATIONS: fetch error: $e ===');
@@ -51,7 +53,8 @@ class NotificationsRepository {
 
   List<dynamic> _extractList(Map<String, dynamic> response) {
     if (response['data'] is List) return response['data'] as List;
-    if (response['notifications'] is List) return response['notifications'] as List;
+    if (response['notifications'] is List)
+      return response['notifications'] as List;
     if (response['items'] is List) return response['items'] as List;
     return [];
   }

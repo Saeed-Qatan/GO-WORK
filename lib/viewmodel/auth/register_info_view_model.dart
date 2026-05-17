@@ -19,12 +19,19 @@ class RegisterInfoViewModel extends ChangeNotifier {
 
   String? validateNotEmpty(String? v, String name) {
     if (v == null || v.trim().isEmpty) return 'الرجاء إدخال $name';
+    if (v.trim().length < 2) return 'الاسم يجب أن يكون حرفين على الأقل';
+    if (!RegExp(r'^[\p{L}\s]+$', unicode: true).hasMatch(v)) {
+      return 'الاسم يجب أن يحتوي على أحرف فقط';
+    }
     return null;
   }
 
   String? validateEmail(String? v) {
-    if (v == null || v.isEmpty) return 'الرجاء إدخال البريد الإلكتروني';
-    if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
+    if (v == null || v.trim().isEmpty) return 'الرجاء إدخال البريد الإلكتروني';
+    final emailRegex = RegExp(
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    );
+    if (!emailRegex.hasMatch(v.trim())) {
       return 'البريد الإلكتروني غير صالح';
     }
     return null;
@@ -32,30 +39,30 @@ class RegisterInfoViewModel extends ChangeNotifier {
 
   String? validatePhone(String? v) {
     if (v == null || v.trim().isEmpty) return 'الرجاء إدخال رقم الهاتف';
-    if (!RegExp(r'^[0-9]+$').hasMatch(v)) {
-      return 'رقم الهاتف يجب أن يحتوي على أرقام فقط';
+    final phoneRegex = RegExp(r'^\+?[0-9]{8,15}$');
+    if (!phoneRegex.hasMatch(v.trim())) {
+      return 'رقم الهاتف غير صالح (8-15 رقم)';
     }
-    if (v.length < 8) return 'رقم الهاتف قصير جداً';
     return null;
   }
 
   String? validatePassword(String? v) {
     if (v == null || v.isEmpty) return 'الرجاء إدخال كلمة المرور';
-    if (v.length < 6) return 'كلمة المرور قصيرة جداً';
+    if (v.length < 8) return 'يجب أن لا تقل كلمة المرور عن 8 أحرف';
 
-    // Check for English characters and complexity
     bool hasUppercase = v.contains(RegExp(r'[A-Z]'));
     bool hasLowercase = v.contains(RegExp(r'[a-z]'));
     bool hasDigits = v.contains(RegExp(r'[0-9]'));
 
-    if (!hasUppercase) return 'يجب أن تحتوي على حرف كبير واحد على الأقل';
-    if (!hasLowercase) return 'يجب أن تحتوي على حرف صغير واحد على الأقل';
-    if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل';
+    if (!hasUppercase) return 'يجب أن تحتوي على حرف إنجليزي كبير (A-Z)';
+    if (!hasLowercase) return 'يجب أن تحتوي على حرف إنجليزي صغير (a-z)';
+    if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل (0-9)';
 
     return null;
   }
 
   String? validateConfirmPassword(String? v) {
+    if (v == null || v.isEmpty) return 'الرجاء تأكيد كلمة المرور';
     if (v != passwordController.text) return 'كلمات المرور غير متطابقة';
     return null;
   }

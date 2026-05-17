@@ -1,3 +1,4 @@
+import 'package:gowork/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class DisplayBoxWidget extends StatelessWidget {
@@ -16,7 +17,7 @@ class DisplayBoxWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: AppColors.textSecondary.withValues(alpha: 0.1),
             spreadRadius: 5,
             blurRadius: 7,
             offset: const Offset(0, 3),
@@ -34,7 +35,7 @@ class DisplayBoxWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.5),
+                  color: AppColors.textSecondary.withValues(alpha: 0.5),
                   blurRadius: 5,
                   spreadRadius: 1,
                   offset: const Offset(0, 7),

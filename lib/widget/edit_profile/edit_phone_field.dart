@@ -27,8 +27,7 @@ class EditPhoneField extends StatelessWidget {
           textDirection: TextDirection.ltr,
           child: TextFormField(
             controller: viewModel.phoneController,
-            validator: (val) =>
-                viewModel.formData.validatePhone(val ?? ''),
+            validator: (val) => viewModel.formData.validatePhone(val ?? ''),
             keyboardType: TextInputType.phone,
             textAlign: TextAlign.left,
             decoration: InputDecoration(
@@ -56,10 +55,7 @@ class EditPhoneField extends StatelessWidget {
               errorStyle: const TextStyle(fontWeight: FontWeight.w500),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Colors.red,
-                  width: 1.5,
-                ),
+                borderSide: const BorderSide(color: Colors.red, width: 1.5),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
