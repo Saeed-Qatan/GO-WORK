@@ -133,19 +133,21 @@ class EditProfileViewModel extends ChangeNotifier {
 
       // Build form-data fields
       final fields = <String, String>{
-        'firstName': _formData.firstName,
-        'midName': _formData.middleName,
-        'lastName': _formData.lastName,
+        'FirstName': _formData.firstName,
+        'MiddleName': _formData.middleName,
+        'LastName': _formData.lastName,
       };
 
       if (_formData.jobTitle.isNotEmpty) {
-        fields['jobTitle'] = _formData.jobTitle;
+        fields['JobTitle'] = _formData.jobTitle;
       }
-      if (_formData.phone.isNotEmpty) fields['phoneNumber'] = _formData.phone;
+      if (_formData.phone.isNotEmpty) {
+        fields['phoneNo'] = _formData.phone;
+      }
 
       // Skills as repeated form-data fields
       final repeatedFields = _formData.skills
-          .map((s) => MapEntry('listOfSkills', s))
+          .map((s) => MapEntry('Skills', s))
           .toList();
 
       // Files: ProfilePhoto and Resume
@@ -157,12 +159,17 @@ class EditProfileViewModel extends ChangeNotifier {
         files['Resume'] = _formData.newCvFile!;
       }
 
-      // Single PATCH request with everything
+      // Update profile text data (and try sending files in case backend supports it)
       await _profileViewModel.updateProfile(
         fields: fields,
         repeatedFields: repeatedFields.isEmpty ? null : repeatedFields,
         files: files.isEmpty ? null : files,
       );
+
+      // Upload CV via dedicated endpoint — backend requires field name 'file'
+      if (_formData.newCvFile != null) {
+        await _profileViewModel.uploadFile(_formData.newCvFile!);
+      }
 
       SnackbarService.showSuccess('تم تحديث الملف الشخصي بنجاح');
       return true;

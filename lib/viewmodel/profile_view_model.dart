@@ -72,6 +72,7 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('--- ERROR IN UPDATE PROFILE: $e ---');
       _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -92,6 +93,7 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('--- ERROR IN UPLOAD FILE: $e ---');
       _errorMessage = 'حدث خطأ أثناء رفع الملف: $e';
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
