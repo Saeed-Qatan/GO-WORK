@@ -35,8 +35,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
           child: SingleChildScrollView(
             child: Consumer<RegisterCVViewModel>(
               builder: (context, viewModel, child) {
+                // CV is optional — backend accepts registration without it.
+                // Required: at least one skill + a category (when categories loaded).
                 final isFormComplete =
-                    (viewModel.cvFileName?.isNotEmpty ?? false) &&
                     viewModel.skills.isNotEmpty &&
                     (viewModel.categories.isNotEmpty
                         ? viewModel.selectedCategoryId != null

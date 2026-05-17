@@ -53,12 +53,10 @@ class RegisterInfoViewModel extends ChangeNotifier {
     bool hasUppercase = v.contains(RegExp(r'[A-Z]'));
     bool hasLowercase = v.contains(RegExp(r'[a-z]'));
     bool hasDigits = v.contains(RegExp(r'[0-9]'));
-    bool hasSpecialCharacters = v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
 
     if (!hasUppercase) return 'يجب أن تحتوي على حرف إنجليزي كبير (A-Z)';
     if (!hasLowercase) return 'يجب أن تحتوي على حرف إنجليزي صغير (a-z)';
     if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل (0-9)';
-    if (!hasSpecialCharacters) return 'يجب أن تحتوي على رمز خاص (!@#\$&*)';
 
     return null;
   }
