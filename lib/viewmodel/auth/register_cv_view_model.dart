@@ -8,6 +8,7 @@ import 'package:gowork/utils/api_storage.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/main.dart'; // للوصول إلى pushNotificationService
 
 class RegisterCVViewModel extends ChangeNotifier {
   final skillController = TextEditingController();
@@ -172,6 +173,17 @@ class RegisterCVViewModel extends ChangeNotifier {
       );
 
       await RegisterService().register(data);
+
+      // --- اشترك في موضوع (Topic) القسم الخاص بالمستخدم ---
+      try {
+        final chosenCategoryId = data.categoryId ?? '101';
+        await pushNotificationService.subscribeToTopic(
+          'category_$chosenCategoryId',
+        );
+      } catch (e) {
+        debugPrint('Topic subscription failed: $e');
+      }
+      // ----------------------------------------------------
 
       SnackbarService.showSuccess(
         'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',

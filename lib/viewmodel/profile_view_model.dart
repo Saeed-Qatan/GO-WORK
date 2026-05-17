@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../model/profile_model.dart';
 import '../repository/profile_repository.dart';
 import '../utils/local_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   final ProfileRepository _repository = ProfileRepository();
@@ -25,6 +26,21 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       _profile = await _repository.getUserProfile();
+
+      // --- تفعيل اشتراك الإشعارات بعد جلب بيانات المستخدم ---
+      if (_profile != null && _profile!.categoryId.isNotEmpty) {
+        try {
+          await FirebaseMessaging.instance.subscribeToTopic(
+            'category_${_profile!.categoryId}',
+          );
+          debugPrint(
+            '=== FCM: Resubscribed to category_${_profile!.categoryId} on profile load ===',
+          );
+        } catch (e) {
+          debugPrint('=== FCM: Error resubscribing to topic: $e ===');
+        }
+      }
+      // --------------------------------------------------------
     } catch (e) {
       debugPrint('Error fetching profile: $e');
       _errorMessage = 'حدث خطأ أثناء تحميل الملف الشخصي: $e';
@@ -83,6 +99,15 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    // --- إيقاف الإشعارات: حذف التوكن الخاص بالجهاز ---
+    try {
+      await FirebaseMessaging.instance.deleteToken();
+      debugPrint('=== FCM: Token deleted on logout ===');
+    } catch (e) {
+      debugPrint('=== FCM: Error deleting token: $e ===');
+    }
+    // ------------------------------------------------
+
     await _storage.clear();
     _profile = null;
     notifyListeners();

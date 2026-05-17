@@ -52,6 +52,32 @@ class PushNotificationService {
   }
 
   // ────────────────────────────────────────────────────
+  // Topic Management (Categories)
+  // ────────────────────────────────────────────────────
+
+  /// Subscribes the device to a specific FCM topic (e.g., category_102).
+  /// Called after successful registration or profile load.
+  Future<void> subscribeToTopic(String topic) async {
+    try {
+      await _firebaseMessaging.subscribeToTopic(topic);
+      debugPrint('=== FCM: SUBSCRIBED TO TOPIC: $topic ===');
+    } catch (e) {
+      debugPrint('=== FCM: TOPIC SUBSCRIBE ERROR ($topic): $e ===');
+    }
+  }
+
+  /// Unsubscribes the device from a specific FCM topic.
+  /// Call this when the user changes their category or logs out.
+  Future<void> unsubscribeFromTopic(String topic) async {
+    try {
+      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      debugPrint('=== FCM: UNSUBSCRIBED FROM TOPIC: $topic ===');
+    } catch (e) {
+      debugPrint('=== FCM: TOPIC UNSUBSCRIBE ERROR ($topic): $e ===');
+    }
+  }
+
+  // ────────────────────────────────────────────────────
   // Private Methods
   // ────────────────────────────────────────────────────
 
