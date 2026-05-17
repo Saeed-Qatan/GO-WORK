@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/viewmodel/auth/change_password_view_model.dart';
 import 'package:gowork/theme/app_colors.dart';
-
 class ChangePasswordView extends StatelessWidget {
   const ChangePasswordView({super.key});
 
