@@ -1,4 +1,4 @@
-enum ApplicationStatus { sent, inReview, accepted, rejected }
+enum ApplicationStatus { sent, inReview, accepted, rejected, withdrawn }
 
 class ApplicationModel {
   final String id;
@@ -33,6 +33,8 @@ class ApplicationModel {
       appStatus = ApplicationStatus.accepted;
     } else if (statusStr.contains('reject') || statusStr == '4') {
       appStatus = ApplicationStatus.rejected;
+    } else if (statusStr.contains('withdraw') || statusStr.contains('cancel') || statusStr == '5') {
+      appStatus = ApplicationStatus.withdrawn;
     }
 
     // Handle nested job object if present
@@ -70,6 +72,8 @@ extension ApplicationStatusExt on ApplicationStatus {
         return 'مرفوض';
       case ApplicationStatus.sent:
         return 'مُرسل';
+      case ApplicationStatus.withdrawn:
+        return 'مسحوب';
     }
   }
 
@@ -83,6 +87,8 @@ extension ApplicationStatusExt on ApplicationStatus {
         return 0xFFC62828; // Red
       case ApplicationStatus.sent:
         return 0xFF1565C0; // Blue
+      case ApplicationStatus.withdrawn:
+        return 0xFF616161; // Grey
     }
   }
 
@@ -96,6 +102,8 @@ extension ApplicationStatusExt on ApplicationStatus {
         return 0xFFFFEBEE; // Light Red
       case ApplicationStatus.sent:
         return 0xFFE3F2FD; // Light Blue
+      case ApplicationStatus.withdrawn:
+        return 0xFFF5F5F5; // Light Grey
     }
   }
 
@@ -109,6 +117,8 @@ extension ApplicationStatusExt on ApplicationStatus {
         return 0xe14c; // Icons.close
       case ApplicationStatus.sent:
         return null;
+      case ApplicationStatus.withdrawn:
+        return 0xe4c2; // Icons.remove_circle_outline
     }
   }
 }

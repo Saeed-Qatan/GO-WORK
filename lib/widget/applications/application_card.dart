@@ -193,9 +193,10 @@ class ApplicationCard extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    // Only allow withdrawal for sent or in-review applications
     final canWithdraw =
-        application.status != ApplicationStatus.rejected &&
-        application.status != ApplicationStatus.accepted;
+        application.status == ApplicationStatus.sent ||
+        application.status == ApplicationStatus.inReview;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

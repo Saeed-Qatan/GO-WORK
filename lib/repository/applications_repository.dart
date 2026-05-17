@@ -88,13 +88,23 @@ class ApplicationsRepository {
   }
 
   Future<void> withdrawApplication(String applicationId) async {
-    try {
-      await _apiClient.post(
-        '${ApiConstants.withdrawApplication}/$applicationId',
-        {},
-      );
-    } catch (e) {
-      rethrow;
+    final response = await _apiClient.post(
+      '${ApiConstants.withdrawApplication}/$applicationId',
+      {},
+    );
+
+    // Explicitly check the success flag from the backend response
+    if (response['success'] != true) {
+      final errors = response['errors'];
+      String message = 'فشل سحب الطلب';
+      if (errors is List && errors.isNotEmpty) {
+        message = errors.join('\n');
+      } else if (errors is String) {
+        message = errors;
+      } else if (response['data']?['message'] != null) {
+        message = response['data']['message'].toString();
+      }
+      throw Exception(message);
     }
   }
 }

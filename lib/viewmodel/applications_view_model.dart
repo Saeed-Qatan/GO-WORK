@@ -91,17 +91,16 @@ class ApplicationsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> withdrawApplication(String applicationId) async {
+  /// Returns null on success, or an error message string on failure.
+  Future<String?> withdrawApplication(String applicationId) async {
     try {
       await _repository.withdrawApplication(applicationId);
-
-      // refresh applications
       await fetchApplications();
-      return true;
+      return null;
     } catch (e) {
-      _errorMessage = 'فشل سحب الطلب: $e';
+      final message = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
-      return false;
+      return message;
     }
   }
 }
