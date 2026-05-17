@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/services/auth/register_service.dart';
