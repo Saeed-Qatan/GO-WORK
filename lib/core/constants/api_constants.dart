@@ -36,6 +36,8 @@ class ApiConstants {
   static const String applicationStatuses = 'Applications/statuses';
   static const String withdrawApplication = 'Applications/withdraw';
   static const String interviews = 'Account/interviews';
+  static const String candidateInterviews = 'Interviews/CandidateInterviews';
+  static String interviewAction(String id) => 'Interviews/$id/action';
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';
 
