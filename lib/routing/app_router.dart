@@ -12,6 +12,7 @@ import 'package:gowork/view/auth/register_cv_skills_page.dart';
 import 'package:gowork/view/auth/email_verification_page.dart';
 import 'package:gowork/view/auth/forget_page.dart';
 import 'package:gowork/view/auth/reset_password_view.dart';
+import 'package:gowork/view/auth/change_password_view.dart';
 import 'package:gowork/view/job_details_view.dart';
 import 'package:gowork/view/main_view.dart';
 import 'package:gowork/view/edit_profile_view.dart';
@@ -30,6 +31,7 @@ class AppRoutes {
   static const String verifyEmail = '/verifyEmail';
   static const String forgetPassword = '/forgetPassword';
   static const String resetPassword = '/resetPassword';
+  static const String changePassword = '/changePassword';
   static const String home = '/home';
   static const String editProfile = '/editProfile';
   static const String profile = '/profile';
@@ -88,6 +90,10 @@ final GoRouter appRouter = GoRouter(
         final email = state.extra as String;
         return ResetPasswordView(email: email);
       },
+    ),
+    GoRoute(
+      path: AppRoutes.changePassword,
+      builder: (context, state) => const ChangePasswordView(),
     ),
     GoRoute(
       path: AppRoutes.home,
