@@ -32,10 +32,10 @@ class _SplashViewState extends State<SplashView> {
     final token = await LocalStorage().getString('token');
 
     if (mounted) {
-      if (token != null) {
-        context.go(AppRoutes.home);
-      } else {
+      if (token == null) {
         context.go(AppRoutes.login);
+      } else {
+        context.go(AppRoutes.home);
       }
     }
   }
