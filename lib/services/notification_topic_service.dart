@@ -4,15 +4,18 @@ import 'package:flutter/foundation.dart';
 class NotificationTopicService {
   static const String _allTopic = 'all';
   static const String _categoryPrefix = 'category_';
+  static const Duration _topicOperationTimeout = Duration(seconds: 10);
 
-  final FirebaseMessaging _firebaseMessaging;
+  final FirebaseMessaging? _firebaseMessaging;
 
   NotificationTopicService({FirebaseMessaging? firebaseMessaging})
-    : _firebaseMessaging = firebaseMessaging ?? FirebaseMessaging.instance;
+    : _firebaseMessaging = firebaseMessaging;
 
   Future<void> subscribeToAll() async {
     try {
-      await _firebaseMessaging.subscribeToTopic(_allTopic);
+      await _messaging
+          .subscribeToTopic(_allTopic)
+          .timeout(_topicOperationTimeout);
       debugPrint('=== FCM TOPICS: SUBSCRIBED TO $_allTopic ===');
     } catch (e) {
       debugPrint('=== FCM TOPICS: SUBSCRIBE ALL ERROR: $e ===');
@@ -27,7 +30,7 @@ class NotificationTopicService {
     }
 
     try {
-      await _firebaseMessaging.subscribeToTopic(topic);
+      await _messaging.subscribeToTopic(topic).timeout(_topicOperationTimeout);
       debugPrint('=== FCM TOPICS: SUBSCRIBED TO $topic ===');
     } catch (e) {
       debugPrint('=== FCM TOPICS: CATEGORY SUBSCRIBE ERROR ($topic): $e ===');
@@ -42,7 +45,9 @@ class NotificationTopicService {
     }
 
     try {
-      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      await _messaging
+          .unsubscribeFromTopic(topic)
+          .timeout(_topicOperationTimeout);
       debugPrint('=== FCM TOPICS: UNSUBSCRIBED FROM $topic ===');
     } catch (e) {
       debugPrint('=== FCM TOPICS: CATEGORY UNSUBSCRIBE ERROR ($topic): $e ===');
@@ -66,4 +71,7 @@ class NotificationTopicService {
     if (trimmedCategoryId.isEmpty) return null;
     return '$_categoryPrefix$trimmedCategoryId';
   }
+
+  FirebaseMessaging get _messaging =>
+      _firebaseMessaging ?? FirebaseMessaging.instance;
 }

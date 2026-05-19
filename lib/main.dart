@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -34,10 +36,19 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   await Firebase.initializeApp();
-  await pushNotificationService.initialize();
-  await notificationTopicService.subscribeToAll();
+  unawaited(_initializeNotifications());
 
   runApp(const MyApp());
+}
+
+Future<void> _initializeNotifications() async {
+  try {
+    await pushNotificationService.initialize();
+  } catch (e) {
+    debugPrint('=== FCM: PUSH NOTIFICATION INITIALIZE ERROR: $e ===');
+  }
+
+  await notificationTopicService.subscribeToAll();
 }
 
 class MyApp extends StatelessWidget {
