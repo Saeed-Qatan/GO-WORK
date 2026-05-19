@@ -2,12 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../model/profile_model.dart';
 import '../repository/profile_repository.dart';
+import '../services/notification_topic_service.dart';
 import '../utils/local_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   final ProfileRepository _repository = ProfileRepository();
   final LocalStorage _storage = LocalStorage();
+  final NotificationTopicService? _notificationTopicService;
   ProfileModel? _profile;
   ProfileModel? get profile => _profile;
 
@@ -17,7 +19,8 @@ class ProfileViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  ProfileViewModel();
+  ProfileViewModel({NotificationTopicService? notificationTopicService})
+    : _notificationTopicService = notificationTopicService;
 
   Future<void> fetchProfile() async {
     _isLoading = true;
@@ -26,19 +29,9 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       _profile = await _repository.getUserProfile();
-
-      if (_profile != null && _profile!.categoryId.isNotEmpty) {
-        try {
-          await FirebaseMessaging.instance.subscribeToTopic(
-            'category_${_profile!.categoryId}',
-          );
-          debugPrint(
-            '=== FCM: Resubscribed to category_${_profile!.categoryId} on profile load ===',
-          );
-        } catch (e) {
-          debugPrint('=== FCM: Error resubscribing to topic: $e ===');
-        }
-      }
+      await _notificationTopicService?.subscribeUserTopics(
+        categoryId: _profile?.categoryId,
+      );
     } catch (e) {
       debugPrint('Error fetching profile: $e');
       _errorMessage = 'حدث خطأ أثناء تحميل الملف الشخصي: $e';
@@ -70,6 +63,7 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('--- ERROR IN UPDATE PROFILE: $e ---');
       _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -90,6 +84,7 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('--- ERROR IN UPLOAD FILE: $e ---');
       _errorMessage = 'حدث خطأ أثناء رفع الملف: $e';
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

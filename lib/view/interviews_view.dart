@@ -25,13 +25,14 @@ class _InterviewsViewState extends State<InterviewsView> {
       id: 'dummy_$index',
       role: 'Loading Role Title',
       company: 'Loading Company',
-      companyLogo: '',
-      date: '00/00/0000',
+      companyLogo: null,
+      date: '0000-00-00',
       time: '00:00',
       location: 'Loading location...',
       interviewerName: 'Loading Name',
       interviewerRole: 'Loading Role',
       status: InterviewStatus.waiting,
+      interviewType: 'Online',
     ),
   );
 
@@ -39,7 +40,7 @@ class _InterviewsViewState extends State<InterviewsView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Provider.of<InterviewsViewModel>(context, listen: false).fetchInterviews();
+      Provider.of<InterviewsViewModel>(context, listen: false).fetchInterviews();
     });
   }
 

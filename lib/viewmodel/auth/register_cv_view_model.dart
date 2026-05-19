@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/services/auth/register_service.dart';
@@ -8,7 +9,7 @@ import 'package:gowork/utils/api_storage.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
-import 'package:gowork/main.dart'; // للوصول إلى pushNotificationService
+import 'package:gowork/main.dart'; // للوصول إلى notificationTopicService
 
 class RegisterCVViewModel extends ChangeNotifier {
   final skillController = TextEditingController();
@@ -174,16 +175,9 @@ class RegisterCVViewModel extends ChangeNotifier {
 
       await RegisterService().register(data);
 
-      // --- اشترك في موضوع (Topic) القسم الخاص بالمستخدم ---
-      try {
-        final chosenCategoryId = data.categoryId ?? '101';
-        await pushNotificationService.subscribeToTopic(
-          'category_$chosenCategoryId',
-        );
-      } catch (e) {
-        debugPrint('Topic subscription failed: $e');
-      }
-      // ----------------------------------------------------
+      await notificationTopicService.subscribeUserTopics(
+        categoryId: data.categoryId,
+      );
 
       SnackbarService.showSuccess(
         'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',

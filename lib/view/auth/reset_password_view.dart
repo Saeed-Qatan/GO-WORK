@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:gowork/widget/display_box_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/theme/app_colors.dart';
 import 'package:gowork/viewmodel/auth/reset_password_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:gowork/widget/custom_text_field.dart';
-import 'package:gowork/widget/display_box_widget.dart';
 import 'package:go_router/go_router.dart';
 
 class ResetPasswordView extends StatelessWidget {
@@ -40,18 +40,6 @@ class ResetPasswordView extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.lock_reset,
-                            size: 40,
-                            color: AppColors.primary,
-                          ),
-                        ),
                         const SizedBox(height: 24),
                         Text(
                           'إعادة تعيين كلمة المرور',

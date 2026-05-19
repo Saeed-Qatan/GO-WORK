@@ -106,6 +106,23 @@ class ApiClient {
     }
   }
 
+  Future<Map<String, dynamic>> patch(
+    String endpoint,
+    Map<String, dynamic> body, {
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final response = await _dio.patch(
+        endpoint,
+        data: body,
+        options: Options(headers: headers, contentType: 'application/json'),
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> delete(
     String endpoint, {
     Map<String, String>? headers,

@@ -135,24 +135,6 @@ class PushNotificationService {
     _notificationStreamController.close();
   }
 
-  Future<void> subscribeToTopic(String topic) async {
-    try {
-      await _firebaseMessaging.subscribeToTopic(topic);
-      debugPrint('=== FCM: SUBSCRIBED TO TOPIC: $topic ===');
-    } catch (e) {
-      debugPrint('=== FCM: TOPIC SUBSCRIBE ERROR ($topic): $e ===');
-    }
-  }
-
-  Future<void> unsubscribeFromTopic(String topic) async {
-    try {
-      await _firebaseMessaging.unsubscribeFromTopic(topic);
-      debugPrint('=== FCM: UNSUBSCRIBED FROM TOPIC: $topic ===');
-    } catch (e) {
-      debugPrint('=== FCM: TOPIC UNSUBSCRIBE ERROR ($topic): $e ===');
-    }
-  }
-
   Future<void> _setupLocalNotifications() async {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',

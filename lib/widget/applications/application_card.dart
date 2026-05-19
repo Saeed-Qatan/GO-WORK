@@ -3,7 +3,6 @@ import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../model/application_model.dart';
 import '../../model/home_model.dart';
-import '../../utils/status_translator.dart';
 import '../../view/job_details_view.dart';
 
 class ApplicationCard extends StatelessWidget {
@@ -196,10 +195,10 @@ class ApplicationCard extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    // Only allow withdrawal for sent or in-review applications
     final canWithdraw =
-        application.status != ApplicationStatus.rejected &&
-        application.status != ApplicationStatus.accepted &&
-        application.status != ApplicationStatus.withdrawn;
+        application.status == ApplicationStatus.sent ||
+        application.status == ApplicationStatus.inReview;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

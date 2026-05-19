@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'theme/app_theme.dart';
 import 'routing/app_router.dart';
 import 'utils/snackbar_service.dart';
+import 'services/notification_topic_service.dart';
 import 'services/push_notification_service.dart';
 
 import 'viewmodel/auth/login_view_model.dart';
@@ -22,6 +23,8 @@ import 'viewmodel/notifications_view_model.dart';
 /// Singleton service instance — shared across the app lifetime.
 final PushNotificationService pushNotificationService =
     PushNotificationService();
+final NotificationTopicService notificationTopicService =
+    NotificationTopicService();
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +35,7 @@ void main() async {
 
   await Firebase.initializeApp();
   await pushNotificationService.initialize();
+  await notificationTopicService.subscribeToAll();
 
   runApp(const MyApp());
 }
@@ -46,12 +50,17 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => LoginViewModel(
             pushNotificationService: pushNotificationService,
+            notificationTopicService: notificationTopicService,
           ),
         ),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(create: (_) => InterviewsViewModel()),
-        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => ProfileViewModel(
+            notificationTopicService: notificationTopicService,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => JobDetailsViewModel()),
         ChangeNotifierProvider(create: (_) => SettingsViewModel()),
         ChangeNotifierProvider(

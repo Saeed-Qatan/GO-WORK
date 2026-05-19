@@ -56,7 +56,7 @@ class SettingsView extends StatelessWidget {
                       icon: Icons.lock_outline,
                       title: 'تغيير كلمة المرور',
                       onTap: () {
-                        // Navigate to change password
+                        context.push(AppRoutes.changePassword);
                       },
                     ),
                   ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../model/interview_model.dart';
+import '../../viewmodel/interviews_view_model.dart';
 
 class InterviewCard extends StatelessWidget {
   final InterviewModel interview;
@@ -132,18 +134,46 @@ class InterviewCard extends StatelessWidget {
             '${interview.date} في ${interview.time}',
           ),
           const SizedBox(height: 8),
+          if (interview.interviewType != null) ...[
+            _buildInfoRow(
+              context,
+              interview.interviewType?.toLowerCase() == 'online'
+                  ? Icons.video_call_outlined
+                  : Icons.people_outline,
+              interview.interviewType == 'Online' ? 'عن بُعد' : 'حضوري',
+            ),
+            const SizedBox(height: 8),
+          ],
           _buildInfoRow(
             context,
             Icons.location_on_outlined,
             interview.location,
           ),
-          const SizedBox(height: 8),
-          _buildInfoRow(
-            context,
-            Icons.person_outline,
-            '${interview.interviewerName} - ${interview.interviewerRole}',
-          ),
-
+          if (interview.meetingLink != null && interview.meetingLink!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              context,
+              Icons.link_outlined,
+              interview.meetingLink!,
+              isLink: true,
+            ),
+          ],
+          if (interview.interviewerName != null && interview.interviewerName!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              context,
+              Icons.person_outline,
+              '${interview.interviewerName} ${interview.interviewerRole != null ? '- ${interview.interviewerRole}' : ''}',
+            ),
+          ],
+          if (interview.notes != null && interview.notes!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              context,
+              Icons.note_alt_outlined,
+              interview.notes!,
+            ),
+          ],
           const SizedBox(height: 24),
           // Buttons
           Row(
@@ -170,7 +200,17 @@ class InterviewCard extends StatelessWidget {
               // Decline Button (Red)
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final success = await context.read<InterviewsViewModel>().submitAction(interview.id, 'Declined');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'تم رفض المقابلة بنجاح' : 'حدث خطأ أثناء رفض المقابلة'),
+                          backgroundColor: success ? Colors.green : Colors.red,
+                        ),
+                      );
+                    }
+                  },
                   icon: const Icon(Icons.close, color: Colors.white, size: 18),
                   label: Text(
                     AppConstants.declineAttendance,
@@ -194,7 +234,17 @@ class InterviewCard extends StatelessWidget {
               // Confirm Button (Green)
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final success = await context.read<InterviewsViewModel>().submitAction(interview.id, 'Confirmed');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'تم تأكيد المقابلة بنجاح' : 'حدث خطأ أثناء تأكيد المقابلة'),
+                          backgroundColor: success ? Colors.green : Colors.red,
+                        ),
+                      );
+                    }
+                  },
                   icon: const Icon(Icons.check, color: Colors.white, size: 18),
                   label: Text(
                     AppConstants.confirmAttendance,
@@ -221,16 +271,20 @@ class InterviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String text) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String text, {bool isLink = false}) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppColors.textSecondary),
+        Icon(icon, size: 18, color: isLink ? AppColors.primary : AppColors.textSecondary),
         const SizedBox(width: 8),
-        Text(
-          text,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isLink ? AppColors.primary : AppColors.textSecondary,
+                  decoration: isLink ? TextDecoration.underline : null,
+                ),
+          ),
         ),
       ],
     );

@@ -18,6 +18,8 @@ class ApplicationsView extends StatefulWidget {
 }
 
 class _ApplicationsViewState extends State<ApplicationsView> {
+  bool _isWithdrawing = false;
+
   final List<ApplicationModel> _dummyApplications = List.generate(
     4,
     (index) => ApplicationModel(
@@ -40,22 +42,29 @@ class _ApplicationsViewState extends State<ApplicationsView> {
   }
 
   void _handleWithdraw(
-    BuildContext context,
     ApplicationsViewModel viewModel,
     String applicationId,
   ) async {
+    // ── Step 1: Confirmation dialog ──────────────────────────────────────────
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'تأكيد سحب الطلب',
-          textAlign: TextAlign.right,
-          style: TextStyle(fontWeight: FontWeight.bold),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              'تأكيد سحب الطلب',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
+          ],
         ),
         content: const Text(
-          'هل أنت متأكد أنك تريد سحب هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
+          'هل أنت متأكد أنك تريد سحب هذا الطلب؟\nلا يمكن التراجع عن هذا الإجراء.',
           textAlign: TextAlign.right,
+          style: TextStyle(height: 1.6),
         ),
         actions: [
           TextButton(
@@ -68,20 +77,19 @@ class _ApplicationsViewState extends State<ApplicationsView> {
               ),
             ),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.red.shade700,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
-            child: const Text(
+            icon: const Icon(Icons.cancel_outlined, color: Colors.white, size: 16),
+            label: const Text(
               'نعم، سحب الطلب',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -90,91 +98,190 @@ class _ApplicationsViewState extends State<ApplicationsView> {
 
     if (confirm != true) return;
 
-    // Show loading dialog
-    if (context.mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => const Center(child: CircularProgressIndicator()),
-      );
-    }
+    // ── Step 2: Show local loading overlay via setState ──────────────────────
+    if (!mounted) return;
+    setState(() => _isWithdrawing = true);
 
-    final success = await viewModel.withdrawApplication(applicationId);
+    final errorMsg = await viewModel.withdrawApplication(applicationId);
 
-    // Close loading dialog
-    if (context.mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
-    }
+    if (!mounted) return;
+    setState(() => _isWithdrawing = false);
 
-    if (context.mounted) {
+    // ── Step 3a: Success → SnackBar ──────────────────────────────────────────
+    if (errorMsg == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            success
-                ? 'تم سحب الطلب بنجاح'
-                : viewModel.errorMessage ?? 'فشل سحب الطلب',
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green.shade700,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 10),
+              Text(
+                'تم سحب الطلب بنجاح',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
-          backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
+      return;
     }
+
+    // ── Step 3b: Failure → styled Dialog ────────────────────────────────────
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red.shade700,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'تعذّر سحب الطلب',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              errorMsg,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                height: 1.5,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+              ),
+              child: const Text(
+                'حسناً',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: Consumer<ApplicationsViewModel>(
-        builder: (context, viewModel, child) {
-          return Column(
-            children: [
-              ApplicationsHeader(viewModel: viewModel),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: const Color(0xFFF5F5F5),
+          body: Consumer<ApplicationsViewModel>(
+            builder: (context, viewModel, child) {
+              return Column(
+                children: [
+                  ApplicationsHeader(viewModel: viewModel),
 
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
                         children: [
-                          // Add filter button/icon on the left
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: const Icon(
-                              Icons.tune,
-                              color: AppColors.textSecondary,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: const Icon(
+                                  Icons.tune,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                '${viewModel.applications.length} ${AppConstants.applicationsCount}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            '${viewModel.applications.length} ${AppConstants.applicationsCount}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: Skeletonizer(
+                              enabled: viewModel.isLoading,
+                              child: _buildListContent(viewModel),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: Skeletonizer(
-                          enabled: viewModel.isLoading,
-                          child: _buildListContent(viewModel),
-                        ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+
+        // ── Withdrawal loading overlay ─────────────────────────────────────
+        if (_isWithdrawing)
+          Container(
+            color: Colors.black.withValues(alpha: 0.4),
+            child: const Center(
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text(
+                        'جارٍ سحب الطلب...',
+                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -207,7 +314,7 @@ class _ApplicationsViewState extends State<ApplicationsView> {
         return ApplicationCard(
               application: apps[index],
               onWithdraw: () =>
-                  _handleWithdraw(context, viewModel, apps[index].id),
+                  _handleWithdraw(viewModel, apps[index].id),
             )
             .animate(
               key: ValueKey('app_\${viewModel.isLoading}_\${apps[index].id}'),

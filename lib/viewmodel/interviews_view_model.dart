@@ -31,4 +31,24 @@ class InterviewsViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> submitAction(String interviewId, String action, {String? notes}) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final success = await _repository.submitInterviewAction(interviewId, action, notes: notes);
+      if (success) {
+        await fetchInterviews();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = 'حدث خطأ أثناء تحديث حالة المقابلة: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

@@ -7,8 +7,8 @@ class ApiConstants {
   static const String verifyEmail = 'Account/Candidate/VerifyEmail';
   static const String login = 'Account/Candidate/Login';
   static const String forgetPassword = 'Account/ForgetPassword';
-  static const String resetPassword =
-      'https://gowork.runasp.net/api/Account/ResetPassword';
+  static const String resetPassword = 'https://gowork.runasp.net/api/Account/ResetPassword';
+  static const String changePassword = 'Account/ChangePassword';
   static const String resendOtp = 'Account/ResendOtp';
   static const String resendLink = 'Account/ResendLink';
 
@@ -36,6 +36,8 @@ class ApiConstants {
   static const String applicationStatuses = 'Applications/statuses';
   static const String withdrawApplication = 'Applications/withdraw';
   static const String interviews = 'Account/interviews';
+  static const String candidateInterviews = 'Interviews/CandidateInterviews';
+  static String interviewAction(String id) => 'Interviews/$id/action';
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';
 
