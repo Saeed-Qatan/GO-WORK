@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "235482726774",
+    "project_id": "masarak-c774e",
+    "storage_bucket": "masarak-c774e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:235482726774:android:f0d5428f6b5eb6c9953a57",
+        "android_client_info": {
+          "package_name": "com.example.gowork"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBx9dzcwwNBrO0_YCWTqsOvr8DSrI-RbXg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'Go Work';
+  static const String appName = 'Masarak';
   static const String welcomeBack = 'مرحباً بعودتك';
   static const String loginSubtitle = 'سجل دخولك للوصول إلى حسابك';
   static const String emailLabel = 'البريد الإلكتروني';
@@ -15,7 +15,7 @@ class AppConstants {
   static const String createAccount = 'إنشاء حساب جديد';
 
   // Home Screen
-  static const String homeWelcome = 'مرحباً، أحمد محمد';
+  static const String homeWelcome = 'مرحباً';
   static const String homeSubtitle = 'ابحث عن وظيفتك المثالية اليوم';
   static const String searchHint = 'ابحث عن وظيفة أو شركة...';
   static const String statInterviews = 'مقابلات';
@@ -23,7 +23,7 @@ class AppConstants {
   static const String statApplied = 'طلبات مرسلة';
   static const String recommendedJobs = 'وظائف موصى بها';
   static const String allFields = 'جميع المجالات';
-  static const String applyNow = 'تقدم الآن';
+  static const String applyNow = ' عرض التفاصيل';
 
   // Bottom Nav
   static const String navHome = 'الرئيسية';
@@ -92,4 +92,19 @@ class AppConstants {
   static const String skillsLabel = 'المهارات';
   static const String addSkillHint = 'أضف مهارة جديدة...';
   static const String suggestedSkills = 'مهارات مقترحة:';
+
+  // Edit Profile Screen
+  static const String editProfileTitle = 'تعديل الملف الشخصي';
+  static const String editProfileBtn = 'تعديل الملف';
+  static const String downloadCV = 'تحميل السيرة';
+  static const String changePhoto = 'تغيير الصورة';
+  static const String firstNameLabel = 'الاسم الأول';
+  static const String middleNameLabel = 'الاسم الأوسط';
+  static const String lastNameLabel = 'الاسم الأخير';
+  static const String jobTitleLabel = 'المسمى الوظيفي';
+  static const String saveChanges = 'حفظ التغييرات';
+  static const String cancel = 'إلغاء';
+  static const String addSkill = '+ إضافة';
+  static const String cvSectionTitle = 'السيرة الذاتية';
+  static const String cvUploadHint = 'اضغط للتحديث أو اسحب ملفاً جديداً';
 }

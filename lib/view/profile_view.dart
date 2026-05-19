@@ -1,261 +1,150 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/profile/profile_view_model.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
+import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../widget/profile/profile_header_card.dart';
+import '../widget/profile/profile_action_buttons.dart';
+import '../widget/profile/profile_contact_info_card.dart';
+import '../widget/profile/profile_skills_card.dart';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch profile only when this page is actually shown (after login)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileViewModel>().fetchProfile();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F7FB),
         elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.edit_outlined,
-                color: AppColors.textSecondary,
-              ),
-              onPressed: () {},
-            ),
-            Text(
-              AppConstants.profileTitle,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_forward,
-                color: AppColors.textPrimary,
-              ),
-              onPressed: () {
-                // Navigation if needed
-              },
-            ),
-          ],
+        scrolledUnderElevation: 0,
+        title: Text(
+          AppConstants.profileTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        centerTitle: true,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+          onPressed: () => context.push(AppRoutes.settings),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
+            onPressed: () => context.pop(),
+          ),
+        ],
       ),
-      backgroundColor: Colors.white,
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
-          if (viewModel.isLoading || viewModel.profile == null) {
+          if (viewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          if (viewModel.errorMessage != null && viewModel.profile == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    viewModel.errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => viewModel.fetchProfile(),
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (viewModel.profile == null) {
+            return const Center(child: Text('لا يوجد بيانات للملف الشخصي'));
+          }
+
           final profile = viewModel.profile!;
+
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Column(
               children: [
-                // Profile Header Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF1976D2), // Blue
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'OA',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        profile.name,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        profile.role,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
+                // ── Profile Header Card ──
+                ProfileHeaderCard(profile: profile),
+                const SizedBox(height: 20),
 
-                // Contact Info
-                _buildSectionHeader(context, AppConstants.contactInfo),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildContactRow(
-                        context,
-                        Icons.email_outlined,
-                        AppConstants.emailTitle,
-                        profile.email,
-                      ),
-                      const Divider(height: 32),
-                      _buildContactRow(
-                        context,
-                        Icons.phone_outlined,
-                        AppConstants.phoneTitle,
-                        profile.phone,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Skills
-                _buildSectionHeader(context, AppConstants.skills),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: profile.skills
-                        .map(
-                          (skill) => Chip(
-                            label: Text(
-                              skill,
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(
-                                    color: const Color(0xFF1565C0),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            backgroundColor: const Color(0xFFE3F2FD),
-                            side: BorderSide.none,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
+                // ── Action Buttons ──
+                ProfileActionButtons(
+                  onEditProfile: () {
+                    context.push(AppRoutes.editProfile);
+                  },
+                  onDownloadCV: () async {
+                    final cvUrl = profile.cvUrl;
+                    if (cvUrl.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('لا يوجد سيرة ذاتية للتحميل'),
+                        ),
+                      );
+                      return;
+                    }
+                    final uri = Uri.parse(cvUrl);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('تعذر فتح رابط السيرة الذاتية'),
                           ),
-                        )
-                        .toList(),
-                  ),
+                        );
+                      }
+                    }
+                  },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-                // Quick Settings (Placeholder per screenshot)
-                _buildSectionHeader(context, AppConstants.quickSettings),
-                // Add quick settings items if needed, mostly toggle switches or arrows
+                // ── Contact Info Card ──
+                ProfileContactInfoCard(
+                  email: profile.email,
+                  phone: profile.phone,
+                ),
+                const SizedBox(height: 20),
+
+                // ── Skills Card ──
+                ProfileSkillsCard(skills: profile.skills),
+                const SizedBox(height: 32),
               ],
             ),
           );
         },
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContactRow(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 4),
-              // Directionality for phone number/english text
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  textAlign: TextAlign.right, // Align right locally
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE3F2FD),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: const Color(0xFF1565C0), size: 20),
-        ),
-      ],
     );
   }
 }

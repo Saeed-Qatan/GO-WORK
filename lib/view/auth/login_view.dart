@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:gowork/core/constants/app_constants.dart';
-import 'package:gowork/theme/app_colors.dart';
-import 'package:gowork/view/auth/forget_page.dart';
-import 'package:gowork/view/auth/register_info_page.dart';
-import 'package:gowork/view/main_view.dart';
 import 'package:gowork/viewmodel/auth/login_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:gowork/widget/custom_text_field.dart';
-import 'package:gowork/widget/social_button.dart';
-import 'package:gowork/utils/navigations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 import 'package:provider/provider.dart';
 
 class LoginView extends StatefulWidget {
@@ -33,8 +29,9 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -51,20 +48,22 @@ class _LoginViewState extends State<LoginView> {
                       height: 90,
                       width: 90,
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: cs.primary,
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withValues(alpha: 0.5),
+                            color: Theme.of(
+                              context,
+                            ).shadowColor.withValues(alpha: 0.5),
                             blurRadius: 5,
                             spreadRadius: 1,
                             offset: const Offset(0, 7),
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.person_outline,
-                        color: Colors.white,
+                        color: cs.onPrimary,
                         size: 45,
                       ),
                     ),
@@ -74,14 +73,14 @@ class _LoginViewState extends State<LoginView> {
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            color: cs.onSurface,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       AppConstants.loginSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 48),
@@ -119,27 +118,25 @@ class _LoginViewState extends State<LoginView> {
                           children: [
                             Checkbox(
                               value: viewModel.rememberMe,
-                              activeColor: const Color(0xff1F59DF),
+                              activeColor: cs.primary,
                               onChanged: viewModel.toggleRememberMe,
-                              side: const BorderSide(
-                                color: AppColors.textSecondary,
-                              ),
+                              side: BorderSide(color: cs.onSurfaceVariant),
                             ),
-                            const Text(
+                            Text(
                               AppConstants.rememberMe,
-                              style: TextStyle(color: AppColors.textSecondary),
+                              style: TextStyle(color: cs.onSurfaceVariant),
                             ),
                           ],
                         ),
                         TextButton(
                           onPressed: () {
-                            NavigationService.navigateTo(const ForgetPage());
+                            context.push(AppRoutes.forgetPassword);
                           },
                           child: Text(
                             AppConstants.forgotPassword,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color: AppColors.primary,
+                                  color: cs.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -152,8 +149,9 @@ class _LoginViewState extends State<LoginView> {
                         padding: const EdgeInsets.only(bottom: 16.0),
                         child: Text(
                           viewModel.errorMessage!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.error),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: cs.error),
                         ),
                       ),
                     CustomButton(
@@ -167,9 +165,7 @@ class _LoginViewState extends State<LoginView> {
                           );
                           if (success) {
                             if (context.mounted) {
-                              NavigationService.pushReplacement(
-                                const MainView(),
-                              );
+                              context.go(AppRoutes.home);
                             }
                           }
                         }
@@ -178,39 +174,45 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(height: 32),
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                        Expanded(
+                          child: Divider(color: Theme.of(context).dividerColor),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             AppConstants.orSeparator,
-                            style: TextStyle(color: AppColors.textSecondary),
+                            style: TextStyle(color: cs.onSurfaceVariant),
                           ),
                         ),
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
+                        Expanded(
+                          child: Divider(color: Theme.of(context).dividerColor),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 32),
-                    SocialButton(
-                      text: AppConstants.googleLogin,
-                      onPressed: () {},
-                    ),
-                    const SizedBox(height: 32),
+                    // google button
+                    // TODO: implement google login
+                    // const SizedBox(height: 32),
+                    // SocialButton(
+                    //   text: AppConstants.googleLogin,
+                    //   onPressed: () {},
+                    // ),
+                    // const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           AppConstants.noAccount,
-                          style: TextStyle(color: AppColors.textSecondary),
+                          style: TextStyle(color: cs.onSurfaceVariant),
                         ),
                         TextButton(
                           onPressed: () {
-                            NavigationService.navigateTo(const RegisterPage());
+                            context.push(AppRoutes.registerInfo);
                           },
                           child: Text(
                             AppConstants.createAccount,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color: AppColors.primary,
+                                  color: cs.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),

@@ -1,0 +1,106 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import '../model/profile_model.dart';
+import '../repository/profile_repository.dart';
+import '../services/notification_topic_service.dart';
+import '../utils/local_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+class ProfileViewModel extends ChangeNotifier {
+  final ProfileRepository _repository = ProfileRepository();
+  final LocalStorage _storage = LocalStorage();
+  final NotificationTopicService? _notificationTopicService;
+  ProfileModel? _profile;
+  ProfileModel? get profile => _profile;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  ProfileViewModel({NotificationTopicService? notificationTopicService})
+    : _notificationTopicService = notificationTopicService;
+
+  Future<void> fetchProfile() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _profile = await _repository.getUserProfile();
+      await _notificationTopicService?.subscribeUserTopics(
+        categoryId: _profile?.categoryId,
+      );
+    } catch (e) {
+      debugPrint('Error fetching profile: $e');
+      _errorMessage = 'حدث خطأ أثناء تحميل الملف الشخصي: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// PATCH /Account/Candidate/UpdateProfile - form-data with all fields + files.
+  Future<void> updateProfile({
+    required Map<String, String> fields,
+    List<MapEntry<String, String>>? repeatedFields,
+    Map<String, File>? files,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      debugPrint('--- STARTING PROFILE UPDATE (PATCH) ---');
+      await _repository.updateProfile(
+        fields: fields,
+        repeatedFields: repeatedFields,
+        files: files,
+      );
+      debugPrint('--- PROFILE UPDATE SUCCESS. REFETCHING PROFILE ---');
+      await fetchProfile();
+    } catch (e) {
+      debugPrint('--- ERROR IN UPDATE PROFILE: $e ---');
+      _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// POST /Account/candidate/uploadfile
+  Future<void> uploadFile(File file) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      debugPrint('--- STARTING FILE UPLOAD ---');
+      await _repository.uploadFile(file);
+      debugPrint('--- FILE UPLOAD SUCCESS. REFETCHING PROFILE ---');
+      await fetchProfile();
+    } catch (e) {
+      debugPrint('--- ERROR IN UPLOAD FILE: $e ---');
+      _errorMessage = 'حدث خطأ أثناء رفع الملف: $e';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await FirebaseMessaging.instance.deleteToken();
+      debugPrint('=== FCM: Token deleted on logout ===');
+    } catch (e) {
+      debugPrint('=== FCM: Error deleting token: $e ===');
+    }
+
+    await _storage.clear();
+    _profile = null;
+    notifyListeners();
+  }
+}

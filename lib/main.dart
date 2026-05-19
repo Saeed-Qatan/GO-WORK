@@ -1,20 +1,54 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-
-import 'package:gowork/view/splash_view.dart';
-
-import 'package:provider/provider.dart';
-import 'theme/app_theme.dart';
-
-import 'package:gowork/utils/navigations.dart';
-import 'viewmodel/auth/login_view_model.dart';
-import 'viewmodel/home/home_view_model.dart';
-import 'viewmodel/applications/applications_view_model.dart';
-import 'viewmodel/interviews/interviews_view_model.dart';
-import 'viewmodel/profile/profile_view_model.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-void main() {
+import 'theme/app_theme.dart';
+import 'routing/app_router.dart';
+import 'utils/snackbar_service.dart';
+import 'services/notification_topic_service.dart';
+import 'services/push_notification_service.dart';
+
+import 'viewmodel/auth/login_view_model.dart';
+import 'viewmodel/home_view_model.dart';
+import 'viewmodel/applications_view_model.dart';
+import 'viewmodel/interviews_view_model.dart';
+import 'viewmodel/profile_view_model.dart';
+import 'viewmodel/job_details_view_model.dart';
+import 'viewmodel/settings_view_model.dart';
+import 'viewmodel/notifications_view_model.dart';
+
+/// Singleton service instance — shared across the app lifetime.
+final PushNotificationService pushNotificationService =
+    PushNotificationService();
+final NotificationTopicService notificationTopicService =
+    NotificationTopicService();
+
+void main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Register the background message handler before Firebase.initializeApp
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  await Firebase.initializeApp();
+  unawaited(_initializeNotifications());
+
   runApp(const MyApp());
+}
+
+Future<void> _initializeNotifications() async {
+  try {
+    await pushNotificationService.initialize();
+  } catch (e) {
+    debugPrint('=== FCM: PUSH NOTIFICATION INITIALIZE ERROR: $e ===');
+  }
+
+  await notificationTopicService.subscribeToAll();
 }
 
 class MyApp extends StatelessWidget {
@@ -24,25 +58,51 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => LoginViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => LoginViewModel(
+            pushNotificationService: pushNotificationService,
+            notificationTopicService: notificationTopicService,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(create: (_) => InterviewsViewModel()),
-        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => ProfileViewModel(
+            notificationTopicService: notificationTopicService,
+          ),
+        ),
+        ChangeNotifierProvider(create: (_) => JobDetailsViewModel()),
+        ChangeNotifierProvider(create: (_) => SettingsViewModel()),
+        ChangeNotifierProvider(
+          create: (_) =>
+              NotificationsViewModel(pushService: pushNotificationService),
+        ),
       ],
-      child: MaterialApp(
-        title: 'Go Work',
+      child: MaterialApp.router(
+        title: 'Masarak',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        navigatorKey: NavigationService.navigatorKey,
-        locale: const Locale('ar', 'AE'), // Default to Arabic as per screenshot
+        scaffoldMessengerKey: SnackbarService.messengerKey,
+
+        // GoRouter Configuration
+        routerConfig: appRouter,
+
+        // Global Premium Scroll Physics
+        scrollBehavior: const MaterialScrollBehavior().copyWith(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+        ),
+
+        // Localization
+        locale: const Locale('ar', 'AE'), // Default to Arabic
         supportedLocales: const [Locale('en', 'US'), Locale('ar', 'AE')],
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: const SplashView(),
       ),
     );
   }

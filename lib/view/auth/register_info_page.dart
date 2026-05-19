@@ -35,7 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color: AppColors.textSecondary.withValues(alpha: 0.1),
                         spreadRadius: 5,
                         blurRadius: 7,
                         offset: const Offset(0, 3),
@@ -56,7 +56,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             borderRadius: BorderRadius.circular(25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withValues(alpha: 0.5),
+                                color: AppColors.textSecondary.withValues(
+                                  alpha: 0.5,
+                                ),
                                 blurRadius: 5,
                                 spreadRadius: 1,
                                 offset: const Offset(0, 7),
@@ -82,31 +84,39 @@ class _RegisterPageState extends State<RegisterPage> {
                         CustomTextField(
                           controller: viewModel.firstNameController,
                           label: 'اسم الاول',
-                          hint: 'علي',
+                          hint: 'الاسم الاول',
+                          validator: (val) =>
+                              viewModel.validateNotEmpty(val, 'الاسم الاول'),
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.fatherNameController,
                           label: 'اسم الاب',
-                          hint: 'ناصر',
+                          hint: 'الاسم الثاني',
+                          validator: (val) =>
+                              viewModel.validateNotEmpty(val, 'اسم الاب'),
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.familyNameController,
                           label: 'اسم العائلة',
-                          hint: 'محمد',
+                          hint: 'اللقب',
+                          validator: (val) =>
+                              viewModel.validateNotEmpty(val, 'اسم العائلة'),
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.emailController,
                           label: 'البريد الإلكتروني',
-                          hint: 'ali@gmail.com',
+                          hint: 'yourmail@gmail.com',
+                          validator: viewModel.validateEmail,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
                           controller: viewModel.phoneController,
                           label: 'رقم الهاتف',
-                          hint: '+967774165326',
+                          hint: 'رقم الهاتف',
+                          validator: viewModel.validatePhone,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
@@ -114,6 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: viewModel.passwordController,
                           hint: 'كلمة المرور',
                           isPassword: true,
+                          validator: viewModel.validatePassword,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(
@@ -121,6 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           hint: 'تأكيد كلمة المرور',
                           label: 'تأكيد كلمة المرور',
                           isPassword: true,
+                          validator: viewModel.validateConfirmPassword,
                         ),
                         if (viewModel.errorMessage != null)
                           Padding(
@@ -178,7 +190,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             "بالتسجيل، أنت توافق على سياسة الخصوصية والشروط والأحكام",
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey.shade500),
+                                ?.copyWith(color: AppColors.textSecondary),
                           ),
                         ),
                         const SizedBox(height: 10),

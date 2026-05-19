@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:gowork/theme/app_colors.dart';
-import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/viewmodel/auth/register_cv_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
+import 'package:gowork/widget/search/filter_dropdown.dart';
+import 'package:gowork/model/auth/register_data_model.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterCVPage extends StatefulWidget {
-  const RegisterCVPage({super.key});
+  final RegisterDataModel data;
+  const RegisterCVPage({super.key, required this.data});
 
   @override
   State<RegisterCVPage> createState() => _RegisterCVPageState();
@@ -19,23 +22,29 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
       create: (_) => RegisterCVViewModel(),
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            onPressed: () => context.pop(),
+          ),
+        ),
         body: Center(
           child: SingleChildScrollView(
-            child: Consumer<RegisterDataModel>(
-              builder: (context, dataModel, child) {
-                // Access ViewModel from the local provider
-                final viewModel = Provider.of<RegisterCVViewModel>(
-                  context,
-                  listen: false,
-                );
-
+            child: Consumer<RegisterCVViewModel>(
+              builder: (context, viewModel, child) {
+                // CV is optional — backend accepts registration without it.
+                // Required: at least one skill + a category (when categories loaded).
                 final isFormComplete =
-                    dataModel.cvFile != null &&
-                    dataModel.fieldOfInterest != null &&
-                    dataModel.skills.isNotEmpty;
+                    viewModel.skills.isNotEmpty &&
+                    (viewModel.categories.isNotEmpty
+                        ? viewModel.selectedCategoryId != null
+                        : true);
 
                 final availableSuggestedSkills = viewModel.suggestedSkills
-                    .where((skill) => !dataModel.skills.contains(skill))
+                    .where((skill) => !viewModel.skills.contains(skill))
                     .toList();
 
                 return Container(
@@ -46,7 +55,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color: AppColors.textSecondary.withValues(alpha: 0.1),
                         spreadRadius: 5,
                         blurRadius: 7,
                         offset: const Offset(0, 3),
@@ -65,7 +74,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withValues(alpha: 0.5),
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.5,
+                              ),
                               blurRadius: 5,
                               spreadRadius: 1,
                               offset: const Offset(0, 7),
@@ -107,13 +118,13 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                       ),
                       const SizedBox(height: 10),
                       GestureDetector(
-                        onTap: () => viewModel.pickCVFile(context),
+                        onTap: () => viewModel.pickCV(),
                         child: Container(
                           height: 150,
                           width: double.infinity,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: AppColors.inputBorder,
+                              color: AppColors.border,
                               width: 2,
                             ),
                             borderRadius: BorderRadius.circular(15),
@@ -125,14 +136,15 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                               const Icon(
                                 Icons.upload_file_outlined,
                                 size: 40,
-                                color: Colors.grey,
+                                color: AppColors.textSecondary,
                               ),
                               const SizedBox(height: 10),
-                              if (dataModel.cvFile != null)
+                              if (viewModel.cvFileName != null &&
+                                  viewModel.cvFileName!.isNotEmpty)
                                 Consumer<RegisterCVViewModel>(
                                   builder: (context, cvViewModel, child) =>
                                       Text(
-                                        cvViewModel.cvFileName,
+                                        cvViewModel.cvFileName!,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
                                           fontWeight: FontWeight.bold,
@@ -141,8 +153,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                 )
                               else
                                 ElevatedButton(
-                                  onPressed: () =>
-                                      viewModel.pickCVFile(context),
+                                  onPressed: () => viewModel.pickCV(),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xffF6F9FF),
                                     foregroundColor: Theme.of(
@@ -156,7 +167,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                               const Text(
                                 "(الحد الأقصى 10MB - PDF, DOC, DOCX)",
                                 style: TextStyle(
-                                  color: Colors.grey,
+                                  color: AppColors.textSecondary,
                                   fontSize: 12,
                                 ),
                               ),
@@ -184,8 +195,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             ),
                             child: IconButton(
                               icon: const Icon(Icons.add, color: Colors.white),
-                              onPressed: () =>
-                                  viewModel.addSkillFromTextField(context),
+                              onPressed: () => viewModel.addSkill(),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -205,8 +215,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   horizontal: 16,
                                 ),
                               ),
-                              onSubmitted: (value) =>
-                                  viewModel.addSkillFromTextField(context),
+                              onSubmitted: (value) => viewModel.addSkill(),
                             ),
                           ),
                         ],
@@ -218,13 +227,12 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           spacing: 8.0,
                           runSpacing: 4.0,
                           alignment: WrapAlignment.start,
-                          children: dataModel.skills
+                          children: viewModel.skills
                               .map(
                                 (skill) => Chip(
                                   label: Text(skill),
                                   deleteIcon: const Icon(Icons.close, size: 16),
-                                  onDeleted: () =>
-                                      viewModel.removeSkill(context, skill),
+                                  onDeleted: () => viewModel.removeSkill(skill),
                                   backgroundColor: AppColors.inputBackground,
                                   side: BorderSide.none,
                                 ),
@@ -237,7 +245,10 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           "مهارات مقترحة:",
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       Align(
@@ -252,55 +263,63 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   label: Text(skill),
                                   backgroundColor: AppColors.inputBackground,
                                   labelStyle: TextStyle(
-                                    color: Colors.grey.shade800,
+                                    color: AppColors.textPrimary,
                                   ),
                                   side: BorderSide.none,
-                                  onPressed: () => viewModel.addSuggestedSkill(
-                                    context,
-                                    skill,
-                                  ),
+                                  onPressed: () =>
+                                      viewModel.addSuggestedSkill(skill),
                                 ),
                               )
                               .toList(),
                         ),
                       ),
                       const SizedBox(height: 25),
-
                       Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          "المجال المهتم به",
+                          "المجال المناسب",
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(height: 10),
-                      DropdownButtonFormField<String>(
-                        initialValue: dataModel.fieldOfInterest,
-                        hint: const Text('اختر المجال المهتم به'),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: AppColors.inputBackground,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
+                      if (viewModel.isCategoriesLoading)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                        )
+                      else if (viewModel.categories.isNotEmpty)
+                        FilterDropdown(
+                          label: 'اختر مجالك المهني',
+                          hint: 'لم يتم الاختيار',
+                          value: viewModel.selectedCategoryId != null
+                              ? viewModel.categories
+                                    .firstWhere(
+                                      (cat) =>
+                                          cat['id'].toString() ==
+                                          viewModel.selectedCategoryId,
+                                      orElse: () => <String, dynamic>{},
+                                    )['name']
+                                    ?.toString()
+                              : null,
+                          items: viewModel.categories
+                              .map((cat) => cat['name'].toString())
+                              .toList(),
+                          onChanged: (String? newFieldValue) {
+                            if (newFieldValue != null) {
+                              final chosenCat = viewModel.categories.firstWhere(
+                                (cat) =>
+                                    cat['name'].toString() == newFieldValue,
+                              );
+                              viewModel.setCategory(chosenCat['id'].toString());
+                            } else {
+                              viewModel.setCategory(null);
+                            }
+                          },
                         ),
-                        items: viewModel.fieldsOfInterest.map((String field) {
-                          return DropdownMenuItem<String>(
-                            value: field,
-                            child: Text(field),
-                          );
-                        }).toList(),
-                        onChanged: (newValue) =>
-                            viewModel.selectField(context, newValue),
-                      ),
-                      const SizedBox(height: 30),
-
+                      const SizedBox(height: 35),
                       Consumer<RegisterCVViewModel>(
                         builder: (context, cvViewModel, child) {
                           return cvViewModel.isLoading
@@ -313,11 +332,12 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   text: 'إنهاء التسجيل',
                                   color: isFormComplete
                                       ? Theme.of(context).primaryColor
-                                      : Colors.grey.shade400,
+                                      : AppColors.textHint,
                                   textColor: Colors.white,
                                   onPressed: isFormComplete
                                       ? () => cvViewModel.finishRegistration(
                                           context,
+                                          widget.data,
                                         )
                                       : null,
                                 );
@@ -333,7 +353,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
+                              color: AppColors.border,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -342,7 +362,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
+                              color: AppColors.border,
                               shape: BoxShape.circle,
                             ),
                           ),

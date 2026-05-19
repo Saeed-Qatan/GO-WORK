@@ -1,120 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
-import 'package:gowork/view/auth/register_cv_skills_page.dart';
-import 'package:gowork/view/auth/login_view.dart';
-import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 
 class RegisterInfoViewModel extends ChangeNotifier {
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
 
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController fatherNameController = TextEditingController();
-  final TextEditingController familyNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final firstNameController = TextEditingController();
+  final fatherNameController = TextEditingController();
+  final familyNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  bool _obscurePassword = true;
-  bool get obscurePassword => _obscurePassword;
+  bool isLoading = false;
+  String? errorMessage;
 
-  bool _obscureConfirmPassword = true;
-  bool get obscureConfirmPassword => _obscureConfirmPassword;
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  void togglePasswordVisibility() {
-    _obscurePassword = !_obscurePassword;
-    notifyListeners();
-  }
-
-  void toggleConfirmPasswordVisibility() {
-    _obscureConfirmPassword = !_obscureConfirmPassword;
-    notifyListeners();
-  }
-
-  String? notEmptyValidator(String? value, String fieldName) {
-    if (value == null || value.isEmpty) {
-      return 'الرجاء إدخال $fieldName';
+  String? validateNotEmpty(String? v, String name) {
+    if (v == null || v.trim().isEmpty) return 'الرجاء إدخال $name';
+    if (v.trim().length < 2) return 'الاسم يجب أن يكون حرفين على الأقل';
+    if (!RegExp(r'^[\p{L}\s]+$', unicode: true).hasMatch(v)) {
+      return 'الاسم يجب أن يحتوي على أحرف فقط';
     }
     return null;
   }
 
-  String? emailValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'الرجاء إدخال البريد الإلكتروني';
-    }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
+  String? validateEmail(String? v) {
+    if (v == null || v.trim().isEmpty) return 'الرجاء إدخال البريد الإلكتروني';
+    final emailRegex = RegExp(
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    );
+    if (!emailRegex.hasMatch(v.trim())) {
       return 'البريد الإلكتروني غير صالح';
     }
     return null;
   }
 
-  String? passwordValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'الرجاء إدخال كلمة المرور';
-    }
-    if (value.length < 6) {
-      return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-    }
-    return null;
-  }
-
-  String? confirmPasswordValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'الرجاء تأكيد كلمة المرور';
-    }
-    if (value != passwordController.text) {
-      return 'كلمات المرور غير متطابقة';
+  String? validatePhone(String? v) {
+    if (v == null || v.trim().isEmpty) return 'الرجاء إدخال رقم الهاتف';
+    final phoneRegex = RegExp(r'^\+?[0-9]{8,15}$');
+    if (!phoneRegex.hasMatch(v.trim())) {
+      return 'رقم الهاتف غير صالح (8-15 رقم)';
     }
     return null;
   }
 
-  Future<void> onContinuePressed(BuildContext context) async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
+  String? validatePassword(String? v) {
+    if (v == null || v.isEmpty) return 'الرجاء إدخال كلمة المرور';
+    if (v.length < 8) return 'يجب أن لا تقل كلمة المرور عن 8 أحرف';
 
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+    bool hasUppercase = v.contains(RegExp(r'[A-Z]'));
+    bool hasLowercase = v.contains(RegExp(r'[a-z]'));
+    bool hasDigits = v.contains(RegExp(r'[0-9]'));
 
-    try {
-      // Update the data model
-      final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-      dataModel.firstName = firstNameController.text;
-      dataModel.fatherName = fatherNameController.text;
-      dataModel.familyName = familyNameController.text;
-      dataModel.email = emailController.text;
-      dataModel.phone = phoneController.text;
-      dataModel.password = passwordController.text;
+    if (!hasUppercase) return 'يجب أن تحتوي على حرف إنجليزي كبير (A-Z)';
+    if (!hasLowercase) return 'يجب أن تحتوي على حرف إنجليزي صغير (a-z)';
+    if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل (0-9)';
 
-      // Navigate to next page
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const RegisterCVPage()),
-        );
-      }
-    } catch (e) {
-      _errorMessage = 'حدث خطأ، الرجاء المحاولة مرة أخرى';
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    return null;
+  }
+
+  String? validateConfirmPassword(String? v) {
+    if (v == null || v.isEmpty) return 'الرجاء تأكيد كلمة المرور';
+    if (v != passwordController.text) return 'كلمات المرور غير متطابقة';
+    return null;
+  }
+
+  void onContinuePressed(BuildContext context) {
+    if (!formKey.currentState!.validate()) return;
+
+    final data = RegisterDataModel(
+      firstName: firstNameController.text.trim(),
+      fatherName: fatherNameController.text.trim(),
+      familyName: familyNameController.text.trim(),
+      email: emailController.text.trim(),
+      phone: phoneController.text.trim(),
+      password: passwordController.text,
+      confirmPassword: confirmPasswordController.text,
+    );
+
+    context.push(AppRoutes.registerPhoto, extra: data);
   }
 
   void onLoginPressed(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginView()),
-    );
+    context.go(AppRoutes.login);
   }
 
   @override

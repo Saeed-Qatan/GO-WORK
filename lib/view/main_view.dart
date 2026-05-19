@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 import 'home_view.dart';
+import 'search_view.dart';
 import 'applications_view.dart';
 import 'interviews_view.dart';
 import 'profile_view.dart';
-import '../theme/app_colors.dart';
-import '../core/constants/app_constants.dart';
+import '../widget/custom_bottom_nav_bar.dart';
 
 class MainView extends StatefulWidget {
   const MainView({super.key});
@@ -16,50 +17,35 @@ class MainView extends StatefulWidget {
 class _MainViewState extends State<MainView> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeView(), // Home
-    ApplicationsView(), // Applications
-    InterviewsView(), // Interviews
-    ProfileView(), // Profile
+  final List<Widget> _screens = [
+    HomeView(key: ValueKey('home')), // Home
+    SearchView(key: ValueKey('search')), // Search
+    ApplicationsView(key: ValueKey('applications')), // Applications
+    InterviewsView(key: ValueKey('interviews')), // Interviews
+    ProfileView(key: ValueKey('profile')), // Profile
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
+      body: PageTransitionSwitcher(
+        duration: const Duration(milliseconds: 400),
+        transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
+          return FadeThroughTransition(
+            animation: primaryAnimation,
+            secondaryAnimation: secondaryAnimation,
+            child: child,
+          );
+        },
+        child: _screens[_currentIndex],
+      ),
+      bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: AppConstants.navHome,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
-            activeIcon: Icon(Icons.assignment),
-            label: AppConstants.navApplications,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: AppConstants.navInterviews,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: AppConstants.navProfile,
-          ),
-        ],
       ),
     );
   }

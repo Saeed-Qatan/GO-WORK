@@ -1,109 +1,195 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+
+import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
-import 'package:gowork/utils/navigations.dart';
-import 'package:gowork/view/main_view.dart';
-import 'package:provider/provider.dart';
-import 'package:gowork/repository/register_repository.dart';
+import 'package:gowork/services/auth/register_service.dart';
+import 'package:gowork/utils/api_storage.dart';
+import 'package:gowork/routing/app_router.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/main.dart'; // للوصول إلى notificationTopicService
 
 class RegisterCVViewModel extends ChangeNotifier {
-  final TextEditingController skillController = TextEditingController();
+  final skillController = TextEditingController();
+  final List<String> _skills = [];
+  List<String> get skills => _skills;
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  File? cvFile;
+  String? cvFileName;
 
-  String _cvFileName = '';
-  String get cvFileName => _cvFileName;
+  bool isLoading = false;
 
-  final List<String> suggestedSkills = [
-    'JavaScript',
-    'Python',
-    'React',
-    'Node.js',
-    'HTML/CSS',
-    'Flutter',
-    'تحليل البيانات',
-    'إدارة المشاريع',
-    'التسويق الرقمي',
-    'التصميم الجرافيكي',
-  ];
+  // --- Categories from API (NO hardcoded data) ---
+  final ApiClient _apiClient = ApiClient();
+  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> get categories => _categories;
+  bool isCategoriesLoading = false;
 
-  final List<String> fieldsOfInterest = [
-    'تطوير البرمجيات',
-    'تحليل البيانات',
-    'التسويق الرقمي',
-    'إدارة المشاريع',
-    'التصميم الجرافيكي',
-    'الموارد البشرية',
-    'المحاسبة والمالية',
-    'الذكاء الاصطناعي',
-  ];
+  String? selectedCategoryId;
 
-  Future<void> pickCVFile(BuildContext context) async {
-    // TODO: Implement file picker using file_picker package
-    // For now, simulate file selection
-    _cvFileName = 'my_cv.pdf';
+  RegisterCVViewModel() {
+    fetchCategories();
+    fetchSuggestedSkills();
+  }
 
-    // TODO: Set cvFile on dataModel when file picker is implemented
-    // final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-    // dataModel.setCvFile(pickedFile);
+  Future<void> fetchCategories() async {
+    isCategoriesLoading = true;
+    notifyListeners();
 
+    try {
+      final response = await _apiClient.get(ApiConstants.jobCategories);
+      debugPrint('Categories Response: $response');
+
+      // Parse categories from various possible response structures
+      List<dynamic>? categoriesList;
+      if (response['data'] is List) {
+        categoriesList = response['data'];
+      } else if (response['categories'] is List) {
+        categoriesList = response['categories'];
+      } else if (response['data'] is Map &&
+          response['data']['categories'] is List) {
+        categoriesList = response['data']['categories'];
+      } else if (response.containsKey('success') && response['data'] is List) {
+        categoriesList = response['data'];
+      }
+
+      if (categoriesList != null && categoriesList.isNotEmpty) {
+        _categories = categoriesList.map((cat) {
+          return <String, dynamic>{
+            'id':
+                (cat['id'] ??
+                        cat['Id'] ??
+                        cat['categoryId'] ??
+                        cat['CategoryId'] ??
+                        '')
+                    .toString(),
+            'name':
+                (cat['name'] ??
+                        cat['Name'] ??
+                        cat['categoryName'] ??
+                        cat['CategoryName'] ??
+                        '')
+                    .toString(),
+          };
+        }).toList();
+        debugPrint('Categories loaded from API: ${_categories.length} items');
+      } else {
+        debugPrint('WARNING: Empty categories from API');
+        _categories = [];
+      }
+    } catch (e) {
+      debugPrint('Error fetching categories: $e');
+      _categories = [];
+    } finally {
+      isCategoriesLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void setCategory(String? id) {
+    selectedCategoryId = id;
     notifyListeners();
   }
 
-  void addSkillFromTextField(BuildContext context) {
-    final skill = skillController.text.trim();
-    if (skill.isNotEmpty) {
-      final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-      dataModel.addSkill(skill);
+  List<String> suggestedSkills = [];
+  bool isSkillsLoading = false;
+
+  Future<void> fetchSuggestedSkills() async {
+    isSkillsLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.get(
+        ApiConstants.jobSkills,
+        skipAuth: true,
+      );
+      List<dynamic>? skillsList;
+      if (response['data'] is List) {
+        skillsList = response['data'];
+      }
+
+      if (skillsList != null) {
+        suggestedSkills = skillsList
+            .map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString())
+            .take(15)
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching suggested skills: $e');
+    } finally {
+      isSkillsLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void addSkill() {
+    final v = skillController.text.trim();
+    if (v.isNotEmpty && !_skills.contains(v)) {
+      _skills.add(v);
       skillController.clear();
       notifyListeners();
     }
   }
 
-  void addSuggestedSkill(BuildContext context, String skill) {
-    final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-    dataModel.addSkill(skill);
+  void removeSkill(String s) {
+    _skills.remove(s);
     notifyListeners();
   }
 
-  void removeSkill(BuildContext context, String skill) {
-    final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-    dataModel.removeSkill(skill);
-    notifyListeners();
-  }
-
-  void selectField(BuildContext context, String? field) {
-    if (field != null) {
-      final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
-      dataModel.setFieldOfInterest(field);
+  void addSuggestedSkill(String skill) {
+    if (!_skills.contains(skill)) {
+      _skills.add(skill);
       notifyListeners();
     }
   }
 
-  Future<void> finishRegistration(BuildContext context) async {
-    _isLoading = true;
+  Future<void> pickCV() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
+
+    if (result?.files.single.path != null) {
+      cvFile = File(result!.files.single.path!);
+      cvFileName = result.files.single.name;
+      notifyListeners();
+    }
+  }
+
+  Future<void> finishRegistration(
+    BuildContext context,
+    RegisterDataModel base,
+  ) async {
+    isLoading = true;
     notifyListeners();
 
     try {
-      final dataModel = Provider.of<RegisterDataModel>(context, listen: false);
+      final data = base.copyWith(
+        skills: _skills,
+        cvFile: cvFile,
+        categoryId:
+            selectedCategoryId ??
+            '101', // Fallback ID if API fails so reg succeeds
+      );
 
-      final RegisterRepository repository = RegisterRepository();
-      await repository.register(dataModel);
+      await RegisterService().register(data);
+
+      await notificationTopicService.subscribeUserTopics(
+        categoryId: data.categoryId,
+      );
+
+      SnackbarService.showSuccess(
+        'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',
+      );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم التسجيل بنجاح!')));
-        NavigationService.pushAndRemoveUntil(const MainView());
+        context.go(AppRoutes.verifyEmail, extra: data.email);
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('حدث خطأ: ${e.toString()}')));
-      }
+      SnackbarService.showError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      _isLoading = false;
+      isLoading = false;
       notifyListeners();
     }
   }
