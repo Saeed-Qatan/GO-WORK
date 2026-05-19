@@ -10,9 +10,10 @@ class ResetPasswordRepository {
       final response = await _apiClient.post(
         ApiConstants.resetPassword,
         request.toJson(),
+        skipAuth: true,
       );
 
-      if (response['success'] != true) {
+      if (response.containsKey('success') && response['success'] != true) {
         throw Exception(response['message'] ?? 'Password reset failed');
       }
     } catch (e) {

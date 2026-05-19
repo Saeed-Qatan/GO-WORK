@@ -39,16 +39,13 @@ class ResetPasswordViewModel extends ChangeNotifier {
     if (v == null || v.isEmpty) return 'الرجاء إدخال كلمة المرور';
     if (v.length < 6) return 'كلمة المرور قصيرة جداً';
 
-    // Check for English characters and complexity (reusing logic from Register)
     bool hasUppercase = v.contains(RegExp(r'[A-Z]'));
     bool hasDigits = v.contains(RegExp(r'[0-9]'));
-    bool hasSpecialCharacters = v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
     bool isEnglish = v.contains(RegExp(r'^[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]+$'));
 
     if (!isEnglish) return 'كلمة المرور يجب أن تكون باللغة الإنجليزية';
     if (!hasUppercase) return 'يجب أن تحتوي على حرف كبير واحد على الأقل';
     if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل';
-    if (!hasSpecialCharacters) return 'يجب أن تحتوي على رمز خاص';
 
     return null;
   }

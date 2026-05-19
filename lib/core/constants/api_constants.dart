@@ -7,7 +7,7 @@ class ApiConstants {
   static const String verifyEmail = 'Account/Candidate/VerifyEmail';
   static const String login = 'Account/Candidate/Login';
   static const String forgetPassword = 'Account/ForgetPassword';
-  static const String resetPassword = 'https://gowork.runasp.net/api/Account/ResetPassword';
+  static const String resetPassword = 'Account/ResetPassword';
   static const String changePassword = 'Account/ChangePassword';
   static const String resendOtp = 'Account/ResendOtp';
   static const String resendLink = 'Account/ResendLink';

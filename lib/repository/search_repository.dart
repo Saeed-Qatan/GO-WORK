@@ -9,7 +9,7 @@ class SearchRepository {
   Future<List<JobModel>> searchJobs({
     String? query,
     String? category,
-    String? location,
+    String? workMode,
     String? type,
     String? country,
   }) async {
@@ -18,14 +18,21 @@ class SearchRepository {
     try {
       // Construct query parameters
       final Map<String, String> queryParams = {};
-      if (query != null && query.isNotEmpty) queryParams['query'] = query;
-      if (category != null && category != 'جميع المجالات')
+      if (query != null && query.isNotEmpty) {
+        queryParams['query'] = query;
+      }
+      if (category != null && category != 'جميع المجالات') {
         queryParams['category'] = category;
-      if (location != null && location != 'الكل')
-        queryParams['location'] = location;
-      if (type != null && type != 'الكل') queryParams['type'] = type;
-      if (country != null && country != 'الكل')
+      }
+      if (workMode != null && workMode != 'الكل') {
+        queryParams['locationType'] = workMode;
+      }
+      if (type != null && type != 'الكل') {
+        queryParams['type'] = type;
+      }
+      if (country != null && country != 'الكل') {
         queryParams['country'] = country;
+      }
 
       String queryString = '';
       if (queryParams.isNotEmpty) {
@@ -72,12 +79,17 @@ class SearchRepository {
       final matchesCategory =
           category == null ||
           category == 'جميع المجالات' ||
-          job.category == category;
+          _matchesFilter(job.category, category);
       final matchesLocation =
-          location == null || location == 'الكل' || job.location == location;
+          workMode == null ||
+          workMode == 'الكل' ||
+          _matchesFilter(job.workMode, workMode);
       final matchesCountry =
-          country == null || country == 'الكل' || job.country == country;
-      final matchesType = type == null || type == 'الكل' || job.type == type;
+          country == null ||
+          country == 'الكل' ||
+          _matchesFilter(job.country, country);
+      final matchesType =
+          type == null || type == 'الكل' || _matchesFilter(job.type, type);
 
       return matchesQuery &&
           matchesCategory &&
@@ -85,5 +97,9 @@ class SearchRepository {
           matchesCountry &&
           matchesType;
     }).toList();
+  }
+
+  bool _matchesFilter(String value, String filter) {
+    return value.trim().toLowerCase() == filter.trim().toLowerCase();
   }
 }

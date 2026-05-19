@@ -201,7 +201,7 @@ class SearchViewModel extends ChangeNotifier {
       _jobs = await _repository.searchJobs(
         query: _searchQuery,
         category: _selectedCategory,
-        location: _selectedLocation,
+        workMode: _selectedLocation,
         type: _selectedType,
         country: _selectedCountry,
       );

@@ -76,12 +76,17 @@ class ApiClient {
     String endpoint,
     Map<String, dynamic> body, {
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final response = await _dio.post(
         endpoint,
         data: body,
-        options: Options(headers: headers, contentType: 'application/json'),
+        options: Options(
+          headers: headers,
+          contentType: 'application/json',
+          extra: {'skipAuth': skipAuth},
+        ),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
