@@ -4,6 +4,7 @@ import 'package:gowork/repository/reset_password_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/utils/app_error_parser.dart';
 
 enum ResetState { idle, loading, success, error }
 
@@ -83,7 +84,7 @@ class ResetPasswordViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _state = ResetState.error;
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = AppErrorParser.parse(e);
       notifyListeners();
     }
   }

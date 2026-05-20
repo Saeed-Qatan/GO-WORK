@@ -1,5 +1,6 @@
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/utils/api_storage.dart';
+import 'package:gowork/utils/app_error_parser.dart';
 
 class EmailVerificationRepository {
   final ApiClient _apiClient = ApiClient();
@@ -9,10 +10,15 @@ class EmailVerificationRepository {
       final response = await _apiClient.post(ApiConstants.verifyEmail, {
         'email': email,
         'emailConfirmationCode': code,
-      });
+      }, skipAuth: true);
 
       if (response['success'] != true) {
-        throw Exception(response['message'] ?? 'Verification failed');
+        throw Exception(
+          AppErrorParser.parseResponseData(
+            response,
+            fallbackMessage: 'تعذر التحقق من الكود، يرجى المحاولة مرة أخرى',
+          ),
+        );
       }
     } catch (e) {
       rethrow;
@@ -23,9 +29,14 @@ class EmailVerificationRepository {
     try {
       final response = await _apiClient.post(ApiConstants.resendOtp, {
         'email': email,
-      });
+      }, skipAuth: true);
       if (response['success'] != true) {
-        throw Exception(response['message'] ?? 'Resend failed');
+        throw Exception(
+          AppErrorParser.parseResponseData(
+            response,
+            fallbackMessage: 'تعذر إعادة إرسال الكود، يرجى المحاولة مرة أخرى',
+          ),
+        );
       }
     } catch (e) {
       rethrow;

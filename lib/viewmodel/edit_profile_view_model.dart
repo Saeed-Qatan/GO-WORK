@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../model/edit_profile_model.dart';
 import '../model/profile_model.dart';
 import '../utils/snackbar_service.dart';
+import '../utils/app_error_parser.dart';
 import 'profile_view_model.dart';
 
 class EditProfileViewModel extends ChangeNotifier {
@@ -26,11 +27,12 @@ class EditProfileViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  String get cvFileName => _formData.newCvFile != null
-      ? _formData.newCvFile!.path.split('/').last
-      : (_formData.cvUrl?.isNotEmpty == true
-            ? _formData.cvUrl!.split('/').last
-            : 'لا يوجد ملف');
+  String get cvFileName =>
+      _formData.newCvFile != null
+          ? _formData.newCvFile!.path.split('/').last
+          : (_formData.cvUrl?.isNotEmpty == true
+              ? _formData.cvUrl!.split('/').last
+              : 'لا يوجد ملف');
 
   EditProfileViewModel(this._profileViewModel) {
     _initFromProfile(_profileViewModel.profile);
@@ -87,7 +89,7 @@ class EditProfileViewModel extends ChangeNotifier {
         SnackbarService.showSuccess('تمت إضافة الصورة بنجاح');
       }
     } catch (e) {
-      SnackbarService.showError('تعذر اختيار الصورة: $e');
+      SnackbarService.showError(AppErrorParser.parse(e));
     }
   }
 
@@ -106,7 +108,7 @@ class EditProfileViewModel extends ChangeNotifier {
         SnackbarService.showSuccess('تم اختيار السيرة الذاتية بنجاح');
       }
     } catch (e) {
-      SnackbarService.showError('تعذر اختيار الملف: $e');
+      SnackbarService.showError(AppErrorParser.parse(e));
     }
   }
 
@@ -146,9 +148,8 @@ class EditProfileViewModel extends ChangeNotifier {
       }
 
       // Skills as repeated form-data fields
-      final repeatedFields = _formData.skills
-          .map((s) => MapEntry('Skills', s))
-          .toList();
+      final repeatedFields =
+          _formData.skills.map((s) => MapEntry('Skills', s)).toList();
 
       // Files: ProfilePhoto and Resume
       final files = <String, File>{};
@@ -174,7 +175,7 @@ class EditProfileViewModel extends ChangeNotifier {
       SnackbarService.showSuccess('تم تحديث الملف الشخصي بنجاح');
       return true;
     } catch (e) {
-      SnackbarService.showError('حدث خطأ أثناء حفظ الملف الشخصي');
+      SnackbarService.showError(AppErrorParser.parse(e));
       return false;
     } finally {
       _isLoading = false;

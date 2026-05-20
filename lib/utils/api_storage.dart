@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gowork/core/constants/api_constants.dart';
 import 'dart:io';
+import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/utils/local_storage.dart';
 
 class ApiClient {
@@ -98,12 +99,17 @@ class ApiClient {
     String endpoint,
     Map<String, dynamic> body, {
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final response = await _dio.put(
         endpoint,
         data: body,
-        options: Options(headers: headers, contentType: 'application/json'),
+        options: Options(
+          headers: headers,
+          contentType: 'application/json',
+          extra: {'skipAuth': skipAuth},
+        ),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -115,12 +121,17 @@ class ApiClient {
     String endpoint,
     Map<String, dynamic> body, {
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final response = await _dio.patch(
         endpoint,
         data: body,
-        options: Options(headers: headers, contentType: 'application/json'),
+        options: Options(
+          headers: headers,
+          contentType: 'application/json',
+          extra: {'skipAuth': skipAuth},
+        ),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -131,11 +142,16 @@ class ApiClient {
   Future<Map<String, dynamic>> delete(
     String endpoint, {
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final response = await _dio.delete(
         endpoint,
-        options: Options(headers: headers, contentType: 'application/json'),
+        options: Options(
+          headers: headers,
+          contentType: 'application/json',
+          extra: {'skipAuth': skipAuth},
+        ),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -147,6 +163,7 @@ class ApiClient {
     String endpoint,
     File file, {
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       String fileName = file.path.split(RegExp(r'[/\\]')).last;
@@ -157,7 +174,7 @@ class ApiClient {
       final response = await _dio.post(
         endpoint,
         data: formData,
-        options: Options(headers: headers),
+        options: Options(headers: headers, extra: {'skipAuth': skipAuth}),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -226,6 +243,7 @@ class ApiClient {
     List<MapEntry<String, String>>? repeatedFields,
     Map<String, File>? files,
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final formData = FormData();
@@ -257,7 +275,7 @@ class ApiClient {
       final response = await _dio.put(
         endpoint,
         data: formData,
-        options: Options(headers: headers),
+        options: Options(headers: headers, extra: {'skipAuth': skipAuth}),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -271,6 +289,7 @@ class ApiClient {
     List<MapEntry<String, String>>? repeatedFields,
     Map<String, File>? files,
     Map<String, String>? headers,
+    bool skipAuth = false,
   }) async {
     try {
       final formData = FormData();
@@ -302,7 +321,7 @@ class ApiClient {
       final response = await _dio.patch(
         endpoint,
         data: formData,
-        options: Options(headers: headers),
+        options: Options(headers: headers, extra: {'skipAuth': skipAuth}),
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -323,15 +342,29 @@ class ApiClient {
       // If data is somehow not a Map (e.g. empty), return empty map.
       return <String, dynamic>{};
     } else {
-      throw Exception('Error ${response.statusCode}: ${response.data}');
+      throw AppApiException(
+        AppErrorParser.parseResponseData(
+          response.data,
+          statusCode: response.statusCode,
+        ),
+        statusCode: response.statusCode,
+        data: response.data,
+      );
     }
   }
 
-  Exception _handleDioError(DioException e) {
+  AppApiException _handleDioError(DioException e) {
     if (e.response != null) {
-      return Exception('Error ${e.response?.statusCode}: ${e.response?.data}');
-    } else {
-      return Exception('Network Error: ${e.message}');
+      return AppApiException(
+        AppErrorParser.parseResponseData(
+          e.response?.data,
+          statusCode: e.response?.statusCode,
+        ),
+        statusCode: e.response?.statusCode,
+        data: e.response?.data,
+      );
     }
+
+    return AppApiException(AppErrorParser.parse(e), data: e.message);
   }
 }

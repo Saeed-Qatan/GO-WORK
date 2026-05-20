@@ -1,4 +1,4 @@
-enum InterviewStatus { confirmed, waiting, scheduled }
+enum InterviewStatus { confirmed, scheduled, declined, waiting }
 
 class InterviewModel {
   final String id;
@@ -7,6 +7,7 @@ class InterviewModel {
   final String? companyLogo;
   final String date;
   final String time;
+  final DateTime? scheduledAt;
   final String location; // Physical or Zoom/Online
   final String? interviewerName;
   final String? interviewerRole;
@@ -22,6 +23,7 @@ class InterviewModel {
     this.companyLogo,
     required this.date,
     required this.time,
+    this.scheduledAt,
     required this.location,
     this.interviewerName,
     this.interviewerRole,
@@ -34,12 +36,15 @@ class InterviewModel {
   factory InterviewModel.fromJson(Map<String, dynamic> json) {
     String parsedDate = '';
     String parsedTime = '';
+    DateTime? scheduledAt;
 
     if (json['interviewDate'] != null) {
       try {
-        final DateTime dt = DateTime.parse(json['interviewDate']);
-        parsedDate = "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}";
-        parsedTime = "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+        scheduledAt = DateTime.parse(json['interviewDate']);
+        parsedDate =
+            "${scheduledAt.year}-${scheduledAt.month.toString().padLeft(2, '0')}-${scheduledAt.day.toString().padLeft(2, '0')}";
+        parsedTime =
+            "${scheduledAt.hour.toString().padLeft(2, '0')}:${scheduledAt.minute.toString().padLeft(2, '0')}";
       } catch (e) {
         parsedDate = json['date'] ?? '';
         parsedTime = json['time'] ?? '';
@@ -56,6 +61,7 @@ class InterviewModel {
       companyLogo: json['companyLogo'],
       date: parsedDate,
       time: parsedTime,
+      scheduledAt: scheduledAt,
       location: json['location'] ?? '',
       interviewerName: json['interviewerName'],
       interviewerRole: json['interviewerRole'],
@@ -71,7 +77,29 @@ class InterviewModel {
     final s = statusString.toLowerCase();
     if (s == 'confirmed') return InterviewStatus.confirmed;
     if (s == 'scheduled') return InterviewStatus.scheduled;
+    if (s == 'declined' || s == 'rejected' || s == 'cancelled') {
+      return InterviewStatus.declined;
+    }
     if (s == 'waiting' || s == 'pending') return InterviewStatus.waiting;
     return InterviewStatus.waiting;
+  }
+
+  InterviewModel copyWith({InterviewStatus? status}) {
+    return InterviewModel(
+      id: id,
+      role: role,
+      company: company,
+      companyLogo: companyLogo,
+      date: date,
+      time: time,
+      scheduledAt: scheduledAt,
+      location: location,
+      interviewerName: interviewerName,
+      interviewerRole: interviewerRole,
+      status: status ?? this.status,
+      interviewType: interviewType,
+      meetingLink: meetingLink,
+      notes: notes,
+    );
   }
 }

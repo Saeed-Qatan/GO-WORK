@@ -21,6 +21,7 @@ import 'viewmodel/profile_view_model.dart';
 import 'viewmodel/job_details_view_model.dart';
 import 'viewmodel/settings_view_model.dart';
 import 'viewmodel/notifications_view_model.dart';
+import 'repository/interviews_repository.dart';
 
 /// Singleton service instance — shared across the app lifetime.
 final PushNotificationService pushNotificationService =
@@ -66,7 +67,11 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
-        ChangeNotifierProvider(create: (_) => InterviewsViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => InterviewsViewModel(
+            repository: InterviewsRepository(),
+          ),
+        ),
         ChangeNotifierProvider(
           create: (_) => ProfileViewModel(
             notificationTopicService: notificationTopicService,

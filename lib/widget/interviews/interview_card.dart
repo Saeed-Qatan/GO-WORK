@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../theme/app_colors.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../core/constants/app_constants.dart';
 import '../../model/interview_model.dart';
+import '../../theme/app_colors.dart';
 import '../../viewmodel/interviews_view_model.dart';
+import 'interview_action_button.dart';
+import 'interview_countdown_banner.dart';
+import 'interview_date_badge.dart';
+import 'interview_detail_row.dart';
+import 'interview_meeting_link_button.dart';
+import 'interview_note_row.dart';
+import 'interview_status_chip.dart';
+import 'interview_status_mapper.dart';
 
+/// Orchestrates all interview card sub-components into a single card layout.
+///
+/// Presentation Layer — zero business logic. All mapping is delegated to
+/// [InterviewStatusMapper]; all sub-widgets are extracted as separate focused files.
 class InterviewCard extends StatelessWidget {
   final InterviewModel interview;
 
@@ -12,281 +26,281 @@ class InterviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor;
-    Color statusBgColor;
-    String statusText;
-    IconData? statusIcon;
+    final statusMeta = InterviewStatusMapper.forStatus(interview.status);
+    final typeMeta = InterviewStatusMapper.forType(interview.interviewType);
+    final countdown = InterviewStatusMapper.buildCountdown(interview.scheduledAt);
+    final timeLabel = InterviewStatusMapper.buildTimeLabel(
+      interview.date,
+      interview.time,
+    );
+    final canRespond = interview.status == InterviewStatus.scheduled ||
+        interview.status == InterviewStatus.waiting;
 
-    switch (interview.status) {
-      case InterviewStatus.confirmed:
-        statusColor = const Color(0xFF2E7D32); // Green
-        statusBgColor = const Color(0xFFE8F5E9);
-        statusText = AppConstants.confirmed;
-        statusIcon = Icons.check;
-        break;
-      case InterviewStatus.waiting:
-        statusColor = const Color(0xFFB79C12); // Gold
-        statusBgColor = const Color(0xFFFFF9C4);
-        statusText = AppConstants.waitingConfirmation;
-        statusIcon = Icons.access_time;
-        break;
-      case InterviewStatus.scheduled:
-        statusColor = const Color(0xFF1565C0); // Blue
-        statusBgColor = const Color(0xFFE3F2FD);
-        statusText = AppConstants.scheduled;
-        statusIcon = Icons.calendar_today;
-        break;
-    }
+    return Consumer<InterviewsViewModel>(
+      builder: (context, viewModel, _) {
+        final isSubmitting = viewModel.isSubmitting(interview.id);
+        final isCancelSubmitting =
+            viewModel.isSubmittingAction(interview.id, 'cancel');
+        final isConfirmSubmitting =
+            viewModel.isSubmittingAction(interview.id, 'confirm');
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Top Row: Status Badge & Role/Company
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusBgColor,
-                      borderRadius: BorderRadius.circular(20), // Pill
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(statusIcon, size: 14, color: statusColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          statusText,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: statusColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.divider.withValues(alpha: 0.5),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-              const Spacer(),
-              // Role Info
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(context, statusMeta, typeMeta),
+                if (countdown != null)
+                  InterviewCountdownBanner(countdown: countdown),
+                _buildDetails(typeMeta.isOnline, timeLabel),
+                if (interview.meetingLink?.trim().isNotEmpty == true)
+                  InterviewMeetingLinkButton(
+                    link: interview.meetingLink!.trim(),
+                    onTap: () => _openMeetingLink(context),
+                  ),
+                if (canRespond)
+                  _buildActions(
+                    context,
+                    isSubmitting: isSubmitting,
+                    isCancelSubmitting: isCancelSubmitting,
+                    isConfirmSubmitting: isConfirmSubmitting,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Section builders ─────────────────────────────────────────────────────
+
+  Widget _buildHeader(
+    BuildContext context,
+    InterviewStatusMeta statusMeta,
+    InterviewTypeMeta typeMeta,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InterviewDateBadge(
+            scheduledAt: interview.scheduledAt,
+            rawDate: interview.date,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  interview.role.isNotEmpty ? interview.role : 'مقابلة عمل',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                _buildCompanyRow(context),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
-                    Text(
-                      interview.role,
-                      textAlign: TextAlign.end,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                    InterviewStatusChip(
+                      icon: statusMeta.icon,
+                      label: statusMeta.label,
+                      foreground: statusMeta.color,
+                      background: statusMeta.background,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      interview.company,
-                      textAlign: TextAlign.end,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    InterviewStatusChip(
+                      icon: typeMeta.icon,
+                      label: typeMeta.label,
+                      foreground: typeMeta.color,
+                      background: typeMeta.background,
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0D47A1), // Place holder blue
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.business, color: Colors.white),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Info Rows: Date, Location, Interviewer
-          _buildInfoRow(
-            context,
-            Icons.calendar_today_outlined,
-            '${interview.date} في ${interview.time}',
-          ),
-          const SizedBox(height: 8),
-          if (interview.interviewType != null) ...[
-            _buildInfoRow(
-              context,
-              interview.interviewType?.toLowerCase() == 'online'
-                  ? Icons.video_call_outlined
-                  : Icons.people_outline,
-              interview.interviewType == 'Online' ? 'عن بُعد' : 'حضوري',
+              ],
             ),
-            const SizedBox(height: 8),
-          ],
-          _buildInfoRow(
-            context,
-            Icons.location_on_outlined,
-            interview.location,
-          ),
-          if (interview.meetingLink != null && interview.meetingLink!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _buildInfoRow(
-              context,
-              Icons.link_outlined,
-              interview.meetingLink!,
-              isLink: true,
-            ),
-          ],
-          if (interview.interviewerName != null && interview.interviewerName!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _buildInfoRow(
-              context,
-              Icons.person_outline,
-              '${interview.interviewerName} ${interview.interviewerRole != null ? '- ${interview.interviewerRole}' : ''}',
-            ),
-          ],
-          if (interview.notes != null && interview.notes!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _buildInfoRow(
-              context,
-              Icons.note_alt_outlined,
-              interview.notes!,
-            ),
-          ],
-          const SizedBox(height: 24),
-          // Buttons
-          Row(
-            children: [
-              // View Details Button (Blue Eye)
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.visibility_outlined,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {},
-                  constraints: const BoxConstraints(
-                    minWidth: 48,
-                    minHeight: 48,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Decline Button (Red)
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final success = await context.read<InterviewsViewModel>().submitAction(interview.id, 'Declined');
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(success ? 'تم رفض المقابلة بنجاح' : 'حدث خطأ أثناء رفض المقابلة'),
-                          backgroundColor: success ? Colors.green : Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.close, color: Colors.white, size: 18),
-                  label: Text(
-                    AppConstants.declineAttendance,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD32F2F),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Confirm Button (Green)
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final success = await context.read<InterviewsViewModel>().submitAction(interview.id, 'Confirmed');
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(success ? 'تم تأكيد المقابلة بنجاح' : 'حدث خطأ أثناء تأكيد المقابلة'),
-                          backgroundColor: success ? Colors.green : Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.check, color: Colors.white, size: 18),
-                  label: Text(
-                    AppConstants.confirmAttendance,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF388E3C),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String text, {bool isLink = false}) {
+  Widget _buildCompanyRow(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: isLink ? AppColors.primary : AppColors.textSecondary),
-        const SizedBox(width: 8),
+        const Icon(
+          Icons.business_rounded,
+          size: 14,
+          color: AppColors.textSecondary,
+        ),
+        const SizedBox(width: 5),
         Expanded(
           child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isLink ? AppColors.primary : AppColors.textSecondary,
-                  decoration: isLink ? TextDecoration.underline : null,
-                ),
+            interview.company.isNotEmpty ? interview.company : 'الشركة غير محددة',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildDetails(bool isOnline, String timeLabel) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          InterviewDetailRow(
+            icon: Icons.access_time_rounded,
+            label: 'الموعد',
+            text: timeLabel,
+          ),
+          if (interview.location.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            InterviewDetailRow(
+              icon: isOnline ? Icons.videocam_outlined : Icons.location_on_outlined,
+              label: 'الموقع',
+              text: interview.location,
+            ),
+          ],
+          if (interview.notes?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 10),
+            InterviewNoteRow(note: interview.notes!.trim()),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(
+    BuildContext context, {
+    required bool isSubmitting,
+    required bool isCancelSubmitting,
+    required bool isConfirmSubmitting,
+  }) {
+    return Column(
+      children: [
+        const Divider(height: 1, color: AppColors.divider),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Expanded(
+                child: InterviewActionButton(
+                  label: AppConstants.declineAttendance,
+                  icon: Icons.close_rounded,
+                  color: AppColors.error,
+                  isLoading: isCancelSubmitting,
+                  onPressed: isSubmitting
+                      ? null
+                      : () => _submitAction(context, 'cancel'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: InterviewActionButton(
+                  label: AppConstants.confirmAttendance,
+                  icon: Icons.check_rounded,
+                  color: AppColors.success,
+                  isLoading: isConfirmSubmitting,
+                  onPressed: isSubmitting
+                      ? null
+                      : () => _submitAction(context, 'confirm'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Actions ──────────────────────────────────────────────────────────────
+
+  Future<void> _submitAction(BuildContext context, String action) async {
+    final viewModel = context.read<InterviewsViewModel>();
+    final success = await viewModel.submitAction(interview.id, action);
+    if (!context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? viewModel.successMessage ??
+                  (action == 'confirm'
+                      ? 'تم تأكيد المقابلة بنجاح'
+                      : 'تم إلغاء المقابلة بنجاح')
+              : viewModel.errorMessage ??
+                  'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: success ? AppColors.success : AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  Future<void> _openMeetingLink(BuildContext context) async {
+    final rawLink = interview.meetingLink?.trim();
+    if (rawLink == null || rawLink.isEmpty) return;
+
+    final normalized =
+        rawLink.startsWith('http') ? rawLink : 'https://$rawLink';
+    final uri = Uri.tryParse(normalized);
+
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('تعذر فتح رابط المقابلة'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
   }
 }

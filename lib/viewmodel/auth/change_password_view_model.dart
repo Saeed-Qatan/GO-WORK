@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:gowork/repository/change_password_repository.dart';
+import 'package:gowork/utils/app_error_parser.dart';
 
 class ChangePasswordViewModel extends ChangeNotifier {
   final ChangePasswordRepository _repository = ChangePasswordRepository();
@@ -39,28 +39,25 @@ class ChangePasswordViewModel extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
-        _successMessage = response['data']?['message'] ?? 'تم تغيير كلمة المرور بنجاح';
+        _successMessage =
+            response['data']?['message'] ?? 'تم تغيير كلمة المرور بنجاح';
         _isLoading = false;
         notifyListeners();
         return true;
       } else {
-        _errorMessage = 'فشل تغيير كلمة المرور';
+        _errorMessage = AppErrorParser.parseResponseData(
+          response,
+          fallbackMessage: 'فشل تغيير كلمة المرور',
+        );
         _isLoading = false;
         notifyListeners();
         return false;
       }
     } catch (e) {
-      _errorMessage = _parseError(e.toString());
+      _errorMessage = AppErrorParser.parse(e);
       _isLoading = false;
       notifyListeners();
       return false;
     }
-  }
-
-  String _parseError(String error) {
-    if (error.contains('400')) {
-      return 'كلمة المرور الحالية غير صحيحة أو البيانات غير مكتملة';
-    }
-    return error.replaceAll('Exception: ', '');
   }
 }

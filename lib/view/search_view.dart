@@ -60,9 +60,10 @@ class _SearchViewState extends State<SearchView> {
                                 label: 'المجال',
                                 hint: 'جميع المجالات',
                                 value: viewModel.selectedCategory,
-                                items: viewModel.isCategoriesLoading
-                                    ? ['جاري التحميل...']
-                                    : viewModel.categoryNames,
+                                items:
+                                    viewModel.isCategoriesLoading
+                                        ? ['جاري التحميل...']
+                                        : viewModel.categoryNames,
                                 onChanged: viewModel.setCategory,
                               ),
                             ),
@@ -76,9 +77,10 @@ class _SearchViewState extends State<SearchView> {
                                 label: 'مكان العمل',
                                 hint: 'الكل',
                                 value: viewModel.selectedLocation,
-                                items: viewModel.isLocationTypesLoading
-                                    ? ['جاري التحميل...']
-                                    : viewModel.locationNames,
+                                items:
+                                    viewModel.isLocationTypesLoading
+                                        ? ['جاري التحميل...']
+                                        : viewModel.locationNames,
                                 onChanged: viewModel.setLocation,
                               ),
                             ),
@@ -88,9 +90,10 @@ class _SearchViewState extends State<SearchView> {
                                 label: 'الدولة',
                                 hint: 'الكل',
                                 value: viewModel.selectedCountry,
-                                items: viewModel.isCountriesLoading
-                                    ? ['جاري التحميل...']
-                                    : viewModel.countryNames,
+                                items:
+                                    viewModel.isCountriesLoading
+                                        ? ['جاري التحميل...']
+                                        : viewModel.countryNames,
                                 onChanged: viewModel.setCountry,
                               ),
                             ),
@@ -104,9 +107,10 @@ class _SearchViewState extends State<SearchView> {
                                 label: 'نوع الوظيفة',
                                 hint: 'الكل',
                                 value: viewModel.selectedType,
-                                items: viewModel.isJobTypesLoading
-                                    ? ['جاري التحميل...']
-                                    : viewModel.jobTypeNames,
+                                items:
+                                    viewModel.isJobTypesLoading
+                                        ? ['جاري التحميل...']
+                                        : viewModel.jobTypeNames,
                                 onChanged: viewModel.setType,
                               ),
                             ),
@@ -126,36 +130,41 @@ class _SearchViewState extends State<SearchView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'date',
-                                  child: Text(
-                                    'حسب التاريخ (الأحدث)',
-                                    style: TextStyle(
-                                      color: viewModel.sortBy == 'date'
-                                          ? AppColors.primary
-                                          : AppColors.textPrimary,
-                                      fontWeight: viewModel.sortBy == 'date'
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                              itemBuilder:
+                                  (context) => [
+                                    PopupMenuItem(
+                                      value: 'date',
+                                      child: Text(
+                                        'حسب التاريخ (الأحدث)',
+                                        style: TextStyle(
+                                          color:
+                                              viewModel.sortBy == 'date'
+                                                  ? AppColors.primary
+                                                  : AppColors.textPrimary,
+                                          fontWeight:
+                                              viewModel.sortBy == 'date'
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'salary',
-                                  child: Text(
-                                    'حسب الراتب (الأعلى)',
-                                    style: TextStyle(
-                                      color: viewModel.sortBy == 'salary'
-                                          ? AppColors.primary
-                                          : AppColors.textPrimary,
-                                      fontWeight: viewModel.sortBy == 'salary'
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                    PopupMenuItem(
+                                      value: 'salary',
+                                      child: Text(
+                                        'حسب الراتب (الأعلى)',
+                                        style: TextStyle(
+                                          color:
+                                              viewModel.sortBy == 'salary'
+                                                  ? AppColors.primary
+                                                  : AppColors.textPrimary,
+                                          fontWeight:
+                                              viewModel.sortBy == 'salary'
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ],
+                                  ],
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
@@ -172,11 +181,12 @@ class _SearchViewState extends State<SearchView> {
                             const Spacer(),
                             Text(
                               'تم العثور على ${viewModel.jobs.length} وظيفة',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                  ),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ],
                         ),
@@ -189,6 +199,15 @@ class _SearchViewState extends State<SearchView> {
                             child: Padding(
                               padding: EdgeInsets.all(32.0),
                               child: CircularProgressIndicator(),
+                            ),
+                          )
+                        else if (viewModel.errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 64.0),
+                            child: AnimatedEmptyState(
+                              icon: Icons.error_outline_rounded,
+                              title: 'حدث خطأ',
+                              subtitle: viewModel.errorMessage!,
                             ),
                           )
                         else if (viewModel.jobs.isEmpty)

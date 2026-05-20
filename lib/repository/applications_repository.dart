@@ -96,15 +96,28 @@ class ApplicationsRepository {
 
     // Explicitly check the success flag from the backend response
     if (response['success'] != true) {
+      // Extract the backend message — but only use it if it's Arabic text.
+      // Otherwise fall back to a safe generic Arabic message.
       final errors = response['errors'];
-      String message = 'فشل سحب الطلب';
+      String? rawMsg;
+
       if (errors is List && errors.isNotEmpty) {
-        message = errors.join('\n');
-      } else if (errors is String) {
-        message = errors;
+        rawMsg = errors.join('\n');
+      } else if (errors is String && errors.trim().isNotEmpty) {
+        rawMsg = errors;
+      } else if (response['message'] != null) {
+        rawMsg = response['message'].toString();
       } else if (response['data']?['message'] != null) {
-        message = response['data']['message'].toString();
+        rawMsg = response['data']['message'].toString();
       }
+
+      // Only surface the message if it's already Arabic, otherwise use a safe default.
+      final bool isArabic =
+          rawMsg != null && RegExp(r'[\u0600-\u06FF]').hasMatch(rawMsg);
+      final String message = isArabic
+          ? rawMsg
+          : 'لا يمكن سحب هذا الطلب في وضعه الحالي';
+
       throw Exception(message);
     }
   }

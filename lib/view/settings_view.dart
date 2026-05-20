@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gowork/widget/Delete_account.dart';
+import 'package:gowork/widget/delete_account.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../routing/app_router.dart';

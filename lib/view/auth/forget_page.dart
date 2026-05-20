@@ -43,11 +43,12 @@ class ForgetPage extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         AppConstants.forgotPassword,
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                       const SizedBox(height: 5),
                       Text(
@@ -72,6 +73,15 @@ class ForgetPage extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (vm.error != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          vm.error!,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.error),
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       CustomButton(
                         text: vm.isLoading ? 'جارٍ...' : 'إرسال رابط الاستعادة',
@@ -79,16 +89,18 @@ class ForgetPage extends StatelessWidget {
                           Icons.send_rounded,
                           color: Colors.white,
                         ),
-                        color: vm.canSubmit
-                            ? AppColors.primary
-                            : AppColors.textHint,
+                        color:
+                            vm.canSubmit
+                                ? AppColors.primary
+                                : AppColors.textHint,
                         textColor: Colors.white,
-                        onPressed: vm.canSubmit
-                            ? () {
-                                FocusScope.of(context).unfocus();
-                                vm.submit(context);
-                              }
-                            : null,
+                        onPressed:
+                            vm.canSubmit
+                                ? () {
+                                  FocusScope.of(context).unfocus();
+                                  vm.submit(context);
+                                }
+                                : null,
                       ),
                       const SizedBox(height: 15),
                       TextButton(

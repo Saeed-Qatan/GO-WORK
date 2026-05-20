@@ -4,6 +4,7 @@ import '../../repository/profile_repository.dart';
 import '../../services/notification_topic_service.dart';
 import '../../services/push_notification_service.dart';
 import 'package:gowork/utils/local_storage.dart';
+import 'package:gowork/utils/app_error_parser.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final LoginRepository _repository = LoginRepository();
@@ -49,7 +50,7 @@ class LoginViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = AppErrorParser.parse(e);
       notifyListeners();
       return false;
     }

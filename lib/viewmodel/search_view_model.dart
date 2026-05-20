@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/home_model.dart';
 import '../repository/search_repository.dart';
 import '../utils/api_storage.dart';
+import '../utils/app_error_parser.dart';
 import '../core/constants/api_constants.dart';
 
 class SearchViewModel extends ChangeNotifier {
@@ -13,6 +14,9 @@ class SearchViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
 
   final ApiClient _apiClient = ApiClient();
 
@@ -97,18 +101,20 @@ class SearchViewModel extends ChangeNotifier {
       }
 
       if (list != null && list.isNotEmpty) {
-        final parsed = list.map((item) {
-          return <String, dynamic>{
-            'id': (item['id'] ?? item['Id'] ?? item['code'] ?? '').toString(),
-            'name':
-                (item['name'] ??
-                        item['Name'] ??
-                        item['title'] ??
-                        item['Title'] ??
-                        '')
-                    .toString(),
-          };
-        }).toList();
+        final parsed =
+            list.map((item) {
+              return <String, dynamic>{
+                'id':
+                    (item['id'] ?? item['Id'] ?? item['code'] ?? '').toString(),
+                'name':
+                    (item['name'] ??
+                            item['Name'] ??
+                            item['title'] ??
+                            item['Title'] ??
+                            '')
+                        .toString(),
+              };
+            }).toList();
         onSuccess(parsed);
       } else {
         onSuccess([]);
@@ -195,6 +201,7 @@ class SearchViewModel extends ChangeNotifier {
   Future<void> searchJobs() async {
     if (_isDisposed) return;
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
@@ -208,6 +215,7 @@ class SearchViewModel extends ChangeNotifier {
       _applySorting();
     } catch (e) {
       debugPrint('Error searching jobs: $e');
+      _errorMessage = AppErrorParser.parse(e);
       _jobs = [];
     } finally {
       _isLoading = false;

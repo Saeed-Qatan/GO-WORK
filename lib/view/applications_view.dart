@@ -287,11 +287,10 @@ class _ApplicationsViewState extends State<ApplicationsView> {
 
   Widget _buildListContent(ApplicationsViewModel viewModel) {
     if (viewModel.errorMessage != null && !viewModel.isLoading) {
-      return Center(
-        child: Text(
-          viewModel.errorMessage!,
-          style: const TextStyle(color: Colors.red),
-        ),
+      return AnimatedEmptyState(
+        icon: Icons.wifi_off_rounded,
+        title: 'تعذّر تحميل الطلبات',
+        subtitle: viewModel.errorMessage!,
       );
     }
 

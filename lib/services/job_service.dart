@@ -25,7 +25,7 @@ class JobService {
       return null;
     } catch (e) {
       debugPrint('Failed to fetch job with ID $jobId: $e');
-      throw Exception('Failed to fetch job details: $e');
+      rethrow;
     }
   }
 

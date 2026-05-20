@@ -9,6 +9,7 @@ import 'package:gowork/utils/api_storage.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/main.dart'; // للوصول إلى notificationTopicService
 
 class RegisterCVViewModel extends ChangeNotifier {
@@ -187,7 +188,7 @@ class RegisterCVViewModel extends ChangeNotifier {
         context.go(AppRoutes.verifyEmail, extra: data.email);
       }
     } catch (e) {
-      SnackbarService.showError(e.toString().replaceFirst('Exception: ', ''));
+      SnackbarService.showError(AppErrorParser.parse(e));
     } finally {
       isLoading = false;
       notifyListeners();

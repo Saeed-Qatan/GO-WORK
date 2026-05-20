@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/home_model.dart';
 import '../services/job_service.dart';
 import '../utils/snackbar_service.dart';
+import '../utils/app_error_parser.dart';
 import '../widget/common/success_bottom_sheet.dart';
 
 class JobDetailsViewModel extends ChangeNotifier {
@@ -29,38 +30,37 @@ class JobDetailsViewModel extends ChangeNotifier {
           _jobDetails = JobModel(
             id: job.id,
             title: job.title.isNotEmpty ? job.title : _jobDetails!.title,
-            company: job.company.isNotEmpty
-                ? job.company
-                : _jobDetails!.company,
-            companyLogoUrl: job.companyLogoUrl.isNotEmpty
-                ? job.companyLogoUrl
-                : _jobDetails!.companyLogoUrl,
-            category: job.category.isNotEmpty
-                ? job.category
-                : _jobDetails!.category,
-            location: job.location.isNotEmpty
-                ? job.location
-                : _jobDetails!.location,
-            country: job.country.isNotEmpty
-                ? job.country
-                : _jobDetails!.country,
+            company:
+                job.company.isNotEmpty ? job.company : _jobDetails!.company,
+            companyLogoUrl:
+                job.companyLogoUrl.isNotEmpty
+                    ? job.companyLogoUrl
+                    : _jobDetails!.companyLogoUrl,
+            category:
+                job.category.isNotEmpty ? job.category : _jobDetails!.category,
+            location:
+                job.location.isNotEmpty ? job.location : _jobDetails!.location,
+            country:
+                job.country.isNotEmpty ? job.country : _jobDetails!.country,
             type: job.type.isNotEmpty ? job.type : _jobDetails!.type,
-            workMode: job.workMode.isNotEmpty
-                ? job.workMode
-                : _jobDetails!.workMode,
-            minSalary: job.minSalary.isNotEmpty
-                ? job.minSalary
-                : _jobDetails!.minSalary,
-            maxSalary: job.maxSalary.isNotEmpty
-                ? job.maxSalary
-                : _jobDetails!.maxSalary,
+            workMode:
+                job.workMode.isNotEmpty ? job.workMode : _jobDetails!.workMode,
+            minSalary:
+                job.minSalary.isNotEmpty
+                    ? job.minSalary
+                    : _jobDetails!.minSalary,
+            maxSalary:
+                job.maxSalary.isNotEmpty
+                    ? job.maxSalary
+                    : _jobDetails!.maxSalary,
             description: job.description ?? _jobDetails!.description,
             currency: job.currency ?? _jobDetails!.currency,
             postedDate: job.postedDate ?? _jobDetails!.postedDate,
             expirationDate: job.expirationDate ?? _jobDetails!.expirationDate,
-            skills: job.skills != null && job.skills!.isNotEmpty
-                ? job.skills
-                : _jobDetails!.skills,
+            skills:
+                job.skills != null && job.skills!.isNotEmpty
+                    ? job.skills
+                    : _jobDetails!.skills,
             canApply: job.canApply ?? _jobDetails!.canApply,
             contactNumber: job.contactNumber ?? _jobDetails!.contactNumber,
           );
@@ -68,10 +68,10 @@ class JobDetailsViewModel extends ChangeNotifier {
           _jobDetails = job;
         }
       } else {
-        _errorMessage = 'Failed to load details.';
+        _errorMessage = 'تعذر تحميل تفاصيل الوظيفة';
       }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = AppErrorParser.parse(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -116,24 +116,15 @@ class JobDetailsViewModel extends ChangeNotifier {
           );
         }
       } else {
-        // Extract errors
-        String errorMsg = 'Failed to apply';
-        if (response['errors'] is List && response['errors'].isNotEmpty) {
-          errorMsg = response['errors'].join('\n');
-        }
-        SnackbarService.showError(errorMsg);
+        SnackbarService.showError(
+          AppErrorParser.parseResponseData(
+            response,
+            fallbackMessage: 'تعذر التقديم على الوظيفة، يرجى المحاولة مرة أخرى',
+          ),
+        );
       }
     } catch (e) {
-      String parsedError = e.toString().replaceFirst('Exception: ', '');
-      if (parsedError.contains('Job is closed or expired')) {
-        parsedError = 'الوظيفة مغلقة أو منتهية الصلاحية.';
-      } else if (parsedError.contains('errors: [')) {
-        final match = RegExp(r'errors: \[(.*?)\]').firstMatch(parsedError);
-        if (match != null && match.group(1) != null) {
-          parsedError = match.group(1)!;
-        }
-      }
-      SnackbarService.showError('فشل التقديم: $parsedError');
+      SnackbarService.showError(AppErrorParser.parse(e));
     } finally {
       _isLoading = false;
       notifyListeners();

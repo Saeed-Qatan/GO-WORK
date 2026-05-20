@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../model/notification_model.dart';
 import '../repository/notifications_repository.dart';
 import '../services/push_notification_service.dart';
+import '../utils/app_error_parser.dart';
 
 enum NotificationsViewState { initial, loading, loaded, empty, error }
 
@@ -50,7 +51,7 @@ class NotificationsViewModel extends ChangeNotifier {
           ? NotificationsViewState.empty
           : NotificationsViewState.loaded;
     } catch (e) {
-      _errorMessage = 'فشل في تحميل الإشعارات: $e';
+      _errorMessage = AppErrorParser.parse(e);
       _viewState = NotificationsViewState.error;
       debugPrint('=== NOTIFICATIONS VM ERROR: $e ===');
     } finally {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gowork/repository/forget_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
+import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/utils/snackbar_service.dart';
 
 enum ForgetState { idle, loading, success, error }
@@ -58,7 +59,7 @@ class ForgetViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _state = ForgetState.error;
-      _error = e.toString().replaceAll('Exception: ', '');
+      _error = AppErrorParser.parse(e);
       notifyListeners();
     }
   }

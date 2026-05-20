@@ -1,6 +1,7 @@
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/reset_password_model.dart';
 import 'package:gowork/utils/api_storage.dart';
+import 'package:gowork/utils/app_error_parser.dart';
 
 class ResetPasswordRepository {
   final ApiClient _apiClient = ApiClient();
@@ -14,7 +15,13 @@ class ResetPasswordRepository {
       );
 
       if (response.containsKey('success') && response['success'] != true) {
-        throw Exception(response['message'] ?? 'Password reset failed');
+        throw Exception(
+          AppErrorParser.parseResponseData(
+            response,
+            fallbackMessage:
+                'تعذر إعادة تعيين كلمة المرور، يرجى المحاولة مرة أخرى',
+          ),
+        );
       }
     } catch (e) {
       rethrow;

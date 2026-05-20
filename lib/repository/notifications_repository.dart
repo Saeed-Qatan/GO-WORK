@@ -53,8 +53,9 @@ class NotificationsRepository {
 
   List<dynamic> _extractList(Map<String, dynamic> response) {
     if (response['data'] is List) return response['data'] as List;
-    if (response['notifications'] is List)
+    if (response['notifications'] is List) {
       return response['notifications'] as List;
+    }
     if (response['items'] is List) return response['items'] as List;
     return [];
   }

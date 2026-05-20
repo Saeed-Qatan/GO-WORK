@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/application_model.dart';
 import '../repository/applications_repository.dart';
 import '../utils/status_translator.dart';
+import '../utils/app_error_parser.dart';
 
 class ApplicationsViewModel extends ChangeNotifier {
   final ApplicationsRepository _repository = ApplicationsRepository();
@@ -45,7 +46,7 @@ class ApplicationsViewModel extends ChangeNotifier {
       _allApplications = await _repository.getApplications();
       _applyFilter();
     } catch (e) {
-      _errorMessage = 'حدث خطأ أثناء جلب الطلبات: $e';
+      _errorMessage = AppErrorParser.parse(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -79,7 +80,7 @@ class ApplicationsViewModel extends ChangeNotifier {
       await fetchApplications();
       return null;
     } catch (e) {
-      final message = e.toString().replaceFirst('Exception: ', '');
+      final message = AppErrorParser.parse(e);
       notifyListeners();
       return message;
     }

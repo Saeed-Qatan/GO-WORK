@@ -4,6 +4,7 @@ import '../model/profile_model.dart';
 import '../repository/profile_repository.dart';
 import '../services/notification_topic_service.dart';
 import '../utils/local_storage.dart';
+import '../utils/app_error_parser.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class ProfileViewModel extends ChangeNotifier {
@@ -34,7 +35,7 @@ class ProfileViewModel extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint('Error fetching profile: $e');
-      _errorMessage = 'حدث خطأ أثناء تحميل الملف الشخصي: $e';
+      _errorMessage = AppErrorParser.parse(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -62,7 +63,7 @@ class ProfileViewModel extends ChangeNotifier {
       await fetchProfile();
     } catch (e) {
       debugPrint('--- ERROR IN UPDATE PROFILE: $e ---');
-      _errorMessage = 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
+      _errorMessage = AppErrorParser.parse(e);
       rethrow;
     } finally {
       _isLoading = false;
@@ -83,7 +84,7 @@ class ProfileViewModel extends ChangeNotifier {
       await fetchProfile();
     } catch (e) {
       debugPrint('--- ERROR IN UPLOAD FILE: $e ---');
-      _errorMessage = 'حدث خطأ أثناء رفع الملف: $e';
+      _errorMessage = AppErrorParser.parse(e);
       rethrow;
     } finally {
       _isLoading = false;
