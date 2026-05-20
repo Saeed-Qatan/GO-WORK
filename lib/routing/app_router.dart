@@ -18,6 +18,7 @@ import 'package:gowork/view/main_view.dart';
 import 'package:gowork/view/edit_profile_view.dart';
 import 'package:gowork/view/profile_view.dart';
 import 'package:gowork/view/settings_view.dart';
+import 'package:gowork/view/feedback_view.dart';
 import 'package:gowork/view/notifications_view.dart';
 import 'package:gowork/model/home_model.dart';
 
@@ -36,6 +37,7 @@ class AppRoutes {
   static const String editProfile = '/editProfile';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String feedback = '/feedback';
   static const String jobDetails = '/jobDetails';
   static const String notifications = '/notifications';
 }
@@ -110,6 +112,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.settings,
       builder: (context, state) => const SettingsView(),
+    ),
+    GoRoute(
+      path: AppRoutes.feedback,
+      builder: (context, state) => const FeedbackView(),
     ),
     GoRoute(
       path: AppRoutes.notifications,

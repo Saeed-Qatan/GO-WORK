@@ -121,6 +121,14 @@ class SettingsView extends StatelessWidget {
                       title: 'مركز المساعدة',
                       onTap: () {},
                     ),
+                    const SettingsDivider(),
+                    SettingsTile(
+                      icon: Icons.feedback_outlined,
+                      title: 'الشكاوى والاقتراحات',
+                      onTap: () {
+                        context.push(AppRoutes.feedback);
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),

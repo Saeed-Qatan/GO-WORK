@@ -40,6 +40,7 @@ class ApiConstants {
   static String interviewAction(String id) => 'Interviews/$id/action';
   static const String fetchOrders = 'Account/orders';
   static const String createOrder = 'Account/orders/create';
+  static const String feedbacks = 'Feedbacks';
 
   // ================= Notifications Endpoints =================
   /// جلب قائمة الإشعارات من الباك اند
