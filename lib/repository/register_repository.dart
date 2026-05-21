@@ -9,6 +9,11 @@ class RegisterRepository {
   final ApiClient _apiClient = ApiClient();
 
   Future<void> register(RegisterDataModel data) async {
+    final categoryId = data.categoryId?.trim();
+    if (categoryId == null || categoryId.isEmpty) {
+      throw ArgumentError('Category id is required for registration.');
+    }
+
     final Map<String, String> fields = {
       'firstName': data.firstName,
       'midName': data.fatherName,
@@ -17,13 +22,11 @@ class RegisterRepository {
       'phoneNumber': data.phone,
       'Password': data.password,
       'PasswordConfirmation': data.confirmPassword,
-      // Use dynamic category ID, fallback to '101' if somehow null
-      'InterstedInCategoryId': data.categoryId ?? '101',
+      'InterstedInCategoryId': categoryId,
     };
 
-    final repeatedFields = data.skills
-        .map((skill) => MapEntry('listOfSkills', skill))
-        .toList();
+    final repeatedFields =
+        data.skills.map((skill) => MapEntry('listOfSkills', skill)).toList();
 
     final Map<String, File> files = {};
     if (data.profilePhoto != null) {

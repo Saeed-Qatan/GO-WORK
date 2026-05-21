@@ -2,14 +2,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import '../core/constants/api_constants.dart';
 import '../model/edit_profile_model.dart';
 import '../model/profile_model.dart';
+import '../utils/api_storage.dart';
 import '../utils/snackbar_service.dart';
 import '../utils/app_error_parser.dart';
 import 'profile_view_model.dart';
 
 class EditProfileViewModel extends ChangeNotifier {
   final ProfileViewModel _profileViewModel;
+  final ApiClient _apiClient = ApiClient();
 
   // Controllers
   final TextEditingController firstNameController = TextEditingController();
@@ -27,6 +30,18 @@ class EditProfileViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> get categories => _categories;
+
+  bool _isCategoriesLoading = false;
+  bool get isCategoriesLoading => _isCategoriesLoading;
+
+  String? _categoriesErrorMessage;
+  String? get categoriesErrorMessage => _categoriesErrorMessage;
+
+  String? _selectedCategoryId;
+  String? get selectedCategoryId => _selectedCategoryId;
+
   String get cvFileName =>
       _formData.newCvFile != null
           ? _formData.newCvFile!.path.split('/').last
@@ -36,6 +51,7 @@ class EditProfileViewModel extends ChangeNotifier {
 
   EditProfileViewModel(this._profileViewModel) {
     _initFromProfile(_profileViewModel.profile);
+    fetchCategories();
   }
 
   void _initFromProfile(ProfileModel? profile) {
@@ -46,6 +62,8 @@ class EditProfileViewModel extends ChangeNotifier {
     lastNameController.text = profile.lastName;
     jobTitleController.text = profile.jobTitle;
     phoneController.text = profile.phone;
+    _selectedCategoryId =
+        profile.categoryId.isNotEmpty ? profile.categoryId : null;
 
     _formData = EditProfileModel(
       firstName: profile.firstName,
@@ -57,6 +75,73 @@ class EditProfileViewModel extends ChangeNotifier {
       avatarUrl: profile.avatarUrl,
       cvUrl: profile.cvUrl,
     );
+  }
+
+  Future<void> fetchCategories() async {
+    _isCategoriesLoading = true;
+    _categoriesErrorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.get(
+        ApiConstants.jobCategories,
+        skipAuth: true,
+      );
+
+      List<dynamic>? categoriesList;
+      if (response['data'] is List) {
+        categoriesList = response['data'];
+      } else if (response['categories'] is List) {
+        categoriesList = response['categories'];
+      } else if (response['data'] is Map &&
+          response['data']['categories'] is List) {
+        categoriesList = response['data']['categories'];
+      }
+
+      _categories =
+          (categoriesList ?? [])
+              .map((cat) {
+                return <String, dynamic>{
+                  'id':
+                      (cat['id'] ??
+                              cat['Id'] ??
+                              cat['categoryId'] ??
+                              cat['CategoryId'] ??
+                              '')
+                          .toString(),
+                  'name':
+                      (cat['name'] ??
+                              cat['Name'] ??
+                              cat['categoryName'] ??
+                              cat['CategoryName'] ??
+                              '')
+                          .toString(),
+                };
+              })
+              .where(
+                (cat) =>
+                    cat['id'].toString().trim().isNotEmpty &&
+                    cat['name'].toString().trim().isNotEmpty,
+              )
+              .toList();
+
+      if (_categories.isEmpty) {
+        _categoriesErrorMessage =
+            'تعذر تحميل المجالات. يمكنك إعادة المحاولة قبل الحفظ.';
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile categories: $e');
+      _categories = [];
+      _categoriesErrorMessage = AppErrorParser.parse(e);
+    } finally {
+      _isCategoriesLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void setCategory(String? id) {
+    _selectedCategoryId = id?.trim().isEmpty == true ? null : id;
+    notifyListeners();
   }
 
   // --- Form Actions ---
@@ -120,6 +205,12 @@ class EditProfileViewModel extends ChangeNotifier {
       return false;
     }
 
+    final categoryId = _selectedCategoryId?.trim();
+    if (categoryId == null || categoryId.isEmpty) {
+      SnackbarService.showWarning('يرجى اختيار المجال المناسب');
+      return false;
+    }
+
     _isLoading = true;
     notifyListeners();
 
@@ -138,6 +229,7 @@ class EditProfileViewModel extends ChangeNotifier {
         'FirstName': _formData.firstName,
         'MiddleName': _formData.middleName,
         'LastName': _formData.lastName,
+        'InterstedInCategoryId': categoryId,
       };
 
       if (_formData.jobTitle.isNotEmpty) {

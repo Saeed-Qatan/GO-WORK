@@ -115,19 +115,24 @@ class PushNotificationService {
     try {
       final token = await _firebaseMessaging.getToken();
       if (token != null) {
-        debugPrint('=== FCM TOKEN: $token ===');
+        debugPrint('=== FCM TOKEN: ${_maskToken(token)} ===');
         await _repository.registerFcmToken(token);
       }
 
       _tokenRefreshSubscription ??= _firebaseMessaging.onTokenRefresh.listen((
         newToken,
       ) {
-        debugPrint('=== FCM TOKEN REFRESHED: $newToken ===');
+        debugPrint('=== FCM TOKEN REFRESHED: ${_maskToken(newToken)} ===');
         _repository.registerFcmToken(newToken);
       });
     } catch (e) {
       debugPrint('=== FCM TOKEN ERROR: $e ===');
     }
+  }
+
+  String _maskToken(String token) {
+    if (token.length <= 12) return '***';
+    return '${token.substring(0, 6)}...${token.substring(token.length - 6)}';
   }
 
   void dispose() {

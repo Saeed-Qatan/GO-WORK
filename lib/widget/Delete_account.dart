@@ -38,20 +38,21 @@ class DeleteAccount extends StatelessWidget {
   Future<void> _handleLogout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('حذف الحساب '),
-        content: const Text('هل أنت متأكد من رغبتك في  حذف الحساب'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('حذف الحساب '),
+            content: const Text('هل أنت متأكد من رغبتك في  حذف الحساب'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('إلغاء'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('تأكيد', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('تأكيد', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
 
     if (shouldLogout == true && context.mounted) {

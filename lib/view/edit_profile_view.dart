@@ -10,6 +10,7 @@ import '../widget/edit_profile/edit_labeled_field.dart';
 import '../widget/edit_profile/edit_phone_field.dart';
 import '../widget/edit_profile/edit_skills_section.dart';
 import '../widget/edit_profile/edit_cv_section.dart';
+import '../widget/search/filter_dropdown.dart';
 
 class EditProfileView extends StatelessWidget {
   const EditProfileView({super.key});
@@ -17,9 +18,10 @@ class EditProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => EditProfileViewModel(
-        Provider.of<ProfileViewModel>(context, listen: false),
-      ),
+      create:
+          (context) => EditProfileViewModel(
+            Provider.of<ProfileViewModel>(context, listen: false),
+          ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F7FB),
         appBar: AppBar(
@@ -69,10 +71,11 @@ class EditProfileView extends StatelessWidget {
                     EditLabeledField(
                       label: AppConstants.firstNameLabel,
                       controller: viewModel.firstNameController,
-                      validator: (val) => viewModel.formData.validateName(
-                        val ?? '',
-                        AppConstants.firstNameLabel,
-                      ),
+                      validator:
+                          (val) => viewModel.formData.validateName(
+                            val ?? '',
+                            AppConstants.firstNameLabel,
+                          ),
                     ),
                     const SizedBox(height: 16),
 
@@ -84,10 +87,11 @@ class EditProfileView extends StatelessWidget {
                           child: EditLabeledField(
                             label: AppConstants.lastNameLabel,
                             controller: viewModel.lastNameController,
-                            validator: (val) => viewModel.formData.validateName(
-                              val ?? '',
-                              AppConstants.lastNameLabel,
-                            ),
+                            validator:
+                                (val) => viewModel.formData.validateName(
+                                  val ?? '',
+                                  AppConstants.lastNameLabel,
+                                ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -106,6 +110,65 @@ class EditProfileView extends StatelessWidget {
                     EditPhoneField(viewModel: viewModel),
                     const SizedBox(height: 24),
 
+                    if (viewModel.isCategoriesLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (viewModel.categories.isNotEmpty)
+                      FilterDropdown(
+                        label: 'المجال المناسب',
+                        hint: 'لم يتم الاختيار',
+                        value:
+                            viewModel.selectedCategoryId != null
+                                ? viewModel.categories
+                                    .firstWhere(
+                                      (cat) =>
+                                          cat['id'].toString() ==
+                                          viewModel.selectedCategoryId,
+                                      orElse: () => <String, dynamic>{},
+                                    )['name']
+                                    ?.toString()
+                                : null,
+                        items:
+                            viewModel.categories
+                                .map((cat) => cat['name'].toString())
+                                .toList(),
+                        onChanged: (String? newFieldValue) {
+                          if (newFieldValue != null) {
+                            final chosenCat = viewModel.categories.firstWhere(
+                              (cat) => cat['name'].toString() == newFieldValue,
+                            );
+                            viewModel.setCategory(chosenCat['id'].toString());
+                          } else {
+                            viewModel.setCategory(null);
+                          }
+                        },
+                      )
+                    else
+                      Column(
+                        children: [
+                          Text(
+                            viewModel.categoriesErrorMessage ??
+                                'تعذر تحميل المجالات. يرجى المحاولة مرة أخرى.',
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 13,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: viewModel.fetchCategories,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('إعادة المحاولة'),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 24),
+
                     // ── Skills ──
                     EditSkillsSection(viewModel: viewModel),
                     const SizedBox(height: 24),
@@ -118,14 +181,15 @@ class EditProfileView extends StatelessWidget {
                     SizedBox(
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: viewModel.isLoading
-                            ? null
-                            : () async {
-                                final success = await viewModel.saveProfile();
-                                if (success && context.mounted) {
-                                  context.pop();
-                                }
-                              },
+                        onPressed:
+                            viewModel.isLoading
+                                ? null
+                                : () async {
+                                  final success = await viewModel.saveProfile();
+                                  if (success && context.mounted) {
+                                    context.pop();
+                                  }
+                                },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -137,24 +201,26 @@ class EditProfileView extends StatelessWidget {
                             alpha: 0.5,
                           ),
                         ),
-                        child: viewModel.isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
+                        child:
+                            viewModel.isLoading
+                                ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : Text(
+                                  AppConstants.saveChanges,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                AppConstants.saveChanges,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                              ),
                       ),
                     ),
                     const SizedBox(height: 32),

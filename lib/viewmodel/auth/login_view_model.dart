@@ -62,6 +62,9 @@ class LoginViewModel extends ChangeNotifier {
 
     try {
       final profile = await _profileRepository.getUserProfile();
+      debugPrint(
+        '=== LOGIN DEBUG: CATEGORY ID = ${profile.categoryId.isNotEmpty ? profile.categoryId : 'EMPTY'} ===',
+      );
       await topicService.subscribeUserTopics(categoryId: profile.categoryId);
     } catch (e) {
       debugPrint('=== FCM TOPICS: LOGIN USER TOPICS ERROR: $e ===');

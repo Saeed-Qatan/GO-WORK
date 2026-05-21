@@ -10,8 +10,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'theme/app_theme.dart';
 import 'routing/app_router.dart';
 import 'utils/snackbar_service.dart';
+import 'utils/local_storage.dart';
 import 'services/notification_topic_service.dart';
 import 'services/push_notification_service.dart';
+import 'repository/profile_repository.dart';
 
 import 'viewmodel/auth/login_view_model.dart';
 import 'viewmodel/home_view_model.dart';
@@ -49,7 +51,31 @@ Future<void> _initializeNotifications() async {
     debugPrint('=== FCM: PUSH NOTIFICATION INITIALIZE ERROR: $e ===');
   }
 
-  await notificationTopicService.subscribeToAll();
+  await _subscribeToCurrentUserTopics();
+}
+
+Future<void> _subscribeToCurrentUserTopics() async {
+  final token = await LocalStorage().getString('token');
+  if (token == null || token.isEmpty) {
+    final cachedCategoryId = await LocalStorage().getString('categoryId');
+    await notificationTopicService.subscribeUserTopics(
+      categoryId: cachedCategoryId,
+    );
+    return;
+  }
+
+  try {
+    final profile = await ProfileRepository().getUserProfile();
+    debugPrint(
+      '=== STARTUP DEBUG: CATEGORY ID = ${profile.categoryId.isNotEmpty ? profile.categoryId : 'EMPTY'} ===',
+    );
+    await notificationTopicService.subscribeUserTopics(
+      categoryId: profile.categoryId,
+    );
+  } catch (e) {
+    debugPrint('=== FCM TOPICS: STARTUP USER TOPICS ERROR: $e ===');
+    await notificationTopicService.subscribeUserTopics(categoryId: null);
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -68,9 +94,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(
-          create: (_) => InterviewsViewModel(
-            repository: InterviewsRepository(),
-          ),
+          create: (_) =>
+              InterviewsViewModel(repository: InterviewsRepository()),
         ),
         ChangeNotifierProvider(
           create: (_) => ProfileViewModel(

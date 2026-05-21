@@ -17,29 +17,34 @@ class ProfileRepository {
     debugPrint('--- RAW PROFILE RESPONSE ---');
     debugPrint(data.toString());
 
+    final jwtPayload = await _readJwtPayload();
+
     // Extract email from JWT token if not in the API response
     if ((data['email'] == null || data['email'] == '') &&
         (data['Email'] == null || data['Email'] == '')) {
-      final token = await LocalStorage().getString('token');
-      if (token != null && token.isNotEmpty) {
-        try {
-          final parts = token.split('.');
-          if (parts.length == 3) {
-            final payload = utf8.decode(
-              base64Url.decode(base64Url.normalize(parts[1])),
-            );
-            final payloadMap = json.decode(payload) as Map<String, dynamic>;
-            // The email claim key in the JWT
-            final email =
-                payloadMap['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ??
-                '';
-            data['email'] = email;
-          }
-        } catch (_) {}
+      if (jwtPayload != null) {
+        final email =
+            jwtPayload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ??
+            '';
+        data['email'] = email;
       }
     }
 
-    return ProfileModel.fromJson(data);
+    final jwtCategoryId = _readCategoryIdFromJwt(jwtPayload);
+    if (jwtCategoryId.isNotEmpty &&
+        ProfileModel.fromJson(data).categoryId.isEmpty) {
+      data['categoryId'] = jwtCategoryId;
+    }
+
+    final profile = ProfileModel.fromJson(data);
+    debugPrint(
+      '=== PROFILE REPOSITORY DEBUG: CATEGORY ID = ${profile.categoryId.isNotEmpty ? profile.categoryId : 'EMPTY'} ===',
+    );
+    if (profile.categoryId.isNotEmpty) {
+      await LocalStorage().saveString('categoryId', profile.categoryId);
+    }
+
+    return profile;
   }
 
   /// Update profile via PATCH /Account/Candidate/UpdateProfile (form-data)
@@ -63,5 +68,65 @@ class ProfileRepository {
   /// Upload file via POST /Account/candidate/uploadfile
   Future<void> uploadFile(File file) async {
     await _service.uploadFile(file);
+  }
+
+  Future<Map<String, dynamic>?> _readJwtPayload() async {
+    final token = await LocalStorage().getString('token');
+    if (token == null || token.isEmpty) return null;
+
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+      final decoded = json.decode(payload);
+      if (decoded is! Map<String, dynamic>) return null;
+
+      final categoryClaimKeys = decoded.keys
+          .where((key) => key.toLowerCase().contains('category'))
+          .toList();
+      debugPrint(
+        '=== JWT DEBUG: CATEGORY CLAIM KEYS = ${categoryClaimKeys.isEmpty ? 'NONE' : categoryClaimKeys.join(', ')} ===',
+      );
+
+      return decoded;
+    } catch (e) {
+      debugPrint('=== JWT DEBUG: PAYLOAD READ ERROR: $e ===');
+      return null;
+    }
+  }
+
+  String _readCategoryIdFromJwt(Map<String, dynamic>? payload) {
+    if (payload == null) return '';
+
+    for (final key in const [
+      'categoryId',
+      'CategoryId',
+      'interstedInCategoryId',
+      'InterstedInCategoryId',
+      'interestedInCategoryId',
+      'InterestedInCategoryId',
+      'interestedCategoryId',
+      'InterestedCategoryId',
+      'jobCategoryId',
+      'JobCategoryId',
+    ]) {
+      final value = payload[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+
+    for (final entry in payload.entries) {
+      if (!entry.key.toLowerCase().contains('category')) continue;
+      final value = entry.value;
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+
+    return '';
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/utils/api_storage.dart';
@@ -9,28 +11,25 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
     final client = ApiClient();
-    
+
     // Login to get token
     print('Logging in...');
     try {
-      final loginResp = await client.post(
-        ApiConstants.login,
-        {
-          'email': 'test_1777641740881@test.com',
-          'password': 'Password123!'
-        },
-      );
-      
+      final loginResp = await client.post(ApiConstants.login, {
+        'email': 'test_1777641740881@test.com',
+        'password': 'Password123!',
+      });
+
       final token = loginResp['data']?['token'];
       if (token == null) {
         print('Could not get token! Login resp: $loginResp');
         return;
       }
       print('Got token: $token');
-      
+
       // Store token
       await LocalStorage().saveString('token', token);
-      
+
       // Fetch Account/Me
       print('\nFetching Account/Me...');
       try {
@@ -39,7 +38,7 @@ void main() {
       } catch (e) {
         print('Profile error: $e');
       }
-      
+
       // Fetch Jobs/recommendations
       print('\nFetching Jobs/recommendations...');
       try {
@@ -48,7 +47,6 @@ void main() {
       } catch (e) {
         print('Jobs error: $e');
       }
-      
     } catch (e) {
       print('Login error: $e');
     }

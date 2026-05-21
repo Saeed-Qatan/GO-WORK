@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gowork/utils/local_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
+import 'package:gowork/repository/profile_repository.dart';
+import 'package:gowork/services/notification_topic_service.dart';
 
 import 'package:gowork/theme/app_colors.dart';
 
@@ -35,8 +39,23 @@ class _SplashViewState extends State<SplashView> {
       if (token == null) {
         context.go(AppRoutes.login);
       } else {
+        unawaited(_subscribeToUserCategoryTopic());
         context.go(AppRoutes.home);
       }
+    }
+  }
+
+  Future<void> _subscribeToUserCategoryTopic() async {
+    try {
+      final profile = await ProfileRepository().getUserProfile();
+      debugPrint(
+        '=== SPLASH DEBUG: CATEGORY ID = ${profile.categoryId.isNotEmpty ? profile.categoryId : 'EMPTY'} ===',
+      );
+      await NotificationTopicService().subscribeUserTopics(
+        categoryId: profile.categoryId,
+      );
+    } catch (e) {
+      debugPrint('=== SPLASH DEBUG: CATEGORY TOPIC SUBSCRIBE ERROR: $e ===');
     }
   }
 

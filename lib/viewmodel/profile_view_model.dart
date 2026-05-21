@@ -23,14 +23,29 @@ class ProfileViewModel extends ChangeNotifier {
   ProfileViewModel({NotificationTopicService? notificationTopicService})
     : _notificationTopicService = notificationTopicService;
 
-  Future<void> fetchProfile() async {
+  Future<void> fetchProfile({
+    String? previousCategoryId,
+    String? preferredCategoryId,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
+      final oldCategoryId = previousCategoryId ?? _profile?.categoryId;
       _profile = await _repository.getUserProfile();
-      await _notificationTopicService?.subscribeUserTopics(
+      final requestedCategoryId = preferredCategoryId?.trim();
+      if (_profile != null &&
+          requestedCategoryId != null &&
+          requestedCategoryId.isNotEmpty) {
+        _profile = _profile!.copyWith(categoryId: requestedCategoryId);
+        await _storage.saveString('categoryId', requestedCategoryId);
+      }
+      debugPrint(
+        '=== PROFILE DEBUG: CATEGORY ID = ${_profile?.categoryId.isNotEmpty == true ? _profile!.categoryId : 'EMPTY'} ===',
+      );
+      await _notificationTopicService?.syncUserTopics(
+        previousCategoryId: oldCategoryId,
         categoryId: _profile?.categoryId,
       );
     } catch (e) {
@@ -53,6 +68,8 @@ class ProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final previousCategoryId = _profile?.categoryId;
+      final requestedCategoryId = fields['InterstedInCategoryId']?.trim();
       debugPrint('--- STARTING PROFILE UPDATE (PATCH) ---');
       await _repository.updateProfile(
         fields: fields,
@@ -60,7 +77,10 @@ class ProfileViewModel extends ChangeNotifier {
         files: files,
       );
       debugPrint('--- PROFILE UPDATE SUCCESS. REFETCHING PROFILE ---');
-      await fetchProfile();
+      await fetchProfile(
+        previousCategoryId: previousCategoryId,
+        preferredCategoryId: requestedCategoryId,
+      );
     } catch (e) {
       debugPrint('--- ERROR IN UPDATE PROFILE: $e ---');
       _errorMessage = AppErrorParser.parse(e);

@@ -1,13 +1,22 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
 void main() {
   final dir = Directory('lib');
   if (!dir.existsSync()) return;
 
-  final files = dir.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'));
+  final files = dir
+      .listSync(recursive: true)
+      .whereType<File>()
+      .where((f) => f.path.endsWith('.dart'));
 
   for (final file in files) {
-    if (file.path.contains('app_colors.dart') || file.path.contains('app_theme.dart') || file.path.contains('app_shadows.dart')) continue;
+    if (file.path.contains('app_colors.dart') ||
+        file.path.contains('app_theme.dart') ||
+        file.path.contains('app_shadows.dart')) {
+      continue;
+    }
 
     String content = file.readAsStringSync();
     bool changed = false;
@@ -32,7 +41,10 @@ void main() {
         // Find the first import
         final importIndex = content.indexOf('import ');
         if (importIndex != -1) {
-          content = content.replaceFirst('import ', "import 'package:gowork/theme/app_colors.dart';\nimport ");
+          content = content.replaceFirst(
+            'import ',
+            "import 'package:gowork/theme/app_colors.dart';\nimport ",
+          );
         }
       }
       file.writeAsStringSync(content);

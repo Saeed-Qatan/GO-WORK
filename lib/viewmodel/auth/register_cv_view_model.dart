@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/main.dart'; // للوصول إلى notificationTopicService
+import 'package:gowork/utils/local_storage.dart';
 
 class RegisterCVViewModel extends ChangeNotifier {
   final skillController = TextEditingController();
@@ -27,6 +28,7 @@ class RegisterCVViewModel extends ChangeNotifier {
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> get categories => _categories;
   bool isCategoriesLoading = false;
+  String? categoriesErrorMessage;
 
   String? selectedCategoryId;
 
@@ -37,10 +39,14 @@ class RegisterCVViewModel extends ChangeNotifier {
 
   Future<void> fetchCategories() async {
     isCategoriesLoading = true;
+    categoriesErrorMessage = null;
     notifyListeners();
 
     try {
-      final response = await _apiClient.get(ApiConstants.jobCategories);
+      final response = await _apiClient.get(
+        ApiConstants.jobCategories,
+        skipAuth: true,
+      );
       debugPrint('Categories Response: $response');
 
       // Parse categories from various possible response structures
@@ -57,32 +63,45 @@ class RegisterCVViewModel extends ChangeNotifier {
       }
 
       if (categoriesList != null && categoriesList.isNotEmpty) {
-        _categories = categoriesList.map((cat) {
-          return <String, dynamic>{
-            'id':
-                (cat['id'] ??
-                        cat['Id'] ??
-                        cat['categoryId'] ??
-                        cat['CategoryId'] ??
-                        '')
-                    .toString(),
-            'name':
-                (cat['name'] ??
-                        cat['Name'] ??
-                        cat['categoryName'] ??
-                        cat['CategoryName'] ??
-                        '')
-                    .toString(),
-          };
-        }).toList();
+        _categories =
+            categoriesList
+                .map((cat) {
+                  return <String, dynamic>{
+                    'id':
+                        (cat['id'] ??
+                                cat['Id'] ??
+                                cat['categoryId'] ??
+                                cat['CategoryId'] ??
+                                '')
+                            .toString(),
+                    'name':
+                        (cat['name'] ??
+                                cat['Name'] ??
+                                cat['categoryName'] ??
+                                cat['CategoryName'] ??
+                                '')
+                            .toString(),
+                  };
+                })
+                .where(
+                  (cat) =>
+                      cat['id'].toString().trim().isNotEmpty &&
+                      cat['name'].toString().trim().isNotEmpty,
+                )
+                .toList();
         debugPrint('Categories loaded from API: ${_categories.length} items');
       } else {
         debugPrint('WARNING: Empty categories from API');
         _categories = [];
       }
+
+      if (_categories.isEmpty) {
+        categoriesErrorMessage = 'تعذر تحميل المجالات. يرجى المحاولة مرة أخرى.';
+      }
     } catch (e) {
       debugPrint('Error fetching categories: $e');
       _categories = [];
+      categoriesErrorMessage = AppErrorParser.parse(e);
     } finally {
       isCategoriesLoading = false;
       notifyListeners();
@@ -111,10 +130,13 @@ class RegisterCVViewModel extends ChangeNotifier {
       }
 
       if (skillsList != null) {
-        suggestedSkills = skillsList
-            .map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString())
-            .take(15)
-            .toList();
+        suggestedSkills =
+            skillsList
+                .map(
+                  (s) => (s['name'] ?? s['title'] ?? s.toString()).toString(),
+                )
+                .take(15)
+                .toList();
       }
     } catch (e) {
       debugPrint('Error fetching suggested skills: $e');
@@ -162,6 +184,12 @@ class RegisterCVViewModel extends ChangeNotifier {
     BuildContext context,
     RegisterDataModel base,
   ) async {
+    final categoryId = selectedCategoryId?.trim();
+    if (categoryId == null || categoryId.isEmpty) {
+      SnackbarService.showWarning('يرجى اختيار المجال المناسب');
+      return;
+    }
+
     isLoading = true;
     notifyListeners();
 
@@ -169,14 +197,14 @@ class RegisterCVViewModel extends ChangeNotifier {
       final data = base.copyWith(
         skills: _skills,
         cvFile: cvFile,
-        categoryId:
-            selectedCategoryId ??
-            '101', // Fallback ID if API fails so reg succeeds
+        categoryId: categoryId,
       );
 
       await RegisterService().register(data);
 
-      await notificationTopicService.subscribeUserTopics(
+      await LocalStorage().saveString('categoryId', categoryId);
+      await notificationTopicService.syncUserTopics(
+        previousCategoryId: null,
         categoryId: data.categoryId,
       );
 

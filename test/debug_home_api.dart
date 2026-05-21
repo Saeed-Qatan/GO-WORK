@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -6,12 +8,14 @@ void main() {
   test('Debug Home API - raw responses', () async {
     TestWidgetsFlutterBinding.ensureInitialized();
 
-    final dio = Dio(BaseOptions(
-      baseUrl: 'https://api.masarak.app/api/',
-      headers: {'Accept': 'application/json'},
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-    ));
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: 'https://api.masarak.app/api/',
+        headers: {'Accept': 'application/json'},
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ),
+    );
 
     // 1. Login
     print('=== STEP 1: LOGIN ===');
@@ -19,7 +23,10 @@ void main() {
     try {
       final loginResp = await dio.post(
         'Account/Candidate/Login',
-        data: {'email': 'test_1777641740881@test.com', 'password': 'Password123!'},
+        data: {
+          'email': 'test_1777641740881@test.com',
+          'password': 'Password123!',
+        },
         options: Options(contentType: 'application/json'),
       );
       print('Login status: ${loginResp.statusCode}');
@@ -27,7 +34,8 @@ void main() {
       print('Login body: ${loginResp.data}');
 
       if (loginResp.data is Map) {
-        token = loginResp.data['token'] ??
+        token =
+            loginResp.data['token'] ??
             loginResp.data['data']?['token'] ??
             loginResp.data['accessToken'];
       }
