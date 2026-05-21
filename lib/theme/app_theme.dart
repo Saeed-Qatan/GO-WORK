@@ -131,7 +131,10 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          // padding: zero so each button controls its own height via SizedBox
+          // Without this, theme padding fights fixed-height wrappers and shifts text
+          padding: EdgeInsets.zero,
+          alignment: Alignment.center,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

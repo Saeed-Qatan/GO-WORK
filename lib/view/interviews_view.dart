@@ -123,16 +123,7 @@ class _InterviewsViewState extends State<InterviewsView> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      actions: [
-        IconButton(
-          tooltip: 'تحديث',
-          onPressed: viewModel.isLoading
-              ? null
-              : () => viewModel.fetchInterviews(),
-          icon: const Icon(Icons.refresh_rounded),
-          color: AppColors.textPrimary,
-        ),
-      ],
+      actions: const [],
     );
   }
 

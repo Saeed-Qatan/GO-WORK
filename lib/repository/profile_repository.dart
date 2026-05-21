@@ -36,6 +36,18 @@ class ProfileRepository {
       data['categoryId'] = jwtCategoryId;
     }
 
+    // Fallback: if API and JWT both returned no categoryId,
+    // use the locally-cached value saved from the last successful update.
+    if (ProfileModel.fromJson(data).categoryId.isEmpty) {
+      final cachedCategoryId = await LocalStorage().getString('categoryId');
+      if (cachedCategoryId != null && cachedCategoryId.trim().isNotEmpty) {
+        data['categoryId'] = cachedCategoryId;
+        debugPrint(
+          '=== PROFILE REPOSITORY: RESTORED CATEGORY ID FROM LOCAL CACHE: $cachedCategoryId ===',
+        );
+      }
+    }
+
     final profile = ProfileModel.fromJson(data);
     debugPrint(
       '=== PROFILE REPOSITORY DEBUG: CATEGORY ID = ${profile.categoryId.isNotEmpty ? profile.categoryId : 'EMPTY'} ===',

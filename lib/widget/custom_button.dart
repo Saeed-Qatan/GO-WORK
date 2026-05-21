@@ -21,24 +21,15 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 2. Responsive internal padding based on screen width rather than hardcoded pixels
-    final horizontalPadding = MediaQuery.of(context).size.width * 0.05;
-    final verticalPadding = 16.0;
-
     return SizedBox(
       width: double.infinity,
+      height: 56, // Fixed height for consistency across the app
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: textColor,
-          // 2. Removed fixed height, using responsive padding
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            vertical: verticalPadding,
-          ),
-          // 4. Minimum tap target of 48x48 dp (Material accessibility standard)
-          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -46,8 +37,7 @@ class CustomButton extends StatelessWidget {
         ),
         child: isLoading
             ? const SizedBox(
-                height:
-                    24, // slightly larger to scale proportionally with the new padding
+                height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
                   color: Colors.white,
@@ -55,26 +45,29 @@ class CustomButton extends StatelessWidget {
                 ),
               )
             : Row(
-                // 3. Perfect horizontal centering
+                mainAxisSize: MainAxisSize.min, // Fix horizontal centering!
                 mainAxisAlignment: MainAxisAlignment.center,
-                // 3. Perfect vertical centering
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
-                  // 5. Handle long text gracefully with Flexible + ellipsis
+                  if (icon != null) ...[
+                    icon!,
+                    const SizedBox(width: 8),
+                  ],
                   Flexible(
                     child: Text(
                       text,
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: textColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        height:
-                            1.2, // Ensures stable vertical alignment across languages
-                      ),
+                      style: TextStyle(
+                            color: textColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          strutStyle: const StrutStyle(
+                            height: 1.0,
+                            forceStrutHeight: true,
+                          ),
                     ),
                   ),
                 ],

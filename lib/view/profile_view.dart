@@ -49,12 +49,7 @@ class _ProfileViewState extends State<ProfileView> {
           icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
           onPressed: () => context.push(AppRoutes.settings),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-            onPressed: () => context.pop(),
-          ),
-        ],
+        actions: const [],
       ),
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {

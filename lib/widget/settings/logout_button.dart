@@ -12,17 +12,8 @@ class LogoutButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 54,
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         onPressed: () => _handleLogout(context),
-        icon: const Icon(Icons.logout, color: Colors.red),
-        label: const Text(
-          'تسجيل الخروج',
-          style: TextStyle(
-            color: Colors.red,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red.withValues(alpha: 0.1),
           foregroundColor: Colors.red,
@@ -30,6 +21,29 @@ class LogoutButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.logout, color: Colors.red),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'تسجيل الخروج',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                strutStyle: StrutStyle(
+                  height: 1.0,
+                  forceStrutHeight: true,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

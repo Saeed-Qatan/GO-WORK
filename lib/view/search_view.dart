@@ -82,6 +82,7 @@ class _SearchViewState extends State<SearchView> {
                                         ? ['جاري التحميل...']
                                         : viewModel.locationNames,
                                 onChanged: viewModel.setLocation,
+                                showSearch: false,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -112,6 +113,7 @@ class _SearchViewState extends State<SearchView> {
                                         ? ['جاري التحميل...']
                                         : viewModel.jobTypeNames,
                                 onChanged: viewModel.setType,
+                                showSearch: false,
                               ),
                             ),
                           ],

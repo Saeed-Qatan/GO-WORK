@@ -1,6 +1,6 @@
 import 'package:gowork/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+
 
 class CustomSearchHeader extends StatelessWidget {
   final VoidCallback? onBackTap;
@@ -35,37 +35,15 @@ class CustomSearchHeader extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Navigation Row
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_forward, color: Colors.white),
-                  onPressed: onBackTap ?? () => context.pop(),
-                  constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
-                  ),
-                ),
-              ),
-              const Expanded(
-                child: Text(
-                  'البحث عن وظائف',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Cairo', // Assuming font usage or standard
-                  ),
-                ),
-              ),
-              // Empty container to balance the back button
-              const SizedBox(width: 40),
-            ],
+          const Text(
+            'البحث عن وظائف',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo', // Assuming font usage or standard
+            ),
           ),
           const SizedBox(height: 24),
 
