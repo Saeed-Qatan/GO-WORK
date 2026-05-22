@@ -9,8 +9,9 @@ import '../widget/home/home_header.dart';
 import '../widget/home/stat_card.dart';
 import '../widget/home/job_card.dart';
 import '../core/constants/app_constants.dart';
-import '../widget/home/home_filters.dart';
+import '../widget/home/recommended_jobs_header.dart';
 import '../utils/stat_ui_helper.dart';
+import '../widget/common/animated_empty_state.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -63,7 +64,7 @@ class _HomeViewState extends State<HomeView> {
         builder: (context, viewModel, child) {
           final isLoading = viewModel.isLoading;
           final stats = isLoading ? _dummyStats : viewModel.stats;
-          final jobs = isLoading ? _dummyJobs : viewModel.jobs;
+          final jobs = isLoading ? _dummyJobs : viewModel.filteredJobs;
 
           return Skeletonizer(
             enabled: isLoading,
@@ -78,7 +79,7 @@ class _HomeViewState extends State<HomeView> {
                       await Provider.of<HomeViewModel>(
                         context,
                         listen: false,
-                      ).fetchHomeData();
+                      ).fetchHomeData(forceRefresh: true);
                     }
                   },
                 ),
@@ -88,79 +89,94 @@ class _HomeViewState extends State<HomeView> {
                     children: [
                       const HomeHeader(),
                       // Stats Row
-                      Transform.translate(
-                        offset: const Offset(
-                          0,
-                          -40,
-                        ), // Pull up to overlap header
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(stats.length, (index) {
-                              final stat = stats[index];
-                              return Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0,
-                                  ),
-                                  child:
-                                      StatCard(
-                                            count: stat.count,
-                                            label: stat.label,
-                                            icon: StatUiHelper.getIcon(
-                                              stat.type,
-                                            ),
-                                            iconColor: StatUiHelper.getColor(
-                                              stat.type,
-                                            ),
-                                          )
-                                          .animate(
-                                            key: ValueKey(
-                                              'stat_\${isLoading}_\${stat.label}',
-                                            ),
-                                          )
-                                          .fade(
-                                            duration: 400.ms,
-                                            delay: (index * 100).ms,
-                                          )
-                                          .slideY(
-                                            begin: 0.2,
-                                            duration: 400.ms,
-                                            curve: Curves.easeOutQuad,
-                                          ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 16.0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(stats.length, (index) {
+                            final stat = stats[index];
+                            return Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0,
                                 ),
-                              );
-                            }),
-                          ),
+                                child:
+                                    StatCard(
+                                          count: stat.count,
+                                          label: stat.label,
+                                          icon: StatUiHelper.getIcon(
+                                            stat.type,
+                                          ),
+                                          iconColor: StatUiHelper.getColor(
+                                            stat.type,
+                                          ),
+                                        )
+                                        .animate(
+                                          key: ValueKey(
+                                            'stat_${isLoading}_${stat.label}',
+                                          ),
+                                        )
+                                        .fade(
+                                          duration: 400.ms,
+                                          delay: (index * 100).ms,
+                                        )
+                                        .slideY(
+                                          begin: 0.2,
+                                          duration: 400.ms,
+                                          curve: Curves.easeOutQuad,
+                                        ),
+                              ),
+                            );
+                          }),
                         ),
                       ),
-                      // Filters Row
-                      const HomeFilters(),
+                      const RecommendedJobsHeader(),
                       const SizedBox(height: 16),
-                      // Jobs List
-                      ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: jobs.length,
-                        itemBuilder: (context, index) {
-                          final job = jobs[index];
-                          return JobCard(
-                                job: job,
-                                applyButtonText: AppConstants.applyNow,
-                              )
-                              .animate(
-                                key: ValueKey('job_\${isLoading}_\${job.id}'),
-                              )
-                              .fade(duration: 500.ms, delay: (index * 100).ms)
-                              .slideY(
-                                begin: 0.1,
-                                duration: 500.ms,
-                                curve: Curves.easeOutQuart,
-                              );
-                        },
-                      ),
+                      // Jobs List or Error/Empty State
+                      if (viewModel.errorMessage != null && !isLoading)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 32.0),
+                          child: AnimatedEmptyState(
+                            icon: Icons.wifi_off_rounded,
+                            title: 'تعذّر تحميل الوظائف',
+                            subtitle: viewModel.errorMessage!,
+                          ),
+                        )
+                      else if (jobs.isEmpty && !isLoading)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 32.0),
+                          child: AnimatedEmptyState(
+                            icon: Icons.work_off_outlined,
+                            title: 'لا توجد وظائف مقترحة',
+                            subtitle: 'يرجى استكمال ملفك الشخصي أو العودة لاحقاً لرؤية الوظائف المناسبة لك',
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: jobs.length,
+                          itemBuilder: (context, index) {
+                            final job = jobs[index];
+                            return JobCard(
+                                  job: job,
+                                  applyButtonText: AppConstants.applyNow,
+                                )
+                                .animate(
+                                  key: ValueKey('job_${isLoading}_${job.id}'),
+                                )
+                                .fade(duration: 500.ms, delay: (index * 100).ms)
+                                .slideY(
+                                  begin: 0.1,
+                                  duration: 500.ms,
+                                  curve: Curves.easeOutQuart,
+                                );
+                          },
+                        ),
                       const SizedBox(height: 24),
                     ],
                   ),

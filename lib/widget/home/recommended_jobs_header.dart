@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 import '../../theme/app_colors.dart';
 
-class HomeFilters extends StatelessWidget {
-  const HomeFilters({super.key});
+class RecommendedJobsHeader extends StatelessWidget {
+  const RecommendedJobsHeader({super.key});
 
   @override
   Widget build(BuildContext context) {

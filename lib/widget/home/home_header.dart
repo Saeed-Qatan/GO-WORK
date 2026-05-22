@@ -18,7 +18,7 @@ class HomeHeader extends StatelessWidget {
           children: [
             // Background with Gradient
             Container(
-              height: 240, // Increased height slightly for better spacing
+              height: 240,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -29,7 +29,7 @@ class HomeHeader extends StatelessWidget {
                   ],
                 ),
                 borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(10),
+                  bottom: Radius.circular(28),
                 ),
               ),
             ),
@@ -58,6 +58,18 @@ class HomeHeader extends StatelessWidget {
                 ),
               ),
             ),
+            Positioned(
+              bottom: 18,
+              left: 28,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
 
             SafeArea(
               child: Padding(
@@ -65,7 +77,7 @@ class HomeHeader extends StatelessWidget {
                   24,
                   24,
                   24,
-                  32,
+                  28,
                 ), // Added bottom padding
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,6 +153,47 @@ class HomeHeader extends StatelessWidget {
                           },
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      onChanged: viewModel.onSearchChanged,
+                      textInputAction: TextInputAction.search,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: AppConstants.searchHint,
+                        hintStyle: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(color: AppColors.textSecondary),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          color: AppColors.primary,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.45),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                            color: Colors.white,
+                            width: 1.4,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

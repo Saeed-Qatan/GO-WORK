@@ -27,9 +27,6 @@ class HomeRepository {
     try {
       _cachedData = await _activeFetch;
       return _cachedData!;
-    } catch (e) {
-      debugPrint('HomeRepository._fetchHomeData error: $e');
-      return {'stats': [], 'jobs': []};
     } finally {
       _activeFetch = null;
     }
