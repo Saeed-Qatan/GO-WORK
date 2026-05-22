@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'status_translator.dart';
 
 class AppApiException implements Exception {
   final String message;
@@ -156,7 +157,9 @@ class AppErrorParser {
 
     cleaned = _translateKnownBackendMessage(cleaned);
 
-    if (cleaned.isEmpty || _looksLikeTechnicalError(cleaned)) {
+    if (cleaned.isEmpty ||
+        _looksLikeTechnicalError(cleaned) ||
+        StatusTranslator.isEnglishOnly(cleaned)) {
       return fallbackMessage;
     }
 
@@ -168,7 +171,9 @@ class AppErrorParser {
     required String fallbackMessage,
   }) {
     final cleaned = _translateKnownBackendMessage(message.trim());
-    if (cleaned.isEmpty || _looksLikeTechnicalError(cleaned)) {
+    if (cleaned.isEmpty ||
+        _looksLikeTechnicalError(cleaned) ||
+        StatusTranslator.isEnglishOnly(cleaned)) {
       return fallbackMessage;
     }
     return cleaned;
@@ -179,6 +184,32 @@ class AppErrorParser {
 
     if (lower.contains('job is closed or expired')) {
       return 'الوظيفة مغلقة أو منتهية الصلاحية.';
+    }
+
+    if (lower.contains('invalid credentials') ||
+        lower.contains('invalid username') ||
+        lower.contains('invalid password') ||
+        lower.contains('wrong password')) {
+      return 'بيانات الدخول غير صحيحة، يرجى التحقق والمحاولة مرة أخرى';
+    }
+
+    if (lower.contains('unauthorized') || lower.contains('not authorized')) {
+      return 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً';
+    }
+
+    if (lower.contains('user not found') ||
+        lower.contains('account not found')) {
+      return 'لم يتم العثور على الحساب';
+    }
+
+    if (lower.contains('current password') &&
+        (lower.contains('incorrect') || lower.contains('invalid'))) {
+      return 'كلمة المرور الحالية غير صحيحة';
+    }
+
+    if (lower.contains('already applied') ||
+        lower.contains('already submitted')) {
+      return 'لقد قمت بالتقديم على هذه الوظيفة مسبقاً';
     }
 
     if (lower.contains('email') &&
@@ -215,6 +246,11 @@ class AppErrorParser {
 
     if (lower.contains('failed to send reset link')) {
       return 'تعذر إرسال كود التحقق، يرجى المحاولة مرة أخرى';
+    }
+
+    final translated = StatusTranslator.backendMessage(message, fallbackMessage: '');
+    if (translated.isNotEmpty && translated != message) {
+      return translated;
     }
 
     return message;

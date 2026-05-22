@@ -126,12 +126,12 @@ class SearchJobCard extends StatelessWidget {
                       _buildTag(
                         context,
                         icon: Icons.access_time,
-                        text: job.type,
+                        text: job.displayType,
                       ),
                       _buildTag(
                         context,
                         icon: Icons.monitor,
-                        text: job.workMode,
+                        text: job.displayWorkMode,
                       ),
                     ],
                   ),

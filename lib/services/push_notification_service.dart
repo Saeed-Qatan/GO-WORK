@@ -16,9 +16,7 @@ const String _notificationChannelDescription =
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint(
-    '=== BACKGROUND NOTIFICATION: ${message.notification?.title ?? message.data['title']} ===',
-  );
+  _debugLogMessage(label: 'BACKGROUND', message: message);
 
   if (message.notification == null) {
     await _showBackgroundLocalNotification(message);
@@ -81,6 +79,45 @@ Future<void> _showBackgroundLocalNotification(RemoteMessage message) async {
     details,
     payload: message.messageId,
   );
+}
+
+/// Logs all relevant fields of an FCM message including topic origin.
+/// [message.from] contains the topic path (e.g. /topics/category_42)
+/// when the message was sent to a topic instead of a direct token.
+void _debugLogMessage({required String label, required RemoteMessage message}) {
+  final from = message.from ?? 'UNKNOWN';
+  final isTopic = from.startsWith('/topics/');
+  final topicName = isTopic ? from.replaceFirst('/topics/', '') : null;
+  final isCategory = topicName?.startsWith('category_') ?? false;
+
+  debugPrint('\n╔════════════════════════════════════════════╗');
+  debugPrint('║  FCM [$label] MESSAGE RECEIVED');
+  debugPrint('╠════════════════════════════════════════════╣');
+  debugPrint('║  from       : $from');
+  debugPrint('║  is topic   : $isTopic');
+  debugPrint('║  topic name : ${topicName ?? "—"}');
+  debugPrint('║  is category: $isCategory');
+  if (isCategory) {
+    final categoryId = topicName!.replaceFirst('category_', '');
+    debugPrint('║  category id: $categoryId  ✅ MATCHED');
+  } else {
+    debugPrint('║  category id: —  ❌ NOT a category topic');
+  }
+  debugPrint('╠════════════════════════════════════════════╣');
+  debugPrint('║  messageId  : ${message.messageId ?? "—"}');
+  debugPrint('║  sentTime   : ${message.sentTime ?? "—"}');
+  debugPrint('║  notif.title: ${message.notification?.title ?? "—"}');
+  debugPrint('║  notif.body : ${message.notification?.body ?? "—"}');
+  debugPrint('╠════════════════════════════════════════════╣');
+  debugPrint('║  data payload:');
+  if (message.data.isEmpty) {
+    debugPrint('║    (empty)');
+  } else {
+    message.data.forEach((key, value) {
+      debugPrint('║    $key: $value');
+    });
+  }
+  debugPrint('╚════════════════════════════════════════════╝\n');
 }
 
 class PushNotificationService {
@@ -195,13 +232,14 @@ class PushNotificationService {
 
   void _listenToForegroundMessages() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _debugLogMessage(label: 'FOREGROUND', message: message);
+
       final model = _modelFromMessage(message);
       if (model == null) {
-        debugPrint('=== FCM: MESSAGE WITHOUT TITLE/BODY: ${message.data} ===');
+        debugPrint('=== FCM: MESSAGE WITHOUT TITLE/BODY — skipping local notification ===');
         return;
       }
 
-      debugPrint('=== FOREGROUND NOTIFICATION: ${model.title} ===');
       _showLocalNotification(model);
       _notificationStreamController.add(model);
     });
@@ -209,9 +247,7 @@ class PushNotificationService {
 
   void _listenToNotificationTaps() {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint(
-        '=== NOTIFICATION TAPPED FROM BACKGROUND: ${message.messageId} ===',
-      );
+      _debugLogMessage(label: 'TAPPED (opened from background)', message: message);
     });
   }
 

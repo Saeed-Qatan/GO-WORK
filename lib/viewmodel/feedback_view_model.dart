@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gowork/model/feedback_model.dart';
 import 'package:gowork/repository/feedback_repository.dart';
 import 'package:gowork/utils/app_error_parser.dart';
+import 'package:gowork/utils/status_translator.dart';
 
 class FeedbackViewModel extends ChangeNotifier {
   final FeedbackRepository _repository = FeedbackRepository();
@@ -29,8 +30,10 @@ class FeedbackViewModel extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
-        _successMessage =
-            response['data']?['message'] ?? 'تم إرسال الرسالة بنجاح';
+        _successMessage = StatusTranslator.backendMessage(
+          response['data']?['message']?.toString(),
+          fallbackMessage: 'تم إرسال الرسالة بنجاح',
+        );
         _isLoading = false;
         notifyListeners();
         return true;

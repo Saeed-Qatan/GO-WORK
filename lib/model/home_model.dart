@@ -1,6 +1,7 @@
 // Pure data models for home feature
 // No Flutter dependencies - UI logic handled separately
 import 'package:flutter/foundation.dart';
+import '../utils/status_translator.dart';
 
 class UserModel {
   final String name;
@@ -94,6 +95,12 @@ class JobModel {
     this.canApply,
     this.contactNumber,
   });
+
+  String get displayType => StatusTranslator.jobTypeLabel(type);
+
+  String get displayWorkMode => StatusTranslator.workModeLabel(workMode);
+
+  String get displayCurrency => StatusTranslator.currencyLabel(currency);
 
   JobModel copyWith({
     String? id,

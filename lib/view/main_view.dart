@@ -4,7 +4,7 @@ import 'home_view.dart';
 import 'search_view.dart';
 import 'applications_view.dart';
 import 'interviews_view.dart';
-import 'profile_view.dart';
+import 'settings_view.dart';
 import '../widget/custom_bottom_nav_bar.dart';
 
 class MainView extends StatefulWidget {
@@ -22,7 +22,7 @@ class _MainViewState extends State<MainView> {
     SearchView(key: ValueKey('search')), // Search
     ApplicationsView(key: ValueKey('applications')), // Applications
     InterviewsView(key: ValueKey('interviews')), // Interviews
-    ProfileView(key: ValueKey('profile')), // Profile
+    SettingsView(key: ValueKey('settings')), // Settings
   ];
 
   @override

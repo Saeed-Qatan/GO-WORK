@@ -8,6 +8,7 @@ class ApplicationModel {
   final String companyLogo;
   final String date;
   final String statusName;
+  final String rawStatusName;
   final ApplicationStatus status;
 
   ApplicationModel({
@@ -18,25 +19,15 @@ class ApplicationModel {
     required this.companyLogo,
     required this.date,
     required this.statusName,
+    this.rawStatusName = '',
     required this.status,
   });
 
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
     final statusStrRaw =
         json['applicationStatus'] ?? json['status'] ?? json['statusName'];
-    final statusStr = statusStrRaw?.toString().toLowerCase() ?? '';
-    ApplicationStatus appStatus = ApplicationStatus.sent;
-    if (statusStr.contains('review') || statusStr == '2') {
-      appStatus = ApplicationStatus.inReview;
-    } else if (statusStr.contains('accept') || statusStr == '3') {
-      appStatus = ApplicationStatus.accepted;
-    } else if (statusStr.contains('reject') || statusStr == '4') {
-      appStatus = ApplicationStatus.rejected;
-    } else if (statusStr.contains('withdraw') ||
-        statusStr.contains('cancel') ||
-        statusStr == '5') {
-      appStatus = ApplicationStatus.withdrawn;
-    }
+    final rawStatus = statusStrRaw?.toString() ?? '';
+    final appStatus = _parseStatus(rawStatus);
 
     // Handle nested job object if present
     final jobObj = json['job'] as Map<String, dynamic>?;
@@ -65,8 +56,31 @@ class ApplicationModel {
           json['date']?.toString() ??
           '',
       statusName: appStatus.arabicLabel,
+      rawStatusName: rawStatus,
       status: appStatus,
     );
+  }
+
+  String get displayStatusName => status.arabicLabel;
+
+  static ApplicationStatus _parseStatus(String rawStatus) {
+    final statusStr = rawStatus
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\s_\-]+'), '');
+    if (statusStr.contains('review') ||
+        statusStr.contains('pending') ||
+        statusStr == '2') {
+      return ApplicationStatus.inReview;
+    } else if (statusStr.contains('accept') || statusStr == '3') {
+      return ApplicationStatus.accepted;
+    } else if (statusStr.contains('reject') || statusStr == '4') {
+      return ApplicationStatus.rejected;
+    } else if (statusStr.contains('withdraw') ||
+        statusStr.contains('cancel') ||
+        statusStr == '5') {
+      return ApplicationStatus.withdrawn;
+    }
+    return ApplicationStatus.sent;
   }
 }
 

@@ -62,9 +62,7 @@ class ApplicationCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  application.statusName.isNotEmpty
-                      ? application.statusName
-                      : application.status.arabicLabel,
+                  application.displayStatusName,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: statusColor,
                     fontWeight: FontWeight.bold,

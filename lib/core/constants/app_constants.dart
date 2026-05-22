@@ -31,6 +31,7 @@ class AppConstants {
   static const String navApplications = 'طلباتي';
   static const String navInterviews = 'المقابلات';
   static const String navProfile = 'الملف الشخصي';
+  static const String navSettings = 'الإعدادات';
 
   // Register Screen
   static const String registerTitle = 'إنشاء حساب جديد';

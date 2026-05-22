@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gowork/repository/change_password_repository.dart';
 import 'package:gowork/utils/app_error_parser.dart';
+import 'package:gowork/utils/status_translator.dart';
 
 class ChangePasswordViewModel extends ChangeNotifier {
   final ChangePasswordRepository _repository = ChangePasswordRepository();
@@ -39,8 +40,10 @@ class ChangePasswordViewModel extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
-        _successMessage =
-            response['data']?['message'] ?? 'تم تغيير كلمة المرور بنجاح';
+        _successMessage = StatusTranslator.backendMessage(
+          response['data']?['message']?.toString(),
+          fallbackMessage: 'تم تغيير كلمة المرور بنجاح',
+        );
         _isLoading = false;
         notifyListeners();
         return true;

@@ -25,21 +25,21 @@ class _HomeViewState extends State<HomeView> {
   final List<StatModel> _dummyStats = List.generate(
     3,
     (index) =>
-        StatModel(count: '00', label: 'Loading...', type: StatType.unknown),
+        StatModel(count: '00', label: 'جارٍ التحميل', type: StatType.unknown),
   );
 
   final List<JobModel> _dummyJobs = List.generate(
     4,
     (index) => JobModel(
       id: 'dummy_$index',
-      title: 'Loading Job Title',
-      company: 'Loading Company',
+      title: 'جارٍ تحميل الوظيفة',
+      company: 'جارٍ تحميل الشركة',
       companyLogoUrl: '',
-      category: 'Category',
-      location: 'Location',
-      country: 'Country',
-      type: 'Full-Time',
-      workMode: 'Remote',
+      category: 'المجال',
+      location: 'الموقع',
+      country: 'الدولة',
+      type: 'دوام كامل',
+      workMode: 'عن بعد',
       minSalary: '0000',
       maxSalary: '0000',
     ),

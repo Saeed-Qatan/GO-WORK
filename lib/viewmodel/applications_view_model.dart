@@ -10,15 +10,36 @@ class ApplicationsViewModel extends ChangeNotifier {
   List<ApplicationModel> _filteredApplications = [];
   List<dynamic> _statuses = [];
 
-  List<String> get filterTabs {
-    if (_statuses.isEmpty) {
-      return ['الكل', 'Sent', 'PendingReview', 'Accepted', 'Rejected'];
+  List<ApplicationFilterTab> get filterTabItems {
+    final tabs = <ApplicationFilterTab>[
+      const ApplicationFilterTab(label: 'الكل', isAll: true),
+    ];
+
+    final rawStatusValues = _statuses.map(_extractStatusValue).whereType<String>();
+
+    if (rawStatusValues.isNotEmpty) {
+      for (final rawStatus in rawStatusValues) {
+        _addUniqueTab(tabs, ApplicationFilterTab.fromRaw(rawStatus));
+      }
+      return tabs;
     }
 
-    return [
-      'الكل',
-      ..._statuses.map((s) => s['name']?.toString() ?? s.toString()),
-    ];
+    for (final application in _allApplications) {
+      _addUniqueTab(
+        tabs,
+        ApplicationFilterTab(
+          label: application.displayStatusName,
+          status: application.status,
+          rawValue: application.rawStatusName,
+        ),
+      );
+    }
+
+    return tabs;
+  }
+
+  List<String> get filterTabs {
+    return filterTabItems.map((tab) => tab.label).toList();
   }
 
   List<ApplicationModel> get applications => _filteredApplications;
@@ -44,6 +65,9 @@ class ApplicationsViewModel extends ChangeNotifier {
     try {
       _statuses = await _repository.getApplicationStatuses();
       _allApplications = await _repository.getApplications();
+      if (_selectedFilterIndex >= filterTabItems.length) {
+        _selectedFilterIndex = 0;
+      }
       _applyFilter();
     } catch (e) {
       _errorMessage = AppErrorParser.parse(e);
@@ -65,11 +89,16 @@ class ApplicationsViewModel extends ChangeNotifier {
       return;
     }
 
-    final selectedTabName = filterTabs[_selectedFilterIndex];
-    final targetStatus = StatusTranslator.getEnum(selectedTabName);
+    final selectedTab = filterTabItems[_selectedFilterIndex];
     _filteredApplications = _allApplications.where((app) {
-      return app.status == targetStatus ||
-          app.statusName.toLowerCase() == selectedTabName.toLowerCase();
+      if (selectedTab.status != null) {
+        return app.status == selectedTab.status;
+      }
+
+      final normalizedTab = StatusTranslator.normalize(selectedTab.rawValue);
+      return StatusTranslator.normalize(app.rawStatusName) == normalizedTab ||
+          StatusTranslator.normalize(app.statusName) == normalizedTab ||
+          StatusTranslator.normalize(app.displayStatusName) == normalizedTab;
     }).toList();
   }
 
@@ -84,5 +113,66 @@ class ApplicationsViewModel extends ChangeNotifier {
       notifyListeners();
       return message;
     }
+  }
+
+  String? _extractStatusValue(dynamic status) {
+    if (status == null) return null;
+    if (status is Map) {
+      for (final key in const [
+        'name',
+        'status',
+        'statusName',
+        'applicationStatus',
+        'value',
+        'id',
+      ]) {
+        final value = status[key];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString();
+        }
+      }
+      return null;
+    }
+
+    final value = status.toString().trim();
+    return value.isEmpty ? null : value;
+  }
+
+  void _addUniqueTab(
+    List<ApplicationFilterTab> tabs,
+    ApplicationFilterTab tab,
+  ) {
+    final key = tab.uniqueKey;
+    final exists = tabs.any((item) => item.uniqueKey == key);
+    if (!exists) tabs.add(tab);
+  }
+}
+
+class ApplicationFilterTab {
+  final String label;
+  final ApplicationStatus? status;
+  final String rawValue;
+  final bool isAll;
+
+  const ApplicationFilterTab({
+    required this.label,
+    this.status,
+    this.rawValue = '',
+    this.isAll = false,
+  });
+
+  factory ApplicationFilterTab.fromRaw(String rawValue) {
+    final status = StatusTranslator.getEnumOrNull(rawValue);
+    return ApplicationFilterTab(
+      label: StatusTranslator.applicationStatusLabel(rawValue),
+      status: status,
+      rawValue: rawValue,
+    );
+  }
+
+  String get uniqueKey {
+    if (isAll) return 'all';
+    if (status != null) return status!.englishApiValue;
+    return StatusTranslator.normalize(label.isNotEmpty ? label : rawValue);
   }
 }

@@ -3,6 +3,7 @@ import '../model/home_model.dart';
 import '../repository/search_repository.dart';
 import '../utils/api_storage.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/status_translator.dart';
 import '../core/constants/api_constants.dart';
 
 class SearchViewModel extends ChangeNotifier {
@@ -38,15 +39,31 @@ class SearchViewModel extends ChangeNotifier {
 
   List<String> get categoryNames => _mapNames(_categories, 'جميع المجالات');
   List<String> get countryNames => _mapNames(_countries, 'الكل');
-  List<String> get locationNames => _mapNames(_locationTypes, 'الكل');
-  List<String> get jobTypeNames => _mapNames(_jobTypes, 'الكل');
+  List<String> get locationNames => _mapNames(
+    _locationTypes,
+    'الكل',
+    translate: StatusTranslator.workModeLabel,
+  );
+  List<String> get jobTypeNames => _mapNames(
+    _jobTypes,
+    'الكل',
+    translate: StatusTranslator.jobTypeLabel,
+  );
 
   List<String> _mapNames(
     List<Map<String, dynamic>> items,
-    String defaultOption,
-  ) {
+    String defaultOption, {
+    String Function(String value)? translate,
+  }) {
     if (items.isEmpty) return [defaultOption];
-    final names = items.map((e) => e['name'].toString()).toSet().toList();
+    final names = items
+        .map((e) {
+          final rawName = e['name'].toString();
+          final displayName = translate?.call(rawName) ?? rawName;
+          return displayName.isEmpty ? rawName : displayName;
+        })
+        .toSet()
+        .toList();
     names.remove(
       defaultOption,
     ); // Remove if API already returns it, to avoid duplicates
@@ -61,8 +78,12 @@ class SearchViewModel extends ChangeNotifier {
 
   // Getters for filters
   String? get selectedCategory => _selectedCategory;
-  String? get selectedLocation => _selectedLocation;
-  String? get selectedType => _selectedType;
+  String? get selectedLocation => _selectedLocation == null
+      ? null
+      : StatusTranslator.workModeLabel(_selectedLocation);
+  String? get selectedType => _selectedType == null
+      ? null
+      : StatusTranslator.jobTypeLabel(_selectedType);
   String? get selectedCountry => _selectedCountry;
 
   String _sortBy = 'date'; // 'date' or 'salary'
@@ -162,12 +183,22 @@ class SearchViewModel extends ChangeNotifier {
   }
 
   void setLocation(String? value) {
-    _selectedLocation = value;
+    _selectedLocation = _rawFilterValue(
+      _locationTypes,
+      value,
+      'الكل',
+      StatusTranslator.workModeLabel,
+    );
     searchJobs();
   }
 
   void setType(String? value) {
-    _selectedType = value;
+    _selectedType = _rawFilterValue(
+      _jobTypes,
+      value,
+      'الكل',
+      StatusTranslator.jobTypeLabel,
+    );
     searchJobs();
   }
 
@@ -196,6 +227,24 @@ class SearchViewModel extends ChangeNotifier {
         return bSalary.compareTo(aSalary); // Descending (highest salary first)
       });
     }
+  }
+
+  String? _rawFilterValue(
+    List<Map<String, dynamic>> items,
+    String? displayValue,
+    String defaultOption,
+    String Function(String value) translate,
+  ) {
+    if (displayValue == null || displayValue == defaultOption) return null;
+
+    for (final item in items) {
+      final rawName = item['name']?.toString() ?? '';
+      if (rawName == displayValue || translate(rawName) == displayValue) {
+        return rawName;
+      }
+    }
+
+    return displayValue;
   }
 
   Future<void> searchJobs() async {

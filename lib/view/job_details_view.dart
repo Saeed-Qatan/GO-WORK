@@ -101,7 +101,9 @@ class _JobDetailsViewState extends State<JobDetailsView> {
 
           String formattedPostedDate = _getTimeAgo(job.postedDate);
 
-          final String currency = job.currency ?? 'ريال';
+          final String currency = job.displayCurrency.isNotEmpty
+              ? job.displayCurrency
+              : 'ريال';
 
           return Stack(
             children: [
@@ -253,7 +255,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                       children: [
                         _buildInfoColumn(
                           'نوع الدوام',
-                          job.type,
+                          job.displayType,
                           onSurfaceVariant,
                           surfaceContainerLow,
                         ),
@@ -267,7 +269,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                         const SizedBox(width: 12),
                         _buildInfoColumn(
                           'النمط',
-                          job.workMode,
+                          job.displayWorkMode,
                           onSurfaceVariant,
                           surfaceContainerLow,
                         ),

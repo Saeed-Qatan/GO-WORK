@@ -146,7 +146,7 @@ class JobCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    job.type,
+                    job.displayType,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -163,7 +163,7 @@ class JobCard extends StatelessWidget {
                   ), // Work Mode
                   const SizedBox(width: 4),
                   Text(
-                    job.workMode,
+                    job.displayWorkMode,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -178,7 +178,7 @@ class JobCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${job.minSalary} - ${job.maxSalary} ${job.currency ?? "ريال"}',
+                  '${job.minSalary} - ${job.maxSalary} ${job.displayCurrency.isNotEmpty ? job.displayCurrency : "ريال"}',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,

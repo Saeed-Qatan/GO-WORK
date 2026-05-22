@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import '../../viewmodel/home_view_model.dart';
+import '../../viewmodel/profile_view_model.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../widget/notifications/notification_badge.dart';
@@ -12,8 +13,16 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HomeViewModel>(
-      builder: (context, viewModel, child) {
+    return Consumer2<HomeViewModel, ProfileViewModel>(
+      builder: (context, homeViewModel, profileViewModel, child) {
+        final profile = profileViewModel.profile;
+        final displayName = profile?.name.trim().isNotEmpty == true
+            ? profile!.name.trim()
+            : homeViewModel.userName.trim();
+        final profileImage = profile?.avatarUrl.trim().isNotEmpty == true
+            ? profile!.avatarUrl.trim()
+            : homeViewModel.userProfileImage.trim();
+
         return Stack(
           children: [
             // Background with Gradient
@@ -104,11 +113,10 @@ class HomeHeader extends StatelessWidget {
                             child: CircleAvatar(
                               radius: 24,
                               backgroundColor: Colors.white,
-                              backgroundImage:
-                                  viewModel.userProfileImage.isNotEmpty
-                                  ? NetworkImage(viewModel.userProfileImage)
+                              backgroundImage: profileImage.isNotEmpty
+                                  ? NetworkImage(profileImage)
                                   : null,
-                              child: viewModel.userProfileImage.isEmpty
+                              child: profileImage.isEmpty
                                   ? const Icon(
                                       Icons.person,
                                       color: AppColors.primary,
@@ -127,8 +135,8 @@ class HomeHeader extends StatelessWidget {
                                 .start, // Align to Start (Right in RTL)
                             children: [
                               Text(
-                                viewModel.userName.isNotEmpty
-                                    ? '${AppConstants.homeWelcome}، ${viewModel.userName}'
+                                displayName.isNotEmpty
+                                    ? '${AppConstants.homeWelcome}، $displayName'
                                     : AppConstants.homeWelcome,
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
@@ -156,7 +164,7 @@ class HomeHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     TextField(
-                      onChanged: viewModel.onSearchChanged,
+                      onChanged: homeViewModel.onSearchChanged,
                       textInputAction: TextInputAction.search,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textPrimary,

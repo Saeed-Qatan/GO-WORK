@@ -58,11 +58,12 @@ class ApplicationsRepository {
               return ApplicationModel(
                 id: '',
                 jobId: '',
-                role: 'Error',
-                company: 'Error',
+                role: 'تعذر قراءة الطلب',
+                company: 'غير معروف',
                 companyLogo: '',
                 date: '',
-                statusName: 'Error',
+                statusName: ApplicationStatus.sent.arabicLabel,
+                rawStatusName: '',
                 status: ApplicationStatus.sent,
               );
             }

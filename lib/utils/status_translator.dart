@@ -1,10 +1,16 @@
 import '../model/application_model.dart';
 
 class StatusTranslator {
+  static const String genericArabicError =
+      'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى';
+
   static const Map<String, ApplicationStatus> _apiToEnumMap = {
     '1': ApplicationStatus.sent,
     'sent': ApplicationStatus.sent,
+    'submitted': ApplicationStatus.sent,
+    'applied': ApplicationStatus.sent,
     '2': ApplicationStatus.inReview,
+    'pending': ApplicationStatus.inReview,
     'pendingreview': ApplicationStatus.inReview,
     'review': ApplicationStatus.inReview,
     'inreview': ApplicationStatus.inReview,
@@ -17,25 +23,162 @@ class StatusTranslator {
     '5': ApplicationStatus.withdrawn,
     'withdrawn': ApplicationStatus.withdrawn,
     'withdraw': ApplicationStatus.withdrawn,
+    'cancel': ApplicationStatus.withdrawn,
+    'canceled': ApplicationStatus.withdrawn,
+    'cancelled': ApplicationStatus.withdrawn,
   };
+
+  static const Map<String, String> _jobTypeLabels = {
+    'fulltime': 'دوام كامل',
+    'full_time': 'دوام كامل',
+    'full-time': 'دوام كامل',
+    'parttime': 'دوام جزئي',
+    'part_time': 'دوام جزئي',
+    'part-time': 'دوام جزئي',
+    'contract': 'عقد',
+    'temporary': 'مؤقت',
+    'internship': 'تدريب',
+    'freelance': 'عمل حر',
+  };
+
+  static const Map<String, String> _workModeLabels = {
+    'remote': 'عن بعد',
+    'onsite': 'حضوري',
+    'on_site': 'حضوري',
+    'on-site': 'حضوري',
+    'hybrid': 'هجين',
+    'inperson': 'حضوري',
+    'offline': 'حضوري',
+  };
+
+  static const Map<String, String> _currencyLabels = {
+    'sar': 'ريال سعودي',
+    'saudi riyal': 'ريال سعودي',
+    'riyal': 'ريال',
+    'yer': 'ريال يمني',
+    'yemeni rial': 'ريال يمني',
+    'usd': 'دولار أمريكي',
+    'dollar': 'دولار',
+  };
+
+  static String normalize(String? value) {
+    return (value ?? '')
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\s_\-]+'), '');
+  }
+
+  static bool hasArabic(String? value) {
+    return value != null && RegExp(r'[\u0600-\u06FF]').hasMatch(value);
+  }
+
+  static bool hasLatin(String? value) {
+    return value != null && RegExp(r'[A-Za-z]').hasMatch(value);
+  }
+
+  static bool isEnglishOnly(String? value) {
+    final text = value?.trim();
+    return text != null && text.isNotEmpty && hasLatin(text) && !hasArabic(text);
+  }
 
   /// Retrieves the corresponding ApplicationStatus enum from an API status string.
   static ApplicationStatus getEnum(String? apiStatus) {
-    if (apiStatus == null) return ApplicationStatus.sent;
-    final normalized = apiStatus.toLowerCase().replaceAll(' ', '');
-    
-    // Direct lookup
+    return getEnumOrNull(apiStatus) ?? ApplicationStatus.sent;
+  }
+
+  static ApplicationStatus? getEnumOrNull(String? apiStatus) {
+    if (apiStatus == null) return null;
+    final normalized = normalize(apiStatus);
+
     if (_apiToEnumMap.containsKey(normalized)) {
       return _apiToEnumMap[normalized]!;
     }
 
-    // Contains lookup as a fallback
-    for (var entry in _apiToEnumMap.entries) {
+    for (final entry in _apiToEnumMap.entries) {
       if (normalized.contains(entry.key)) {
         return entry.value;
       }
     }
 
-    return ApplicationStatus.sent;
+    return null;
+  }
+
+  static String applicationStatusLabel(String? apiStatus) {
+    if (apiStatus == null || apiStatus.trim().isEmpty) {
+      return ApplicationStatus.sent.arabicLabel;
+    }
+    if (hasArabic(apiStatus)) return apiStatus.trim();
+    final status = getEnumOrNull(apiStatus);
+    if (status != null) return status.arabicLabel;
+    return isEnglishOnly(apiStatus) ? 'غير محدد' : apiStatus.trim();
+  }
+
+  static String jobTypeLabel(String? value) {
+    return _translateSystemValue(value, _jobTypeLabels);
+  }
+
+  static String workModeLabel(String? value) {
+    return _translateSystemValue(value, _workModeLabels);
+  }
+
+  static String currencyLabel(String? value) {
+    return _translateSystemValue(value, _currencyLabels);
+  }
+
+  static String backendMessage(
+    String? message, {
+    String fallbackMessage = genericArabicError,
+  }) {
+    final text = message?.trim();
+    if (text == null || text.isEmpty) return fallbackMessage;
+
+    if (hasArabic(text)) return text;
+
+    final lower = text.toLowerCase();
+
+    if (lower.contains('password changed') ||
+        lower.contains('password has been changed')) {
+      return 'تم تغيير كلمة المرور بنجاح';
+    }
+    if (lower.contains('feedback') && lower.contains('sent')) {
+      return 'تم إرسال الرسالة بنجاح';
+    }
+    if (lower.contains('interview') && lower.contains('confirmed')) {
+      return 'تم تأكيد حضور المقابلة';
+    }
+    if (lower.contains('interview') &&
+        (lower.contains('cancelled') || lower.contains('declined'))) {
+      return 'تم الاعتذار عن حضور المقابلة';
+    }
+    if (lower.contains('application') && lower.contains('withdraw')) {
+      return 'تم سحب الطلب بنجاح';
+    }
+    if (lower.contains('successfully') || lower == 'success') {
+      return 'تمت العملية بنجاح';
+    }
+
+    return isEnglishOnly(text) ? fallbackMessage : text;
+  }
+
+  static String _translateSystemValue(
+    String? value,
+    Map<String, String> labels,
+  ) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) return '';
+    if (hasArabic(text)) return text;
+
+    final normalized = normalize(text);
+    if (labels.containsKey(normalized)) {
+      return labels[normalized]!;
+    }
+
+    for (final entry in labels.entries) {
+      if (normalized.contains(normalize(entry.key))) {
+        return entry.value;
+      }
+    }
+
+    return text;
   }
 }

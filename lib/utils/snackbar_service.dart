@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gowork/theme/app_colors.dart';
+import 'status_translator.dart';
 
 class SnackbarService {
   static final GlobalKey<ScaffoldMessengerState> messengerKey =
@@ -47,6 +48,7 @@ class SnackbarService {
     IconData icon,
     Duration duration,
   ) {
+    final displayMessage = StatusTranslator.backendMessage(message);
     messengerKey.currentState
       ?..hideCurrentSnackBar()
       ..showSnackBar(
@@ -82,7 +84,7 @@ class SnackbarService {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    message,
+                    displayMessage,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,

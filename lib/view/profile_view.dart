@@ -45,11 +45,6 @@ class _ProfileViewState extends State<ProfileView> {
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
-          onPressed: () => context.push(AppRoutes.settings),
-        ),
-        actions: const [],
       ),
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {

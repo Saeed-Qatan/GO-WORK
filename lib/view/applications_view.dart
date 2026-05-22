@@ -24,11 +24,11 @@ class _ApplicationsViewState extends State<ApplicationsView> {
     4,
     (index) => ApplicationModel(
       id: 'dummy_$index',
-      role: 'Loading Role...',
-      company: 'Loading Company...',
+      role: 'جارٍ تحميل الوظيفة',
+      company: 'جارٍ تحميل الشركة',
       companyLogo: '',
       date: '00/00/0000',
-      statusName: 'Loading...',
+      statusName: 'جارٍ التحميل',
       status: ApplicationStatus.sent, jobId: '',
     ),
   );
@@ -316,7 +316,7 @@ class _ApplicationsViewState extends State<ApplicationsView> {
                   _handleWithdraw(viewModel, apps[index].id),
             )
             .animate(
-              key: ValueKey('app_\${viewModel.isLoading}_\${apps[index].id}'),
+              key: ValueKey('app_${viewModel.isLoading}_${apps[index].id}'),
             )
             .fade(duration: 400.ms, delay: (index * 100).ms)
             .slideX(begin: 0.1, duration: 400.ms);

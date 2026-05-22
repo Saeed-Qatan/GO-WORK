@@ -45,9 +45,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
       label: AppConstants.navInterviews,
     ),
     _NavItem(
-      icon: Icons.person_outline_rounded,
-      activeIcon: Icons.person_rounded,
-      label: AppConstants.navProfile,
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: AppConstants.navSettings,
     ),
   ];
 

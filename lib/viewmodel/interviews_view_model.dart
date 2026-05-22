@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../model/interview_model.dart';
 import '../repository/interviews_repository.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/status_translator.dart';
 
 /// Manages state and business logic for the Interviews screen.
 ///
@@ -91,8 +92,10 @@ class InterviewsViewModel extends ChangeNotifier {
 
       if (response['success'] == true) {
         _applyStatusChange(interviewId, action);
-        _successMessage = response['data']?['message']?.toString() ??
-            _defaultSuccessMessage(action);
+        _successMessage = StatusTranslator.backendMessage(
+          response['data']?['message']?.toString(),
+          fallbackMessage: _defaultSuccessMessage(action),
+        );
         _clearSubmitting();
         notifyListeners();
         await fetchInterviews(showLoading: false);
