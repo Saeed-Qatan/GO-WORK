@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../viewmodel/applications_view_model.dart';
-import '../model/application_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widget/applications/application_card.dart';
@@ -19,19 +17,6 @@ class ApplicationsView extends StatefulWidget {
 
 class _ApplicationsViewState extends State<ApplicationsView> {
   bool _isWithdrawing = false;
-
-  final List<ApplicationModel> _dummyApplications = List.generate(
-    4,
-    (index) => ApplicationModel(
-      id: 'dummy_$index',
-      role: 'جارٍ تحميل الوظيفة',
-      company: 'جارٍ تحميل الشركة',
-      companyLogo: '',
-      date: '00/00/0000',
-      statusName: 'جارٍ التحميل',
-      status: ApplicationStatus.sent, jobId: '',
-    ),
-  );
 
   @override
   void initState() {
@@ -86,10 +71,17 @@ class _ApplicationsViewState extends State<ApplicationsView> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
-            icon: const Icon(Icons.cancel_outlined, color: Colors.white, size: 16),
+            icon: const Icon(
+              Icons.cancel_outlined,
+              color: Colors.white,
+              size: 16,
+            ),
             label: const Text(
               'نعم، سحب الطلب',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -113,14 +105,19 @@ class _ApplicationsViewState extends State<ApplicationsView> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.green.shade700,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           content: const Row(
             children: [
               Icon(Icons.check_circle_outline, color: Colors.white),
               SizedBox(width: 10),
               Text(
                 'تم سحب الطلب بنجاح',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -179,8 +176,10 @@ class _ApplicationsViewState extends State<ApplicationsView> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 10,
+                ),
               ),
               child: const Text(
                 'حسناً',
@@ -239,12 +238,7 @@ class _ApplicationsViewState extends State<ApplicationsView> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Expanded(
-                            child: Skeletonizer(
-                              enabled: viewModel.isLoading,
-                              child: _buildListContent(viewModel),
-                            ),
-                          ),
+                          Expanded(child: _buildListContent(viewModel)),
                         ],
                       ),
                     ),
@@ -286,6 +280,10 @@ class _ApplicationsViewState extends State<ApplicationsView> {
   }
 
   Widget _buildListContent(ApplicationsViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     if (viewModel.errorMessage != null && !viewModel.isLoading) {
       return AnimatedEmptyState(
         icon: Icons.wifi_off_rounded,
@@ -294,11 +292,9 @@ class _ApplicationsViewState extends State<ApplicationsView> {
       );
     }
 
-    final apps = viewModel.isLoading
-        ? _dummyApplications
-        : viewModel.applications;
+    final apps = viewModel.applications;
 
-    if (apps.isEmpty && !viewModel.isLoading) {
+    if (apps.isEmpty) {
       return const AnimatedEmptyState(
         icon: Icons.folder_open_rounded,
         title: 'لا توجد طلبات',
@@ -312,8 +308,7 @@ class _ApplicationsViewState extends State<ApplicationsView> {
       itemBuilder: (context, index) {
         return ApplicationCard(
               application: apps[index],
-              onWithdraw: () =>
-                  _handleWithdraw(viewModel, apps[index].id),
+              onWithdraw: () => _handleWithdraw(viewModel, apps[index].id),
             )
             .animate(
               key: ValueKey('app_${viewModel.isLoading}_${apps[index].id}'),

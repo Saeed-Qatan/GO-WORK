@@ -54,16 +54,8 @@ class AppConstants {
   // Applications Screen
   static const String applicationsTitle = 'طلبات التوظيف';
   static const String filterAll = 'الكل';
-  static const String filterSent = 'تم الإرسال';
-  static const String filterReview = 'قيد المراجعة';
-  static const String filterAccepted = 'تم القبول';
-  static const String filterRejected = 'مرفوض';
   static const String applicationsCount = 'طلبات توظيف';
   static const String datePrefix = 'تاريخ التقديم:';
-  static const String statusSent = 'تم الإرسال';
-  static const String statusReview = 'قيد المراجعة';
-  static const String statusAccepted = 'تم القبول للمقابلة';
-  static const String statusRejected = 'مرفوض';
   static const String confirmed = 'مؤكد';
   static const String scheduled = 'مجدولة';
 

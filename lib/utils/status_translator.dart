@@ -1,5 +1,3 @@
-import '../model/application_model.dart';
-
 class StatusTranslator {
   static const String genericArabicError =
       'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى';
@@ -38,10 +36,10 @@ class StatusTranslator {
   };
 
   static String normalize(String? value) {
-    return (value ?? '')
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[\s_\-]+'), '');
+    return (value ?? '').trim().toLowerCase().replaceAll(
+      RegExp(r'[\s_\-]+'),
+      '',
+    );
   }
 
   static bool hasArabic(String? value) {
@@ -54,20 +52,10 @@ class StatusTranslator {
 
   static bool isEnglishOnly(String? value) {
     final text = value?.trim();
-    return text != null && text.isNotEmpty && hasLatin(text) && !hasArabic(text);
-  }
-
-  /// Retrieves the corresponding ApplicationStatus enum from an API status string.
-  static ApplicationStatus getEnum(String? apiStatus) {
-    return ApplicationStatusMapper.fromApi(apiStatus);
-  }
-
-  static ApplicationStatus? getEnumOrNull(String? apiStatus) {
-    return ApplicationStatusMapper.tryFromApi(apiStatus);
-  }
-
-  static String applicationStatusLabel(String? apiStatus) {
-    return ApplicationStatusMapper.labelFor(apiStatus);
+    return text != null &&
+        text.isNotEmpty &&
+        hasLatin(text) &&
+        !hasArabic(text);
   }
 
   static String jobTypeLabel(String? value) {

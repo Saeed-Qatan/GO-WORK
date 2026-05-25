@@ -43,9 +43,11 @@ class ApplicationCard extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final statusColor = Color(application.status.colorHex);
-    final statusBgColor = Color(application.status.bgColorHex);
-    final iconCode = application.status.iconCodePoint;
+    final statusColor =
+        _parseHexColor(application.statusColorHex) ?? AppColors.info;
+    final statusBgColor =
+        _parseHexColor(application.statusBackgroundColorHex) ??
+        AppColors.infoBackground;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -62,21 +64,13 @@ class ApplicationCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  application.displayStatusName,
+                  application.statusLabelFromBackend,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: statusColor,
                     fontWeight: FontWeight.bold,
                     height: 1.5,
                   ),
                 ),
-                if (iconCode != null) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    IconData(iconCode, fontFamily: 'MaterialIcons'),
-                    size: 12,
-                    color: statusColor,
-                  ),
-                ],
               ],
             ),
           ),
@@ -193,10 +187,7 @@ class ApplicationCard extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
-    // Only allow withdrawal for sent or in-review applications
-    final canWithdraw =
-        application.status == ApplicationStatus.sent ||
-        application.status == ApplicationStatus.inReview;
+    final canWithdraw = application.canWithdraw ?? true;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -317,5 +308,15 @@ class ApplicationCard extends StatelessWidget {
     } catch (e) {
       return isoDate.split('T').first;
     }
+  }
+
+  Color? _parseHexColor(String? value) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) return null;
+
+    final normalized = text.replaceFirst('#', '');
+    final hex = normalized.length == 6 ? 'FF$normalized' : normalized;
+    final colorValue = int.tryParse(hex, radix: 16);
+    return colorValue == null ? null : Color(colorValue);
   }
 }

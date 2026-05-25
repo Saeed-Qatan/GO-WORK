@@ -1,125 +1,162 @@
 import 'package:flutter/foundation.dart';
-import 'package:gowork/model/application_model.dart';
-import 'package:gowork/core/constants/api_constants.dart';
-import 'package:gowork/utils/api_storage.dart';
 
-class ApplicationsRepository {
-  final ApiClient _apiClient;
+import '../model/application_model.dart';
+import '../services/applications_service.dart';
+import '../utils/status_translator.dart';
 
-  ApplicationsRepository({ApiClient? apiClient})
-    : _apiClient = apiClient ?? ApiClient();
+abstract class IApplicationsRepository {
+  Future<ApplicationsData> getApplicationsData();
 
-  Future<List<ApplicationModel>> getApplications() async {
-    try {
-      debugPrint('=== APPLICATIONS: Fetching ${ApiConstants.applications} ===');
-      final response = await _apiClient.get(ApiConstants.applications);
-      debugPrint(
-        '=== APPLICATIONS: response keys: ${response.keys.toList()} ===',
-      );
+  Future<List<ApplicationStatusModel>> getApplicationStatuses();
 
-      if (response.containsKey('data')) {
-        debugPrint(
-          '=== APPLICATIONS: data type: ${response['data'].runtimeType} ===',
-        );
-        if (response['data'] is Map) {
-          debugPrint(
-            '=== APPLICATIONS: data keys: ${(response['data'] as Map).keys.toList()} ===',
-          );
-        }
-      }
+  Future<List<ApplicationModel>> getApplications({
+    List<ApplicationStatusModel>? statuses,
+  });
 
-      List<dynamic> rawList = [];
+  Future<void> withdrawApplication(String applicationId);
+}
 
-      if (response['data'] != null && response['data'] is List) {
-        rawList = response['data'] as List;
-      } else if (response['data'] != null && response['data'] is Map) {
-        final dataMap = response['data'] as Map<String, dynamic>;
-        if (dataMap.containsKey('items') && dataMap['items'] is List) {
-          rawList = dataMap['items'] as List;
-        } else if (dataMap.containsKey('applications') &&
-            dataMap['applications'] is List) {
-          rawList = dataMap['applications'] as List;
-        }
-      } else if (response['applications'] != null &&
-          response['applications'] is List) {
-        rawList = response['applications'] as List;
-      } else if (response['items'] != null && response['items'] is List) {
-        rawList = response['items'] as List;
-      }
+class ApplicationsRepository implements IApplicationsRepository {
+  final ApplicationsService _service;
 
-      debugPrint('=== APPLICATIONS: Found ${rawList.length} raw items ===');
+  ApplicationsRepository({ApplicationsService? service})
+    : _service = service ?? ApplicationsService();
 
-      return rawList
-          .map((json) {
-            try {
-              return ApplicationModel.fromJson(json as Map<String, dynamic>);
-            } catch (e) {
-              debugPrint('=== APPLICATIONS: Error parsing item: $e ===');
-              return ApplicationModel(
-                id: '',
-                jobId: '',
-                role: 'تعذر قراءة الطلب',
-                company: 'غير معروف',
-                companyLogo: '',
-                date: '',
-                statusName: ApplicationStatus.sent.arabicLabel,
-                rawStatusName: '',
-                status: ApplicationStatus.sent,
-              );
-            }
-          })
-          .where((app) => app.id.isNotEmpty)
-          .toList();
-    } catch (e) {
-      debugPrint('=== APPLICATIONS ERROR: $e ===');
-      rethrow;
-    }
+  @override
+  Future<ApplicationsData> getApplicationsData() async {
+    final statuses = await getApplicationStatuses();
+    final applications = await getApplications(statuses: statuses);
+
+    return ApplicationsData(applications: applications, statuses: statuses);
   }
 
-  Future<List<dynamic>> getApplicationStatuses() async {
-    try {
-      final response = await _apiClient.get(ApiConstants.applicationStatuses);
-      if (response['data'] != null && response['data'] is List) {
-        return response['data'] as List<dynamic>;
-      }
-      return [];
-    } catch (e) {
-      // If endpoint doesn't exist or fails, return empty list to fallback
-      return [];
-    }
+  @override
+  Future<List<ApplicationStatusModel>> getApplicationStatuses() async {
+    final response = await _service.getApplicationStatuses();
+    final rawStatuses = _extractList(response);
+
+    return rawStatuses
+        .map(_parseStatus)
+        .where((status) => status.value.isNotEmpty || status.id.isNotEmpty)
+        .toList();
   }
 
+  @override
+  Future<List<ApplicationModel>> getApplications({
+    List<ApplicationStatusModel>? statuses,
+  }) async {
+    debugPrint('=== APPLICATIONS: Fetching applications ===');
+    final response = await _service.getApplications();
+    final rawApplications = _extractList(response);
+
+    final applications = <ApplicationModel>[];
+
+    for (final rawApplication in rawApplications) {
+      try {
+        final application = _parseApplication(rawApplication);
+        if (application.id.isNotEmpty) {
+          applications.add(_attachBackendStatus(application, statuses ?? []));
+        }
+      } catch (error) {
+        debugPrint('=== APPLICATIONS: Skipping invalid item: $error ===');
+      }
+    }
+
+    return applications;
+  }
+
+  @override
   Future<void> withdrawApplication(String applicationId) async {
-    final response = await _apiClient.post(
-      '${ApiConstants.withdrawApplication}/$applicationId',
-      {},
-    );
+    final response = await _service.withdrawApplication(applicationId);
 
-    // Explicitly check the success flag from the backend response
-    if (response['success'] != true) {
-      // Extract the backend message — but only use it if it's Arabic text.
-      // Otherwise fall back to a safe generic Arabic message.
-      final errors = response['errors'];
-      String? rawMsg;
-
-      if (errors is List && errors.isNotEmpty) {
-        rawMsg = errors.join('\n');
-      } else if (errors is String && errors.trim().isNotEmpty) {
-        rawMsg = errors;
-      } else if (response['message'] != null) {
-        rawMsg = response['message'].toString();
-      } else if (response['data']?['message'] != null) {
-        rawMsg = response['data']['message'].toString();
-      }
-
-      // Only surface the message if it's already Arabic, otherwise use a safe default.
-      final bool isArabic =
-          rawMsg != null && RegExp(r'[\u0600-\u06FF]').hasMatch(rawMsg);
-      final String message = isArabic
-          ? rawMsg
-          : 'لا يمكن سحب هذا الطلب في وضعه الحالي';
-
-      throw Exception(message);
+    if (response['success'] == false) {
+      throw Exception(
+        StatusTranslator.backendMessage(
+          _extractBackendMessage(response),
+          fallbackMessage: 'لا يمكن سحب هذا الطلب في وضعه الحالي',
+        ),
+      );
     }
+  }
+
+  ApplicationStatusModel _parseStatus(dynamic status) {
+    if (status is Map<String, dynamic>) {
+      return ApplicationStatusModel.fromJson(status);
+    }
+    if (status is Map) {
+      return ApplicationStatusModel.fromJson(Map<String, dynamic>.from(status));
+    }
+    return ApplicationStatusModel.fromValue(status);
+  }
+
+  ApplicationModel _parseApplication(dynamic application) {
+    if (application is Map<String, dynamic>) {
+      return ApplicationModel.fromJson(application);
+    }
+    if (application is Map) {
+      return ApplicationModel.fromJson(Map<String, dynamic>.from(application));
+    }
+
+    throw const FormatException('Invalid application item');
+  }
+
+  ApplicationModel _attachBackendStatus(
+    ApplicationModel application,
+    List<ApplicationStatusModel> statuses,
+  ) {
+    for (final status in statuses) {
+      if (status.matches(application)) {
+        return application.attachStatus(status);
+      }
+    }
+
+    return application;
+  }
+
+  List<dynamic> _extractList(Map<String, dynamic> response) {
+    final data = response['data'];
+    if (data is List) return data;
+
+    if (data is Map) {
+      for (final key in const [
+        'items',
+        'applications',
+        'statuses',
+        'applicationStatuses',
+        'applicationStatus',
+      ]) {
+        final value = data[key];
+        if (value is List) return value;
+      }
+    }
+
+    for (final key in const [
+      'items',
+      'applications',
+      'statuses',
+      'applicationStatuses',
+      'applicationStatus',
+    ]) {
+      final value = response[key];
+      if (value is List) return value;
+    }
+
+    return const [];
+  }
+
+  String? _extractBackendMessage(Map<String, dynamic> response) {
+    final errors = response['errors'];
+    if (errors is List && errors.isNotEmpty) return errors.join('\n');
+    if (errors is String && errors.trim().isNotEmpty) return errors;
+
+    final message = response['message'];
+    if (message != null) return message.toString();
+
+    final data = response['data'];
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+
+    return null;
   }
 }
