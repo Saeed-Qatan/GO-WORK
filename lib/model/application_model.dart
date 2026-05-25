@@ -32,7 +32,7 @@ class ApplicationStatusModel {
       json['code'],
       id,
     ]);
-    final label = _firstNonEmpty([
+    final backendLabel = _firstNonEmpty([
       json['label'],
       json['displayName'],
       json['arabicName'],
@@ -48,7 +48,7 @@ class ApplicationStatusModel {
     return ApplicationStatusModel(
       id: id,
       value: value,
-      label: label,
+      label: ApplicationStatusLabels.arabicLabelFor([backendLabel, value, id]),
       foregroundColorHex: _nullableString(
         json['color'] ?? json['foregroundColor'] ?? json['textColor'],
       ),
@@ -61,7 +61,11 @@ class ApplicationStatusModel {
 
   factory ApplicationStatusModel.fromValue(dynamic rawValue) {
     final value = _readString(rawValue);
-    return ApplicationStatusModel(id: value, value: value, label: value);
+    return ApplicationStatusModel(
+      id: value,
+      value: value,
+      label: ApplicationStatusLabels.arabicLabelFor([value]),
+    );
   }
 
   bool matches(ApplicationModel application) {
@@ -95,6 +99,10 @@ class ApplicationStatusModel {
       ])
         _readString(rawJson[key]),
     }.where((value) => value.isNotEmpty).toSet();
+  }
+
+  bool get isWithdrawn {
+    return ApplicationStatusLabels.isWithdrawn(matchValues);
   }
 }
 
@@ -209,7 +217,12 @@ class ApplicationModel {
   }
 
   String get statusLabelFromBackend {
-    return _firstNonEmpty([statusLabel, statusRaw, statusValue, statusId]);
+    return ApplicationStatusLabels.arabicLabelFor([
+      statusLabel,
+      statusRaw,
+      statusValue,
+      statusId,
+    ]);
   }
 
   ApplicationModel attachStatus(ApplicationStatusModel status) {
@@ -217,6 +230,18 @@ class ApplicationModel {
       statusLabel: status.label,
       statusColorHex: status.foregroundColorHex,
       statusBackgroundColorHex: status.backgroundColorHex,
+    );
+  }
+
+  ApplicationModel withStatus(ApplicationStatusModel status) {
+    return copyWith(
+      statusId: status.id.isNotEmpty ? status.id : statusId,
+      statusValue: status.value.isNotEmpty ? status.value : statusValue,
+      statusRaw: status.value.isNotEmpty ? status.value : statusRaw,
+      statusLabel: status.label,
+      statusColorHex: status.foregroundColorHex,
+      statusBackgroundColorHex: status.backgroundColorHex,
+      canWithdraw: false,
     );
   }
 
@@ -270,6 +295,74 @@ class ApplicationStatusMatcher {
   }
 }
 
+class ApplicationStatusLabels {
+  static const Map<String, String> _arabicLabels = {
+    '0': 'تم التقديم',
+    
+    'applied': 'تم التقديم',
+    '1': 'قيد المراجعة',
+    
+    'pendingreview': 'قيد المراجعة',
+    
+    '2': 'تم القبول',
+    'accepted': 'تم القبول',
+    
+    
+    '3': 'مرفوض',
+    'rejected': 'مرفوض',
+    
+    '4': 'تم السحب',
+    'withdrawn': 'تم السحب',
+    
+    '5': 'تم التوظيف',
+    'hired': 'تم التوظيف',
+    
+    
+    '6': 'لم يحضر المقابلة',
+    
+    'missinginterview': 'لم يحضر المقابلة',
+    
+  };
+
+  static String arabicLabelFor(Iterable<dynamic> values) {
+    String firstReadableValue = '';
+
+    for (final value in values) {
+      final text = _readString(value);
+      if (text.isEmpty) continue;
+      firstReadableValue = firstReadableValue.isEmpty
+          ? text
+          : firstReadableValue;
+      if (_hasArabic(text)) return text;
+
+      final normalized = ApplicationStatusMatcher.normalize(text);
+      final exact = _arabicLabels[normalized];
+      if (exact != null) return exact;
+
+      for (final entry in _arabicLabels.entries) {
+        if (normalized.contains(entry.key)) return entry.value;
+      }
+    }
+
+    return firstReadableValue;
+  }
+
+  static bool isWithdrawn(Iterable<dynamic> values) {
+    for (final value in values) {
+      final normalized = ApplicationStatusMatcher.normalize(_readString(value));
+      if (normalized.isEmpty) continue;
+      if (normalized == '4' ||
+          normalized.contains('withdraw') ||
+          normalized.contains('cancel') ||
+          normalized.contains('سحب')) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}
+
 Map<String, dynamic>? _asMap(dynamic value) {
   if (value is Map<String, dynamic>) return value;
   if (value is Map) return Map<String, dynamic>.from(value);
@@ -304,4 +397,8 @@ bool? _readBool(dynamic value) {
   if (text == 'true' || text == '1') return true;
   if (text == 'false' || text == '0') return false;
   return null;
+}
+
+bool _hasArabic(String value) {
+  return RegExp(r'[\u0600-\u06FF]').hasMatch(value);
 }

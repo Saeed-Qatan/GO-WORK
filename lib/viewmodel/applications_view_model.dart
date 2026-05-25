@@ -81,13 +81,79 @@ class ApplicationsViewModel extends ChangeNotifier {
 
   Future<String?> withdrawApplication(String applicationId) async {
     try {
+      final currentApplication = _findApplication(applicationId);
       await _repository.withdrawApplication(applicationId);
+      final movedApplication = _moveApplicationToWithdrawnStatus(applicationId);
       await fetchApplications(showLoading: false);
+      _restoreWithdrawnApplicationIfMissing(
+        movedApplication ?? currentApplication,
+      );
+      _moveApplicationToWithdrawnStatus(applicationId);
+      _selectWithdrawnTab();
       return null;
     } catch (e) {
       notifyListeners();
       return AppErrorParser.parse(e);
     }
+  }
+
+  ApplicationModel? _moveApplicationToWithdrawnStatus(String applicationId) {
+    final withdrawnStatus = _withdrawnStatus;
+    if (withdrawnStatus == null) return null;
+
+    ApplicationModel? movedApplication;
+
+    _allApplications = _allApplications.map((application) {
+      if (application.id != applicationId) return application;
+      movedApplication = application.withStatus(withdrawnStatus);
+      return movedApplication!;
+    }).toList();
+
+    _applyFilter();
+    notifyListeners();
+
+    return movedApplication;
+  }
+
+  void _restoreWithdrawnApplicationIfMissing(ApplicationModel? application) {
+    if (application == null) return;
+    final withdrawnStatus = _withdrawnStatus;
+    if (withdrawnStatus == null) return;
+
+    final exists = _allApplications.any((item) => item.id == application.id);
+    if (exists) return;
+
+    _allApplications = [
+      application.withStatus(withdrawnStatus),
+      ..._allApplications,
+    ];
+  }
+
+  ApplicationModel? _findApplication(String applicationId) {
+    for (final application in _allApplications) {
+      if (application.id == applicationId) return application;
+    }
+
+    return null;
+  }
+
+  ApplicationStatusModel? get _withdrawnStatus {
+    for (final status in _statuses) {
+      if (status.isWithdrawn) return status;
+    }
+
+    return null;
+  }
+
+  void _selectWithdrawnTab() {
+    final index = filterTabItems.indexWhere(
+      (tab) => tab.status?.isWithdrawn ?? false,
+    );
+    if (index == -1) return;
+
+    _selectedFilterIndex = index;
+    _applyFilter();
+    notifyListeners();
   }
 
   void _applyFilter() {
