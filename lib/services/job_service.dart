@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import '../core/constants/api_constants.dart';
-import '../model/home_model.dart';
+import '../model/home/home_model.dart';
 import '../utils/api_storage.dart';
 
 class JobService {

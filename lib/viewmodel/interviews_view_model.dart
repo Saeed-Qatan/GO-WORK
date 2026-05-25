@@ -13,7 +13,7 @@ class InterviewsViewModel extends ChangeNotifier {
   final IInterviewsRepository _repository;
 
   InterviewsViewModel({required IInterviewsRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   // ── State ───────────────────────────────────────────────────────────────
 

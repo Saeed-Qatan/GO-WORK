@@ -26,7 +26,7 @@ class InterviewsRepository implements IInterviewsRepository {
 
   /// [service] is injected to keep this class testable.
   InterviewsRepository({InterviewsService? service})
-      : _service = service ?? InterviewsService();
+    : _service = service ?? InterviewsService();
 
   @override
   Future<List<InterviewModel>> getInterviews() async {

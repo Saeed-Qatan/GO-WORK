@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
-import '../../model/application_model.dart';
-import '../../model/home_model.dart';
+import '../../model/applications/application_model.dart';
+import '../../model/home/home_model.dart';
 import '../../view/job_details_view.dart';
 
 class ApplicationCard extends StatelessWidget {

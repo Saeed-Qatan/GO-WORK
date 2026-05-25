@@ -9,15 +9,9 @@ class ChangePasswordService {
     required String newPassword,
     required String confirmPassword,
   }) async {
-    final body = {
-      'OldPassword': currentPassword,
-      'NewPassword': newPassword,
-    };
+    final body = {'OldPassword': currentPassword, 'NewPassword': newPassword};
 
-    final response = await _apiClient.patch(
-      ApiConstants.changePassword,
-      body,
-    );
+    final response = await _apiClient.patch(ApiConstants.changePassword, body);
 
     return response;
   }

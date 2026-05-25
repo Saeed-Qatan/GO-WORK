@@ -44,12 +44,11 @@ class EditProfileViewModel extends ChangeNotifier {
   bool _hasInitializedFromProfile = false;
   bool _isDisposed = false;
 
-  String get cvFileName =>
-      _formData.newCvFile != null
-          ? _formData.newCvFile!.path.split('/').last
-          : (_formData.cvUrl?.isNotEmpty == true
-              ? _formData.cvUrl!.split('/').last
-              : 'لا يوجد ملف');
+  String get cvFileName => _formData.newCvFile != null
+      ? _formData.newCvFile!.path.split('/').last
+      : (_formData.cvUrl?.isNotEmpty == true
+            ? _formData.cvUrl!.split('/').last
+            : 'لا يوجد ملف');
 
   EditProfileViewModel(this._profileViewModel) {
     if (_profileViewModel.profile != null) {
@@ -88,8 +87,9 @@ class EditProfileViewModel extends ChangeNotifier {
     lastNameController.text = profile.lastName;
     jobTitleController.text = profile.jobTitle;
     phoneController.text = profile.phone;
-    _selectedCategoryId =
-        profile.categoryId.isNotEmpty ? profile.categoryId : null;
+    _selectedCategoryId = profile.categoryId.isNotEmpty
+        ? profile.categoryId
+        : null;
 
     _formData = EditProfileModel(
       firstName: profile.firstName,
@@ -125,32 +125,31 @@ class EditProfileViewModel extends ChangeNotifier {
         categoriesList = response['data']['categories'];
       }
 
-      _categories =
-          (categoriesList ?? [])
-              .map((cat) {
-                return <String, dynamic>{
-                  'id':
-                      (cat['id'] ??
-                              cat['Id'] ??
-                              cat['categoryId'] ??
-                              cat['CategoryId'] ??
-                              '')
-                          .toString(),
-                  'name':
-                      (cat['name'] ??
-                              cat['Name'] ??
-                              cat['categoryName'] ??
-                              cat['CategoryName'] ??
-                              '')
-                          .toString(),
-                };
-              })
-              .where(
-                (cat) =>
-                    cat['id'].toString().trim().isNotEmpty &&
-                    cat['name'].toString().trim().isNotEmpty,
-              )
-              .toList();
+      _categories = (categoriesList ?? [])
+          .map((cat) {
+            return <String, dynamic>{
+              'id':
+                  (cat['id'] ??
+                          cat['Id'] ??
+                          cat['categoryId'] ??
+                          cat['CategoryId'] ??
+                          '')
+                      .toString(),
+              'name':
+                  (cat['name'] ??
+                          cat['Name'] ??
+                          cat['categoryName'] ??
+                          cat['CategoryName'] ??
+                          '')
+                      .toString(),
+            };
+          })
+          .where(
+            (cat) =>
+                cat['id'].toString().trim().isNotEmpty &&
+                cat['name'].toString().trim().isNotEmpty,
+          )
+          .toList();
 
       if (_categories.isEmpty) {
         _categoriesErrorMessage =
@@ -267,8 +266,9 @@ class EditProfileViewModel extends ChangeNotifier {
       }
 
       // Skills as repeated form-data fields
-      final repeatedFields =
-          _formData.skills.map((s) => MapEntry('Skills', s)).toList();
+      final repeatedFields = _formData.skills
+          .map((s) => MapEntry('Skills', s))
+          .toList();
 
       // Files: ProfilePhoto and Resume
       final files = <String, File>{};

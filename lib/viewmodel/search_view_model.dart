@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/api_constants.dart';
-import '../model/filter_option.dart';
-import '../model/home_model.dart';
+import '../model/search/filter_option.dart';
+import '../model/home/home_model.dart';
 import '../repository/search_repository.dart';
 import '../utils/api_storage.dart';
 import '../utils/app_error_parser.dart';
@@ -43,15 +43,15 @@ class SearchViewModel extends ChangeNotifier {
       _mapOptions(_categories, allCategoriesLabel);
   List<FilterOption> get countryOptions => _mapOptions(_countries, allLabel);
   List<FilterOption> get locationOptions => _mapOptions(
-        _locationTypes,
-        allLabel,
-        translate: StatusTranslator.workModeLabel,
-      );
+    _locationTypes,
+    allLabel,
+    translate: StatusTranslator.workModeLabel,
+  );
   List<FilterOption> get jobTypeOptions => _mapOptions(
-        _jobTypes,
-        allLabel,
-        translate: StatusTranslator.jobTypeLabel,
-      );
+    _jobTypes,
+    allLabel,
+    translate: StatusTranslator.jobTypeLabel,
+  );
 
   String _searchQuery = '';
   FilterOption? _selectedCategory;
@@ -103,12 +103,13 @@ class SearchViewModel extends ChangeNotifier {
         final parsed = list.map((item) {
           return <String, dynamic>{
             'id': (item['id'] ?? item['Id'] ?? item['code'] ?? '').toString(),
-            'name': (item['name'] ??
-                    item['Name'] ??
-                    item['title'] ??
-                    item['Title'] ??
-                    '')
-                .toString(),
+            'name':
+                (item['name'] ??
+                        item['Name'] ??
+                        item['title'] ??
+                        item['Title'] ??
+                        '')
+                    .toString(),
           };
         }).toList();
         onSuccess(parsed);
@@ -125,29 +126,29 @@ class SearchViewModel extends ChangeNotifier {
   }
 
   Future<void> _fetchCategories() => _fetchFilterData(
-        ApiConstants.jobCategories,
-        (data) => _categories = data,
-        (v) => _isCategoriesLoading = v,
-        skipAuth: true,
-      );
+    ApiConstants.jobCategories,
+    (data) => _categories = data,
+    (v) => _isCategoriesLoading = v,
+    skipAuth: true,
+  );
 
   Future<void> _fetchCountries() => _fetchFilterData(
-        ApiConstants.jobCountries,
-        (data) => _countries = data,
-        (v) => _isCountriesLoading = v,
-      );
+    ApiConstants.jobCountries,
+    (data) => _countries = data,
+    (v) => _isCountriesLoading = v,
+  );
 
   Future<void> _fetchLocationTypes() => _fetchFilterData(
-        ApiConstants.locationTypes,
-        (data) => _locationTypes = data,
-        (v) => _isLocationTypesLoading = v,
-      );
+    ApiConstants.locationTypes,
+    (data) => _locationTypes = data,
+    (v) => _isLocationTypesLoading = v,
+  );
 
   Future<void> _fetchJobTypes() => _fetchFilterData(
-        ApiConstants.jobTypes,
-        (data) => _jobTypes = data,
-        (v) => _isJobTypesLoading = v,
-      );
+    ApiConstants.jobTypes,
+    (data) => _jobTypes = data,
+    (v) => _isJobTypesLoading = v,
+  );
 
   void onSearchChanged(String query) {
     _searchQuery = query;

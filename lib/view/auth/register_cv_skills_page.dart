@@ -5,7 +5,7 @@ import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/widget/search/filter_dropdown.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
-import 'package:gowork/model/filter_option.dart';
+import 'package:gowork/model/search/filter_option.dart';
 import 'package:go_router/go_router.dart';
 
 class RegisterCVPage extends StatefulWidget {
@@ -44,10 +44,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                     viewModel.selectedCategoryId != null &&
                     !viewModel.isCategoriesLoading;
 
-                final availableSuggestedSkills =
-                    viewModel.suggestedSkills
-                        .where((skill) => !viewModel.skills.contains(skill))
-                        .toList();
+                final availableSuggestedSkills = viewModel.suggestedSkills
+                    .where((skill) => !viewModel.skills.contains(skill))
+                    .toList();
 
                 return Container(
                   padding: const EdgeInsets.all(15),
@@ -94,12 +93,11 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                       const SizedBox(height: 10),
                       Text(
                         "السيرة الذاتية والمهارات",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                            ),
                       ),
                       const SizedBox(height: 5),
                       Text(
@@ -145,8 +143,8 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                               if (viewModel.cvFileName != null &&
                                   viewModel.cvFileName!.isNotEmpty)
                                 Consumer<RegisterCVViewModel>(
-                                  builder:
-                                      (context, cvViewModel, child) => Text(
+                                  builder: (context, cvViewModel, child) =>
+                                      Text(
                                         cvViewModel.cvFileName!,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
@@ -159,8 +157,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   onPressed: () => viewModel.pickCV(),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xffF6F9FF),
-                                    foregroundColor:
-                                        Theme.of(context).primaryColor,
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).primaryColor,
                                     elevation: 0,
                                   ),
                                   child: const Text("اختر ملف السيرة الذاتية"),
@@ -229,23 +228,17 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           spacing: 8.0,
                           runSpacing: 4.0,
                           alignment: WrapAlignment.start,
-                          children:
-                              viewModel.skills
-                                  .map(
-                                    (skill) => Chip(
-                                      label: Text(skill),
-                                      deleteIcon: const Icon(
-                                        Icons.close,
-                                        size: 16,
-                                      ),
-                                      onDeleted:
-                                          () => viewModel.removeSkill(skill),
-                                      backgroundColor:
-                                          AppColors.inputBackground,
-                                      side: BorderSide.none,
-                                    ),
-                                  )
-                                  .toList(),
+                          children: viewModel.skills
+                              .map(
+                                (skill) => Chip(
+                                  label: Text(skill),
+                                  deleteIcon: const Icon(Icons.close, size: 16),
+                                  onDeleted: () => viewModel.removeSkill(skill),
+                                  backgroundColor: AppColors.inputBackground,
+                                  side: BorderSide.none,
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
                       const SizedBox(height: 15),
@@ -265,24 +258,20 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           spacing: 8.0,
                           runSpacing: 4.0,
                           alignment: WrapAlignment.start,
-                          children:
-                              availableSuggestedSkills
-                                  .map(
-                                    (skill) => ActionChip(
-                                      label: Text(skill),
-                                      backgroundColor:
-                                          AppColors.inputBackground,
-                                      labelStyle: TextStyle(
-                                        color: AppColors.textPrimary,
-                                      ),
-                                      side: BorderSide.none,
-                                      onPressed:
-                                          () => viewModel.addSuggestedSkill(
-                                            skill,
-                                          ),
-                                    ),
-                                  )
-                                  .toList(),
+                          children: availableSuggestedSkills
+                              .map(
+                                (skill) => ActionChip(
+                                  label: Text(skill),
+                                  backgroundColor: AppColors.inputBackground,
+                                  labelStyle: TextStyle(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  side: BorderSide.none,
+                                  onPressed: () =>
+                                      viewModel.addSuggestedSkill(skill),
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
                       const SizedBox(height: 25),
@@ -308,18 +297,28 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           hint: 'لم يتم الاختيار',
                           value: viewModel.selectedCategoryId != null
                               ? FilterOption(
-                                  label: viewModel.categories.firstWhere(
-                                    (cat) => cat['id'].toString() == viewModel.selectedCategoryId,
-                                    orElse: () => <String, dynamic>{'name': ''},
-                                  )['name']?.toString() ?? '',
+                                  label:
+                                      viewModel.categories
+                                          .firstWhere(
+                                            (cat) =>
+                                                cat['id'].toString() ==
+                                                viewModel.selectedCategoryId,
+                                            orElse: () => <String, dynamic>{
+                                              'name': '',
+                                            },
+                                          )['name']
+                                          ?.toString() ??
+                                      '',
                                   rawValue: viewModel.selectedCategoryId!,
                                 )
                               : null,
                           items: viewModel.categories
-                              .map((cat) => FilterOption(
-                                    label: cat['name'].toString(),
-                                    rawValue: cat['id'].toString(),
-                                  ))
+                              .map(
+                                (cat) => FilterOption(
+                                  label: cat['name'].toString(),
+                                  rawValue: cat['id'].toString(),
+                                ),
+                              )
                               .toList(),
                           onChanged: (FilterOption? newFieldValue) {
                             viewModel.setCategory(newFieldValue?.rawValue);
@@ -351,24 +350,22 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                           return cvViewModel.isLoading
                               ? const Center(child: CircularProgressIndicator())
                               : CustomButton(
-                                icon: const Icon(
-                                  Icons.check_circle_outline,
-                                  color: Colors.white,
-                                ),
-                                text: 'إنهاء التسجيل',
-                                color:
-                                    isFormComplete
-                                        ? Theme.of(context).primaryColor
-                                        : AppColors.textHint,
-                                textColor: Colors.white,
-                                onPressed:
-                                    isFormComplete
-                                        ? () => cvViewModel.finishRegistration(
+                                  icon: const Icon(
+                                    Icons.check_circle_outline,
+                                    color: Colors.white,
+                                  ),
+                                  text: 'إنهاء التسجيل',
+                                  color: isFormComplete
+                                      ? Theme.of(context).primaryColor
+                                      : AppColors.textHint,
+                                  textColor: Colors.white,
+                                  onPressed: isFormComplete
+                                      ? () => cvViewModel.finishRegistration(
                                           context,
                                           widget.data,
                                         )
-                                        : null,
-                              );
+                                      : null,
+                                );
                         },
                       ),
 

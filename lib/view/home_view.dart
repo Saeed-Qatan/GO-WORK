@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../viewmodel/home_view_model.dart';
-import '../model/home_model.dart';
+import '../model/home/home_model.dart';
 import '../widget/home/home_header.dart';
 import '../widget/home/stat_card.dart';
 import '../widget/home/job_card.dart';
@@ -107,9 +107,7 @@ class _HomeViewState extends State<HomeView> {
                                     StatCard(
                                           count: stat.count,
                                           label: stat.label,
-                                          icon: StatUiHelper.getIcon(
-                                            stat.type,
-                                          ),
+                                          icon: StatUiHelper.getIcon(stat.type),
                                           iconColor: StatUiHelper.getColor(
                                             stat.type,
                                           ),
@@ -151,7 +149,8 @@ class _HomeViewState extends State<HomeView> {
                           child: AnimatedEmptyState(
                             icon: Icons.work_off_outlined,
                             title: 'لا توجد وظائف مقترحة',
-                            subtitle: 'يرجى استكمال ملفك الشخصي أو العودة لاحقاً لرؤية الوظائف المناسبة لك',
+                            subtitle:
+                                'يرجى استكمال ملفك الشخصي أو العودة لاحقاً لرؤية الوظائف المناسبة لك',
                           ),
                         )
                       else

@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:gowork/model/application_model.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:gowork/model/applications/application_model.dart';
 import 'package:gowork/repository/applications_repository.dart';
 import 'package:gowork/services/applications_service.dart';
 import 'package:gowork/viewmodel/applications_view_model.dart';

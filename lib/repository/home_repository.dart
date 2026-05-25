@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
-import '../model/home_model.dart';
+﻿import 'package:flutter/foundation.dart';
+import '../model/home/home_model.dart';
 import '../services/home_service.dart';
 
 /// Repository that caches home data and provides it to the ViewModel.

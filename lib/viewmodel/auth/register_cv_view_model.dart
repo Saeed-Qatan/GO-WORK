@@ -64,32 +64,31 @@ class RegisterCVViewModel extends ChangeNotifier {
       }
 
       if (categoriesList != null && categoriesList.isNotEmpty) {
-        _categories =
-            categoriesList
-                .map((cat) {
-                  return <String, dynamic>{
-                    'id':
-                        (cat['id'] ??
-                                cat['Id'] ??
-                                cat['categoryId'] ??
-                                cat['CategoryId'] ??
-                                '')
-                            .toString(),
-                    'name':
-                        (cat['name'] ??
-                                cat['Name'] ??
-                                cat['categoryName'] ??
-                                cat['CategoryName'] ??
-                                '')
-                            .toString(),
-                  };
-                })
-                .where(
-                  (cat) =>
-                      cat['id'].toString().trim().isNotEmpty &&
-                      cat['name'].toString().trim().isNotEmpty,
-                )
-                .toList();
+        _categories = categoriesList
+            .map((cat) {
+              return <String, dynamic>{
+                'id':
+                    (cat['id'] ??
+                            cat['Id'] ??
+                            cat['categoryId'] ??
+                            cat['CategoryId'] ??
+                            '')
+                        .toString(),
+                'name':
+                    (cat['name'] ??
+                            cat['Name'] ??
+                            cat['categoryName'] ??
+                            cat['CategoryName'] ??
+                            '')
+                        .toString(),
+              };
+            })
+            .where(
+              (cat) =>
+                  cat['id'].toString().trim().isNotEmpty &&
+                  cat['name'].toString().trim().isNotEmpty,
+            )
+            .toList();
         debugPrint('Categories loaded from API: ${_categories.length} items');
       } else {
         debugPrint('WARNING: Empty categories from API');
@@ -131,13 +130,10 @@ class RegisterCVViewModel extends ChangeNotifier {
       }
 
       if (skillsList != null) {
-        suggestedSkills =
-            skillsList
-                .map(
-                  (s) => (s['name'] ?? s['title'] ?? s.toString()).toString(),
-                )
-                .take(15)
-                .toList();
+        suggestedSkills = skillsList
+            .map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString())
+            .take(15)
+            .toList();
       }
     } catch (e) {
       debugPrint('Error fetching suggested skills: $e');

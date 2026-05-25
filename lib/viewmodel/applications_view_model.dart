@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../model/application_model.dart';
+import '../model/applications/application_model.dart';
 import '../repository/applications_repository.dart';
 import '../utils/app_error_parser.dart';
 

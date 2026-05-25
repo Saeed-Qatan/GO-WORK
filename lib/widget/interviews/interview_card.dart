@@ -28,29 +28,35 @@ class InterviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusMeta = InterviewStatusMapper.forStatus(interview.status);
     final typeMeta = InterviewStatusMapper.forType(interview.interviewType);
-    final countdown = InterviewStatusMapper.buildCountdown(interview.scheduledAt);
+    final countdown = InterviewStatusMapper.buildCountdown(
+      interview.scheduledAt,
+    );
     final timeLabel = InterviewStatusMapper.buildTimeLabel(
       interview.date,
       interview.time,
     );
-    final canRespond = (interview.status == InterviewStatus.scheduled ||
-        interview.status == InterviewStatus.waiting) && !interview.isPast;
+    final canRespond =
+        (interview.status == InterviewStatus.scheduled ||
+            interview.status == InterviewStatus.waiting) &&
+        !interview.isPast;
 
     return Consumer<InterviewsViewModel>(
       builder: (context, viewModel, _) {
         final isSubmitting = viewModel.isSubmitting(interview.id);
-        final isCancelSubmitting =
-            viewModel.isSubmittingAction(interview.id, 'cancel');
-        final isConfirmSubmitting =
-            viewModel.isSubmittingAction(interview.id, 'confirm');
+        final isCancelSubmitting = viewModel.isSubmittingAction(
+          interview.id,
+          'cancel',
+        );
+        final isConfirmSubmitting = viewModel.isSubmittingAction(
+          interview.id,
+          'confirm',
+        );
 
         return Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.divider.withValues(alpha: 0.5),
-            ),
+            border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.02),
@@ -144,7 +150,11 @@ class InterviewCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, size: 24, color: AppColors.error),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              size: 24,
+              color: AppColors.error,
+            ),
             onPressed: () => _confirmDismiss(context),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -165,7 +175,9 @@ class InterviewCard extends StatelessWidget {
         const SizedBox(width: 5),
         Expanded(
           child: Text(
-            interview.company.isNotEmpty ? interview.company : 'الشركة غير محددة',
+            interview.company.isNotEmpty
+                ? interview.company
+                : 'الشركة غير محددة',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -196,7 +208,9 @@ class InterviewCard extends StatelessWidget {
           if (interview.location.isNotEmpty) ...[
             const SizedBox(height: 10),
             InterviewDetailRow(
-              icon: isOnline ? Icons.videocam_outlined : Icons.location_on_outlined,
+              icon: isOnline
+                  ? Icons.videocam_outlined
+                  : Icons.location_on_outlined,
               label: 'الموقع',
               text: interview.location,
             ),
@@ -267,11 +281,11 @@ class InterviewCard extends StatelessWidget {
         content: Text(
           success
               ? viewModel.successMessage ??
-                  (action == 'confirm'
-                      ? 'تم تأكيد المقابلة بنجاح'
-                      : 'تم إلغاء المقابلة بنجاح')
+                    (action == 'confirm'
+                        ? 'تم تأكيد المقابلة بنجاح'
+                        : 'تم إلغاء المقابلة بنجاح')
               : viewModel.errorMessage ??
-                  'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
+                    'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -289,8 +303,9 @@ class InterviewCard extends StatelessWidget {
     final rawLink = interview.meetingLink?.trim();
     if (rawLink == null || rawLink.isEmpty) return;
 
-    final normalized =
-        rawLink.startsWith('http') ? rawLink : 'https://$rawLink';
+    final normalized = rawLink.startsWith('http')
+        ? rawLink
+        : 'https://$rawLink';
     final uri = Uri.tryParse(normalized);
 
     if (uri == null ||
@@ -314,8 +329,13 @@ class InterviewCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('إخفاء المقابلة', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('هل أنت متأكد من رغبتك في إخفاء هذه المقابلة من القائمة؟'),
+        title: const Text(
+          'إخفاء المقابلة',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'هل أنت متأكد من رغبتك في إخفاء هذه المقابلة من القائمة؟',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -324,9 +344,14 @@ class InterviewCard extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<InterviewsViewModel>().dismissInterview(interview.id);
+              context.read<InterviewsViewModel>().dismissInterview(
+                interview.id,
+              );
             },
-            child: const Text('إخفاء', style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'إخفاء',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),

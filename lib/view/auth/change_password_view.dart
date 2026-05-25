@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/viewmodel/auth/change_password_view_model.dart';
 import 'package:gowork/theme/app_colors.dart';
+
 class ChangePasswordView extends StatelessWidget {
   const ChangePasswordView({super.key});
 
@@ -56,7 +57,9 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(viewModel.successMessage ?? 'تم تغيير كلمة المرور بنجاح'),
+          content: Text(
+            viewModel.successMessage ?? 'تم تغيير كلمة المرور بنجاح',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -82,9 +85,9 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -109,7 +112,8 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
                   setState(() => _obscureCurrent = !_obscureCurrent);
                 },
                 validator: (val) {
-                  if (val == null || val.isEmpty) return 'يرجى إدخال كلمة المرور الحالية';
+                  if (val == null || val.isEmpty)
+                    return 'يرجى إدخال كلمة المرور الحالية';
                   return null;
                 },
               ),
@@ -124,8 +128,10 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
                   setState(() => _obscureNew = !_obscureNew);
                 },
                 validator: (val) {
-                  if (val == null || val.isEmpty) return 'يرجى إدخال كلمة المرور الجديدة';
-                  if (val.length < 6) return 'يجب أن لا تقل كلمة المرور عن 6 أحرف';
+                  if (val == null || val.isEmpty)
+                    return 'يرجى إدخال كلمة المرور الجديدة';
+                  if (val.length < 6)
+                    return 'يجب أن لا تقل كلمة المرور عن 6 أحرف';
                   return null;
                 },
               ),
@@ -140,8 +146,10 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
                   setState(() => _obscureConfirm = !_obscureConfirm);
                 },
                 validator: (val) {
-                  if (val == null || val.isEmpty) return 'يرجى تأكيد كلمة المرور الجديدة';
-                  if (val != _newPasswordController.text) return 'كلمات المرور غير متطابقة';
+                  if (val == null || val.isEmpty)
+                    return 'يرجى تأكيد كلمة المرور الجديدة';
+                  if (val != _newPasswordController.text)
+                    return 'كلمات المرور غير متطابقة';
                   return null;
                 },
               ),
@@ -203,7 +211,9 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
         ),
         suffixIcon: IconButton(
           icon: Icon(
-            obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            obscureText
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
             color: AppColors.textSecondary,
           ),
           onPressed: onToggleVisibility,

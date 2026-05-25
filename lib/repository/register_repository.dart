@@ -25,8 +25,9 @@ class RegisterRepository {
       'InterstedInCategoryId': categoryId,
     };
 
-    final repeatedFields =
-        data.skills.map((skill) => MapEntry('listOfSkills', skill)).toList();
+    final repeatedFields = data.skills
+        .map((skill) => MapEntry('listOfSkills', skill))
+        .toList();
 
     final Map<String, File> files = {};
     if (data.profilePhoto != null) {

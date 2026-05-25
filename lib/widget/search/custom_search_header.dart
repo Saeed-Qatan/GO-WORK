@@ -1,7 +1,6 @@
 import 'package:gowork/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-
 class CustomSearchHeader extends StatelessWidget {
   final VoidCallback? onBackTap;
   final VoidCallback? onFilterTap;

@@ -126,24 +126,22 @@ class AppErrorParser {
   }
 
   static String? _joinMessages(Iterable values) {
-    final messages =
-        values
-            .map(_extractMessage)
-            .whereType<String>()
-            .map((message) => message.trim())
-            .where((message) => message.isNotEmpty)
-            .toList();
+    final messages = values
+        .map(_extractMessage)
+        .whereType<String>()
+        .map((message) => message.trim())
+        .where((message) => message.isNotEmpty)
+        .toList();
 
     if (messages.isEmpty) return null;
     return messages.toSet().join('\n');
   }
 
   static String _parseGeneric(String raw, {required String fallbackMessage}) {
-    var cleaned =
-        raw
-            .replaceFirst(RegExp(r'^Exception:\s*'), '')
-            .replaceFirst(RegExp(r'^FormatException:\s*'), '')
-            .trim();
+    var cleaned = raw
+        .replaceFirst(RegExp(r'^Exception:\s*'), '')
+        .replaceFirst(RegExp(r'^FormatException:\s*'), '')
+        .trim();
 
     final statusMatch = RegExp(r'^Error\s+(\d{3})\s*:').firstMatch(cleaned);
     if (statusMatch != null) {
@@ -248,7 +246,10 @@ class AppErrorParser {
       return 'تعذر إرسال كود التحقق، يرجى المحاولة مرة أخرى';
     }
 
-    final translated = StatusTranslator.backendMessage(message, fallbackMessage: '');
+    final translated = StatusTranslator.backendMessage(
+      message,
+      fallbackMessage: '',
+    );
     if (translated.isNotEmpty && translated != message) {
       return translated;
     }

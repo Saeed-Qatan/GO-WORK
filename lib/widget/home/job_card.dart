@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
-import '../../model/home_model.dart';
+import '../../model/home/home_model.dart';
 import '../../routing/app_router.dart';
 import '../common/pressable_button.dart';
 

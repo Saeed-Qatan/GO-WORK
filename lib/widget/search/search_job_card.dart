@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../../model/home_model.dart';
+import '../../model/home/home_model.dart';
 
 class SearchJobCard extends StatelessWidget {
   final JobModel job;

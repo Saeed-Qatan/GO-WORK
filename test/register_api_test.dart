@@ -11,12 +11,12 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     // Allow real network requests by bypassing the mock client
     HttpOverrides.global = null;
-    
+
     // Mocking shared preferences because ApiClient/LocalStorage might use it
     SharedPreferences.setMockInitialValues({});
-    
+
     final repository = RegisterRepository();
-    
+
     // Generate unique credentials to avoid duplicate email/phone errors
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final email = 'test_$timestamp@test.com';

@@ -236,7 +236,9 @@ class PushNotificationService {
 
       final model = _modelFromMessage(message);
       if (model == null) {
-        debugPrint('=== FCM: MESSAGE WITHOUT TITLE/BODY — skipping local notification ===');
+        debugPrint(
+          '=== FCM: MESSAGE WITHOUT TITLE/BODY — skipping local notification ===',
+        );
         return;
       }
 
@@ -247,7 +249,10 @@ class PushNotificationService {
 
   void _listenToNotificationTaps() {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      _debugLogMessage(label: 'TAPPED (opened from background)', message: message);
+      _debugLogMessage(
+        label: 'TAPPED (opened from background)',
+        message: message,
+      );
     });
   }
 

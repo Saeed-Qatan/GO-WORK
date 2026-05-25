@@ -49,10 +49,7 @@ class CustomButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (icon != null) ...[
-                    icon!,
-                    const SizedBox(width: 8),
-                  ],
+                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Flexible(
                     child: Text(
                       text,
@@ -60,14 +57,14 @@ class CustomButton extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                            color: textColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          strutStyle: const StrutStyle(
-                            height: 1.0,
-                            forceStrutHeight: true,
-                          ),
+                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      strutStyle: const StrutStyle(
+                        height: 1.0,
+                        forceStrutHeight: true,
+                      ),
                     ),
                   ),
                 ],

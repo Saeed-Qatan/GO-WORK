@@ -23,7 +23,10 @@ void main() {
     test('AppTheme should use Cairo font', () {
       final theme = AppTheme.lightTheme;
       // We check if the elevated button theme uses Cairo as explicitly defined
-      expect(theme.elevatedButtonTheme.style?.textStyle?.resolve({})?.fontFamily, 'Cairo');
+      expect(
+        theme.elevatedButtonTheme.style?.textStyle?.resolve({})?.fontFamily,
+        'Cairo',
+      );
     });
 
     test('AppShadows should return valid BoxShadow lists', () {

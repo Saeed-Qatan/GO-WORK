@@ -1,6 +1,6 @@
-import 'package:gowork/theme/app_colors.dart';
+﻿import 'package:gowork/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../model/home_model.dart';
+import '../model/home/home_model.dart';
 
 /// UI Helper for mapping StatType to visual elements
 /// Separates UI concerns from data models

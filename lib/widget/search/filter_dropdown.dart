@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../model/filter_option.dart';
+import '../../model/search/filter_option.dart';
 import '../../theme/app_colors.dart';
 
 class FilterDropdown extends StatelessWidget {
@@ -53,13 +53,15 @@ class FilterDropdown extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary.withValues(alpha: 0.4) : AppColors.border,
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.4)
+                : AppColors.border,
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected 
-                  ? AppColors.primary.withValues(alpha: 0.05) 
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.05)
                   : Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
@@ -89,9 +91,13 @@ class FilterDropdown extends StatelessWidget {
                   Text(
                     isSelected ? value!.label : label,
                     style: TextStyle(
-                      color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                      color: isSelected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                       fontSize: isSelected ? 14 : 14,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w600,
                       fontFamily: 'Cairo',
                     ),
                     maxLines: 1,
@@ -104,8 +110,8 @@ class FilterDropdown extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: isSelected 
-                    ? AppColors.primary.withValues(alpha: 0.1) 
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.1)
                     : AppColors.inputBackground,
                 shape: BoxShape.circle,
               ),
@@ -157,8 +163,9 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
         _filteredItems = widget.items;
       } else {
         _filteredItems = widget.items
-            .where((item) =>
-                item.label.toLowerCase().contains(query.toLowerCase()))
+            .where(
+              (item) => item.label.toLowerCase().contains(query.toLowerCase()),
+            )
             .toList();
       }
     });
@@ -225,7 +232,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                 onChanged: _filterItems,
                 decoration: InputDecoration(
                   hintText: 'ابحث هنا...',
-                  prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: AppColors.textSecondary,
+                  ),
                   filled: true,
                   fillColor: AppColors.inputBackground,
                   border: OutlineInputBorder(
@@ -248,22 +258,32 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: _filteredItems.length,
                     itemBuilder: (context, index) {
                       final item = _filteredItems[index];
                       final selected = widget.selectedValue;
-                      final isSelected = selected != null &&
+                      final isSelected =
+                          selected != null &&
                           selected.rawValue == item.rawValue &&
                           selected.label == item.label;
                       return InkWell(
-                        onTap: () => widget.onSelected(isSelected ? null : item),
+                        onTap: () =>
+                            widget.onSelected(isSelected ? null : item),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.1)
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -272,13 +292,21 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                                 child: Text(
                                   item.label,
                                   style: TextStyle(
-                                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : AppColors.textPrimary,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 ),
                               ),
                               if (isSelected)
-                                const Icon(Icons.check, color: AppColors.primary, size: 20),
+                                const Icon(
+                                  Icons.check,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
                             ],
                           ),
                         ),
@@ -291,4 +319,3 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
     );
   }
 }
-

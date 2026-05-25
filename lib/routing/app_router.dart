@@ -20,7 +20,7 @@ import 'package:gowork/view/profile_view.dart';
 import 'package:gowork/view/settings_view.dart';
 import 'package:gowork/view/feedback_view.dart';
 import 'package:gowork/view/notifications_view.dart';
-import 'package:gowork/model/home_model.dart';
+import 'package:gowork/model/home/home_model.dart';
 
 /// Centralized route names
 class AppRoutes {

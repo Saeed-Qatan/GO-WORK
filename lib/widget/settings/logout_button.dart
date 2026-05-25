@@ -37,10 +37,7 @@ class LogoutButton extends StatelessWidget {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
-                strutStyle: StrutStyle(
-                  height: 1.0,
-                  forceStrutHeight: true,
-                ),
+                strutStyle: StrutStyle(height: 1.0, forceStrutHeight: true),
               ),
             ),
           ],

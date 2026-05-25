@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
-
-import '../model/application_model.dart';
+import '../model/applications/application_model.dart';
 import '../services/applications_service.dart';
 import '../utils/status_translator.dart';
 

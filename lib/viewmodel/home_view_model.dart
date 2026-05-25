@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import '../model/home_model.dart';
+﻿import 'package:flutter/material.dart';
+import '../model/home/home_model.dart';
 import '../repository/home_repository.dart';
 import '../repository/profile_repository.dart';
 import '../utils/app_error_parser.dart';

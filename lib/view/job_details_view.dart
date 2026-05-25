@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import '../model/home_model.dart';
+import '../model/home/home_model.dart';
 import '../theme/app_colors.dart';
 import '../viewmodel/job_details_view_model.dart';
 import '../widget/common/pressable_button.dart';

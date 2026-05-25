@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../model/notification_model.dart';
 import '../repository/notifications_repository.dart';
