@@ -137,6 +137,12 @@ class InterviewsViewModel extends ChangeNotifier {
         : 'تم إلغاء المقابلة بنجاح';
   }
 
+  /// Dismisses an interview locally without making an API call.
+  void dismissInterview(String interviewId) {
+    _interviews = _interviews.where((i) => i.id != interviewId).toList();
+    notifyListeners();
+  }
+
   void _clearSubmitting() {
     _submittingInterviewId = null;
     _submittingAction = null;

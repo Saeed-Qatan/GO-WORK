@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../model/filter_option.dart';
 import '../../theme/app_colors.dart';
 
 class FilterDropdown extends StatelessWidget {
-  final String? value;
-  final List<String> items;
+  final FilterOption? value;
+  final List<FilterOption> items;
   final String hint;
-  final ValueChanged<String?> onChanged;
+  final ValueChanged<FilterOption?> onChanged;
   final String label;
   final bool showSearch;
 
@@ -24,6 +25,7 @@ class FilterDropdown extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+
       builder: (context) => _FilterBottomSheet(
         items: items,
         selectedValue: value,
@@ -39,7 +41,7 @@ class FilterDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSelected = value != null && value!.isNotEmpty;
+    final bool isSelected = value != null;
 
     return InkWell(
       onTap: () => _showSearchBottomSheet(context),
@@ -85,7 +87,7 @@ class FilterDropdown extends StatelessWidget {
                     const SizedBox(height: 2),
                   ],
                   Text(
-                    isSelected ? value! : label, // Use label as placeholder if not selected
+                    isSelected ? value!.label : label,
                     style: TextStyle(
                       color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                       fontSize: isSelected ? 14 : 14,
@@ -121,10 +123,10 @@ class FilterDropdown extends StatelessWidget {
 }
 
 class _FilterBottomSheet extends StatefulWidget {
-  final List<String> items;
-  final String? selectedValue;
+  final List<FilterOption> items;
+  final FilterOption? selectedValue;
   final String title;
-  final ValueChanged<String?> onSelected;
+  final ValueChanged<FilterOption?> onSelected;
   final bool showSearch;
 
   const _FilterBottomSheet({
@@ -141,7 +143,7 @@ class _FilterBottomSheet extends StatefulWidget {
 
 class _FilterBottomSheetState extends State<_FilterBottomSheet> {
   final TextEditingController _searchController = TextEditingController();
-  List<String> _filteredItems = [];
+  List<FilterOption> _filteredItems = [];
 
   @override
   void initState() {
@@ -155,7 +157,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
         _filteredItems = widget.items;
       } else {
         _filteredItems = widget.items
-            .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+            .where((item) =>
+                item.label.toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
@@ -249,9 +252,12 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     itemCount: _filteredItems.length,
                     itemBuilder: (context, index) {
                       final item = _filteredItems[index];
-                      final isSelected = item == widget.selectedValue;
+                      final selected = widget.selectedValue;
+                      final isSelected = selected != null &&
+                          selected.rawValue == item.rawValue &&
+                          selected.label == item.label;
                       return InkWell(
-                        onTap: () => widget.onSelected(item),
+                        onTap: () => widget.onSelected(isSelected ? null : item),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 8),
@@ -264,7 +270,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  item,
+                                  item.label,
                                   style: TextStyle(
                                     color: isSelected ? AppColors.primary : AppColors.textPrimary,
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

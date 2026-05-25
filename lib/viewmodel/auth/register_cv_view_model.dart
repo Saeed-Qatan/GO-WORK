@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:gowork/core/constants/api_constants.dart';
+import 'package:gowork/model/auth/email_verification_args.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
 import 'package:gowork/services/auth/register_service.dart';
 import 'package:gowork/utils/api_storage.dart';
@@ -213,7 +214,13 @@ class RegisterCVViewModel extends ChangeNotifier {
       );
 
       if (context.mounted) {
-        context.go(AppRoutes.verifyEmail, extra: data.email);
+        context.go(
+          AppRoutes.verifyEmail,
+          extra: EmailVerificationArgs(
+            email: data.email,
+            password: data.password,
+          ),
+        );
       }
     } catch (e) {
       SnackbarService.showError(AppErrorParser.parse(e));

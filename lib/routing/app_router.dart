@@ -78,8 +78,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.verifyEmail,
       builder: (context, state) {
-        final email = state.extra as String?;
-        return EmailVerificationPage(email: email);
+        return EmailVerificationPage(args: state.extra);
       },
     ),
     GoRoute(

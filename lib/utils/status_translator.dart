@@ -4,30 +4,6 @@ class StatusTranslator {
   static const String genericArabicError =
       'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى';
 
-  static const Map<String, ApplicationStatus> _apiToEnumMap = {
-    '1': ApplicationStatus.sent,
-    'sent': ApplicationStatus.sent,
-    'submitted': ApplicationStatus.sent,
-    'applied': ApplicationStatus.sent,
-    '2': ApplicationStatus.inReview,
-    'pending': ApplicationStatus.inReview,
-    'pendingreview': ApplicationStatus.inReview,
-    'review': ApplicationStatus.inReview,
-    'inreview': ApplicationStatus.inReview,
-    '3': ApplicationStatus.accepted,
-    'accepted': ApplicationStatus.accepted,
-    'accept': ApplicationStatus.accepted,
-    '4': ApplicationStatus.rejected,
-    'rejected': ApplicationStatus.rejected,
-    'reject': ApplicationStatus.rejected,
-    '5': ApplicationStatus.withdrawn,
-    'withdrawn': ApplicationStatus.withdrawn,
-    'withdraw': ApplicationStatus.withdrawn,
-    'cancel': ApplicationStatus.withdrawn,
-    'canceled': ApplicationStatus.withdrawn,
-    'cancelled': ApplicationStatus.withdrawn,
-  };
-
   static const Map<String, String> _jobTypeLabels = {
     'fulltime': 'دوام كامل',
     'full_time': 'دوام كامل',
@@ -83,34 +59,15 @@ class StatusTranslator {
 
   /// Retrieves the corresponding ApplicationStatus enum from an API status string.
   static ApplicationStatus getEnum(String? apiStatus) {
-    return getEnumOrNull(apiStatus) ?? ApplicationStatus.sent;
+    return ApplicationStatusMapper.fromApi(apiStatus);
   }
 
   static ApplicationStatus? getEnumOrNull(String? apiStatus) {
-    if (apiStatus == null) return null;
-    final normalized = normalize(apiStatus);
-
-    if (_apiToEnumMap.containsKey(normalized)) {
-      return _apiToEnumMap[normalized]!;
-    }
-
-    for (final entry in _apiToEnumMap.entries) {
-      if (normalized.contains(entry.key)) {
-        return entry.value;
-      }
-    }
-
-    return null;
+    return ApplicationStatusMapper.tryFromApi(apiStatus);
   }
 
   static String applicationStatusLabel(String? apiStatus) {
-    if (apiStatus == null || apiStatus.trim().isEmpty) {
-      return ApplicationStatus.sent.arabicLabel;
-    }
-    if (hasArabic(apiStatus)) return apiStatus.trim();
-    final status = getEnumOrNull(apiStatus);
-    if (status != null) return status.arabicLabel;
-    return isEnglishOnly(apiStatus) ? 'غير محدد' : apiStatus.trim();
+    return ApplicationStatusMapper.labelFor(apiStatus);
   }
 
   static String jobTypeLabel(String? value) {

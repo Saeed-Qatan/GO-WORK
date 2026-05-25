@@ -41,6 +41,8 @@ class EditProfileViewModel extends ChangeNotifier {
 
   String? _selectedCategoryId;
   String? get selectedCategoryId => _selectedCategoryId;
+  bool _hasInitializedFromProfile = false;
+  bool _isDisposed = false;
 
   String get cvFileName =>
       _formData.newCvFile != null
@@ -50,12 +52,36 @@ class EditProfileViewModel extends ChangeNotifier {
               : 'لا يوجد ملف');
 
   EditProfileViewModel(this._profileViewModel) {
-    _initFromProfile(_profileViewModel.profile);
-    fetchCategories();
+    if (_profileViewModel.profile != null) {
+      _initFromProfile(_profileViewModel.profile);
+    }
+    Future.microtask(() {
+      if (!_isDisposed) {
+        initializeFromProfile();
+        fetchCategories();
+      }
+    });
+  }
+
+  Future<void> initializeFromProfile() async {
+    if (_hasInitializedFromProfile) return;
+
+    var profile = _profileViewModel.profile;
+    if (profile == null) {
+      _isLoading = true;
+      if (!_isDisposed) notifyListeners();
+      await _profileViewModel.fetchProfile();
+      profile = _profileViewModel.profile;
+      _isLoading = false;
+    }
+
+    _initFromProfile(profile);
+    if (!_isDisposed) notifyListeners();
   }
 
   void _initFromProfile(ProfileModel? profile) {
     if (profile == null) return;
+    if (_hasInitializedFromProfile) return;
 
     firstNameController.text = profile.firstName;
     middleNameController.text = profile.middleName;
@@ -75,12 +101,13 @@ class EditProfileViewModel extends ChangeNotifier {
       avatarUrl: profile.avatarUrl,
       cvUrl: profile.cvUrl,
     );
+    _hasInitializedFromProfile = true;
   }
 
   Future<void> fetchCategories() async {
     _isCategoriesLoading = true;
     _categoriesErrorMessage = null;
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
 
     try {
       final response = await _apiClient.get(
@@ -135,13 +162,13 @@ class EditProfileViewModel extends ChangeNotifier {
       _categoriesErrorMessage = AppErrorParser.parse(e);
     } finally {
       _isCategoriesLoading = false;
-      notifyListeners();
+      if (!_isDisposed) notifyListeners();
     }
   }
 
   void setCategory(String? id) {
     _selectedCategoryId = id?.trim().isEmpty == true ? null : id;
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
   }
 
   // --- Form Actions ---
@@ -151,7 +178,7 @@ class EditProfileViewModel extends ChangeNotifier {
     if (text.isNotEmpty && !_formData.skills.contains(text)) {
       _formData = _formData.copyWith(skills: [..._formData.skills, text]);
       skillController.clear();
-      notifyListeners();
+      if (!_isDisposed) notifyListeners();
       SnackbarService.showSuccess('تمت إضافة المهارة');
     } else if (_formData.skills.contains(text)) {
       SnackbarService.showInfo('هذه المهارة مضافة مسبقاً');
@@ -161,7 +188,7 @@ class EditProfileViewModel extends ChangeNotifier {
   void removeSkill(int index) {
     final updatedSkills = List<String>.from(_formData.skills)..removeAt(index);
     _formData = _formData.copyWith(skills: updatedSkills);
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
   }
 
   Future<void> pickImage() async {
@@ -170,7 +197,7 @@ class EditProfileViewModel extends ChangeNotifier {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         _formData = _formData.copyWith(newAvatarFile: File(image.path));
-        notifyListeners();
+        if (!_isDisposed) notifyListeners();
         SnackbarService.showSuccess('تمت إضافة الصورة بنجاح');
       }
     } catch (e) {
@@ -189,7 +216,7 @@ class EditProfileViewModel extends ChangeNotifier {
         _formData = _formData.copyWith(
           newCvFile: File(result!.files.single.path!),
         );
-        notifyListeners();
+        if (!_isDisposed) notifyListeners();
         SnackbarService.showSuccess('تم اختيار السيرة الذاتية بنجاح');
       }
     } catch (e) {
@@ -212,7 +239,7 @@ class EditProfileViewModel extends ChangeNotifier {
     }
 
     _isLoading = true;
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
 
     try {
       // Sync controllers back to model just before save
@@ -271,12 +298,13 @@ class EditProfileViewModel extends ChangeNotifier {
       return false;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) notifyListeners();
     }
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     firstNameController.dispose();
     middleNameController.dispose();
     lastNameController.dispose();

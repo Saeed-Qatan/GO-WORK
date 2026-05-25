@@ -33,8 +33,8 @@ class InterviewCard extends StatelessWidget {
       interview.date,
       interview.time,
     );
-    final canRespond = interview.status == InterviewStatus.scheduled ||
-        interview.status == InterviewStatus.waiting;
+    final canRespond = (interview.status == InterviewStatus.scheduled ||
+        interview.status == InterviewStatus.waiting) && !interview.isPast;
 
     return Consumer<InterviewsViewModel>(
       builder: (context, viewModel, _) {
@@ -142,6 +142,12 @@ class InterviewCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded, size: 24, color: AppColors.error),
+            onPressed: () => _confirmDismiss(context),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -302,5 +308,28 @@ class InterviewCard extends StatelessWidget {
         ),
       );
     }
+  }
+
+  void _confirmDismiss(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('إخفاء المقابلة', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('هل أنت متأكد من رغبتك في إخفاء هذه المقابلة من القائمة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<InterviewsViewModel>().dismissInterview(interview.id);
+            },
+            child: const Text('إخفاء', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
   }
 }

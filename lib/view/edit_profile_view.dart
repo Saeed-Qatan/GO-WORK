@@ -11,6 +11,7 @@ import '../widget/edit_profile/edit_phone_field.dart';
 import '../widget/edit_profile/edit_skills_section.dart';
 import '../widget/edit_profile/edit_cv_section.dart';
 import '../widget/search/filter_dropdown.dart';
+import '../model/filter_option.dart';
 
 class EditProfileView extends StatelessWidget {
   const EditProfileView({super.key});
@@ -121,30 +122,23 @@ class EditProfileView extends StatelessWidget {
                       FilterDropdown(
                         label: 'المجال المناسب',
                         hint: 'لم يتم الاختيار',
-                        value:
-                            viewModel.selectedCategoryId != null
-                                ? viewModel.categories
-                                    .firstWhere(
-                                      (cat) =>
-                                          cat['id'].toString() ==
-                                          viewModel.selectedCategoryId,
-                                      orElse: () => <String, dynamic>{},
-                                    )['name']
-                                    ?.toString()
-                                : null,
-                        items:
-                            viewModel.categories
-                                .map((cat) => cat['name'].toString())
-                                .toList(),
-                        onChanged: (String? newFieldValue) {
-                          if (newFieldValue != null) {
-                            final chosenCat = viewModel.categories.firstWhere(
-                              (cat) => cat['name'].toString() == newFieldValue,
-                            );
-                            viewModel.setCategory(chosenCat['id'].toString());
-                          } else {
-                            viewModel.setCategory(null);
-                          }
+                        value: viewModel.selectedCategoryId != null
+                            ? FilterOption(
+                                label: viewModel.categories.firstWhere(
+                                  (cat) => cat['id'].toString() == viewModel.selectedCategoryId,
+                                  orElse: () => <String, dynamic>{'name': ''},
+                                )['name']?.toString() ?? '',
+                                rawValue: viewModel.selectedCategoryId!,
+                              )
+                            : null,
+                        items: viewModel.categories
+                            .map((cat) => FilterOption(
+                                  label: cat['name'].toString(),
+                                  rawValue: cat['id'].toString(),
+                                ))
+                            .toList(),
+                        onChanged: (FilterOption? newFieldValue) {
+                          viewModel.setCategory(newFieldValue?.rawValue);
                         },
                       )
                     else

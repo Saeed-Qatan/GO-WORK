@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import '../core/constants/api_constants.dart';
+import '../model/filter_option.dart';
 import '../model/home_model.dart';
 import '../repository/search_repository.dart';
 import '../utils/api_storage.dart';
 import '../utils/app_error_parser.dart';
 import '../utils/status_translator.dart';
-import '../core/constants/api_constants.dart';
 
 class SearchViewModel extends ChangeNotifier {
+  static const String allLabel = 'الكل';
+  static const String allCategoriesLabel = 'جميع المجالات';
+
   final SearchRepository _repository = SearchRepository();
+  final ApiClient _apiClient = ApiClient();
   bool _isDisposed = false;
 
   List<JobModel> _jobs = [];
@@ -19,9 +24,6 @@ class SearchViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  final ApiClient _apiClient = ApiClient();
-
-  // Dynamic Lists for Filters
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _countries = [];
   List<Map<String, dynamic>> _locationTypes = [];
@@ -37,61 +39,37 @@ class SearchViewModel extends ChangeNotifier {
   bool get isLocationTypesLoading => _isLocationTypesLoading;
   bool get isJobTypesLoading => _isJobTypesLoading;
 
-  List<String> get categoryNames => _mapNames(_categories, 'جميع المجالات');
-  List<String> get countryNames => _mapNames(_countries, 'الكل');
-  List<String> get locationNames => _mapNames(
-    _locationTypes,
-    'الكل',
-    translate: StatusTranslator.workModeLabel,
-  );
-  List<String> get jobTypeNames => _mapNames(
-    _jobTypes,
-    'الكل',
-    translate: StatusTranslator.jobTypeLabel,
-  );
-
-  List<String> _mapNames(
-    List<Map<String, dynamic>> items,
-    String defaultOption, {
-    String Function(String value)? translate,
-  }) {
-    if (items.isEmpty) return [defaultOption];
-    final names = items
-        .map((e) {
-          final rawName = e['name'].toString();
-          final displayName = translate?.call(rawName) ?? rawName;
-          return displayName.isEmpty ? rawName : displayName;
-        })
-        .toSet()
-        .toList();
-    names.remove(
-      defaultOption,
-    ); // Remove if API already returns it, to avoid duplicates
-    return [defaultOption, ...names];
-  }
+  List<FilterOption> get categoryOptions =>
+      _mapOptions(_categories, allCategoriesLabel);
+  List<FilterOption> get countryOptions => _mapOptions(_countries, allLabel);
+  List<FilterOption> get locationOptions => _mapOptions(
+        _locationTypes,
+        allLabel,
+        translate: StatusTranslator.workModeLabel,
+      );
+  List<FilterOption> get jobTypeOptions => _mapOptions(
+        _jobTypes,
+        allLabel,
+        translate: StatusTranslator.jobTypeLabel,
+      );
 
   String _searchQuery = '';
-  String? _selectedCategory;
-  String? _selectedLocation;
-  String? _selectedType;
-  String? _selectedCountry;
+  FilterOption? _selectedCategory;
+  FilterOption? _selectedLocation;
+  FilterOption? _selectedType;
+  FilterOption? _selectedCountry;
 
-  // Getters for filters
-  String? get selectedCategory => _selectedCategory;
-  String? get selectedLocation => _selectedLocation == null
-      ? null
-      : StatusTranslator.workModeLabel(_selectedLocation);
-  String? get selectedType => _selectedType == null
-      ? null
-      : StatusTranslator.jobTypeLabel(_selectedType);
-  String? get selectedCountry => _selectedCountry;
+  FilterOption? get selectedCategory => _selectedCategory;
+  FilterOption? get selectedLocation => _selectedLocation;
+  FilterOption? get selectedType => _selectedType;
+  FilterOption? get selectedCountry => _selectedCountry;
 
-  String _sortBy = 'date'; // 'date' or 'salary'
+  String _sortBy = 'date';
   String get sortBy => _sortBy;
 
   SearchViewModel() {
     _fetchAllFilters();
-    searchJobs(); // Load initial data
+    searchJobs();
   }
 
   Future<void> _fetchAllFilters() async {
@@ -103,8 +81,8 @@ class SearchViewModel extends ChangeNotifier {
 
   Future<void> _fetchFilterData(
     String endpoint,
-    Function(List<Map<String, dynamic>>) onSuccess,
-    Function(bool) setLoading, {
+    void Function(List<Map<String, dynamic>>) onSuccess,
+    void Function(bool) setLoading, {
     bool skipAuth = false,
   }) async {
     if (_isDisposed) return;
@@ -116,26 +94,23 @@ class SearchViewModel extends ChangeNotifier {
       List<dynamic>? list;
 
       if (response['data'] is List) {
-        list = response['data'];
+        list = response['data'] as List<dynamic>;
       } else if (response.containsKey('success') && response['data'] is List) {
-        list = response['data'];
+        list = response['data'] as List<dynamic>;
       }
 
       if (list != null && list.isNotEmpty) {
-        final parsed =
-            list.map((item) {
-              return <String, dynamic>{
-                'id':
-                    (item['id'] ?? item['Id'] ?? item['code'] ?? '').toString(),
-                'name':
-                    (item['name'] ??
-                            item['Name'] ??
-                            item['title'] ??
-                            item['Title'] ??
-                            '')
-                        .toString(),
-              };
-            }).toList();
+        final parsed = list.map((item) {
+          return <String, dynamic>{
+            'id': (item['id'] ?? item['Id'] ?? item['code'] ?? '').toString(),
+            'name': (item['name'] ??
+                    item['Name'] ??
+                    item['title'] ??
+                    item['Title'] ??
+                    '')
+                .toString(),
+          };
+        }).toList();
         onSuccess(parsed);
       } else {
         onSuccess([]);
@@ -150,59 +125,51 @@ class SearchViewModel extends ChangeNotifier {
   }
 
   Future<void> _fetchCategories() => _fetchFilterData(
-    ApiConstants.jobCategories,
-    (data) => _categories = data,
-    (v) => _isCategoriesLoading = v,
-    skipAuth: true,
-  );
+        ApiConstants.jobCategories,
+        (data) => _categories = data,
+        (v) => _isCategoriesLoading = v,
+        skipAuth: true,
+      );
+
   Future<void> _fetchCountries() => _fetchFilterData(
-    ApiConstants.jobCountries,
-    (data) => _countries = data,
-    (v) => _isCountriesLoading = v,
-  );
+        ApiConstants.jobCountries,
+        (data) => _countries = data,
+        (v) => _isCountriesLoading = v,
+      );
+
   Future<void> _fetchLocationTypes() => _fetchFilterData(
-    ApiConstants.locationTypes,
-    (data) => _locationTypes = data,
-    (v) => _isLocationTypesLoading = v,
-  );
+        ApiConstants.locationTypes,
+        (data) => _locationTypes = data,
+        (v) => _isLocationTypesLoading = v,
+      );
+
   Future<void> _fetchJobTypes() => _fetchFilterData(
-    ApiConstants.jobTypes,
-    (data) => _jobTypes = data,
-    (v) => _isJobTypesLoading = v,
-  );
+        ApiConstants.jobTypes,
+        (data) => _jobTypes = data,
+        (v) => _isJobTypesLoading = v,
+      );
 
   void onSearchChanged(String query) {
     _searchQuery = query;
-    // Debounce could be added here
     searchJobs();
   }
 
-  void setCategory(String? value) {
+  void setCategory(FilterOption? value) {
     _selectedCategory = value;
     searchJobs();
   }
 
-  void setLocation(String? value) {
-    _selectedLocation = _rawFilterValue(
-      _locationTypes,
-      value,
-      'الكل',
-      StatusTranslator.workModeLabel,
-    );
+  void setLocation(FilterOption? value) {
+    _selectedLocation = value;
     searchJobs();
   }
 
-  void setType(String? value) {
-    _selectedType = _rawFilterValue(
-      _jobTypes,
-      value,
-      'الكل',
-      StatusTranslator.jobTypeLabel,
-    );
+  void setType(FilterOption? value) {
+    _selectedType = value;
     searchJobs();
   }
 
-  void setCountry(String? value) {
+  void setCountry(FilterOption? value) {
     _selectedCountry = value;
     searchJobs();
   }
@@ -211,40 +178,6 @@ class SearchViewModel extends ChangeNotifier {
     _sortBy = sortBy;
     _applySorting();
     if (!_isDisposed) notifyListeners();
-  }
-
-  void _applySorting() {
-    if (_sortBy == 'date') {
-      _jobs.sort((a, b) {
-        final aDate = DateTime.tryParse(a.postedDate ?? '') ?? DateTime(2000);
-        final bDate = DateTime.tryParse(b.postedDate ?? '') ?? DateTime(2000);
-        return bDate.compareTo(aDate); // Descending (newest first)
-      });
-    } else if (_sortBy == 'salary') {
-      _jobs.sort((a, b) {
-        final aSalary = double.tryParse(a.maxSalary) ?? 0.0;
-        final bSalary = double.tryParse(b.maxSalary) ?? 0.0;
-        return bSalary.compareTo(aSalary); // Descending (highest salary first)
-      });
-    }
-  }
-
-  String? _rawFilterValue(
-    List<Map<String, dynamic>> items,
-    String? displayValue,
-    String defaultOption,
-    String Function(String value) translate,
-  ) {
-    if (displayValue == null || displayValue == defaultOption) return null;
-
-    for (final item in items) {
-      final rawName = item['name']?.toString() ?? '';
-      if (rawName == displayValue || translate(rawName) == displayValue) {
-        return rawName;
-      }
-    }
-
-    return displayValue;
   }
 
   Future<void> searchJobs() async {
@@ -256,10 +189,10 @@ class SearchViewModel extends ChangeNotifier {
     try {
       _jobs = await _repository.searchJobs(
         query: _searchQuery,
-        category: _selectedCategory,
-        workMode: _selectedLocation,
-        type: _selectedType,
-        country: _selectedCountry,
+        category: _selectedCategory?.rawValue,
+        workMode: _selectedLocation?.rawValue,
+        type: _selectedType?.rawValue,
+        country: _selectedCountry?.rawValue,
       );
       _applySorting();
     } catch (e) {
@@ -268,10 +201,50 @@ class SearchViewModel extends ChangeNotifier {
       _jobs = [];
     } finally {
       _isLoading = false;
-      if (!_isDisposed) {
-        notifyListeners();
+      if (!_isDisposed) notifyListeners();
+    }
+  }
+
+  void _applySorting() {
+    if (_sortBy == 'date') {
+      _jobs.sort((a, b) {
+        final aDate = DateTime.tryParse(a.postedDate ?? '') ?? DateTime(2000);
+        final bDate = DateTime.tryParse(b.postedDate ?? '') ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+    } else if (_sortBy == 'salary') {
+      _jobs.sort((a, b) {
+        final aSalary = double.tryParse(a.maxSalary) ?? 0.0;
+        final bSalary = double.tryParse(b.maxSalary) ?? 0.0;
+        return bSalary.compareTo(aSalary);
+      });
+    }
+  }
+
+  List<FilterOption> _mapOptions(
+    List<Map<String, dynamic>> items,
+    String defaultOption, {
+    String Function(String value)? translate,
+  }) {
+    if (items.isEmpty) return [];
+
+    final seen = <String>{};
+    final options = <FilterOption>[];
+    for (final item in items) {
+      final rawName = item['name']?.toString() ?? '';
+      if (rawName.trim().isEmpty) continue;
+
+      final displayName = translate?.call(rawName) ?? rawName;
+      final label = displayName.isEmpty ? rawName : displayName;
+      if (label == defaultOption) continue;
+
+      final key = '${label.trim()}|${rawName.trim()}';
+      if (seen.add(key)) {
+        options.add(FilterOption(label: label, rawValue: rawName));
       }
     }
+
+    return options;
   }
 
   @override

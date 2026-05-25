@@ -36,26 +36,22 @@ class _SplashViewState extends State<SplashView> {
     final token = await LocalStorage().getString('token');
 
     if (mounted) {
-      if (token == null) {
+      if (token == null || token.isEmpty) {
         context.go(AppRoutes.login);
       } else {
-        unawaited(_subscribeToUserCategoryTopic());
-        context.go(AppRoutes.home);
+        try {
+          final profile = await ProfileRepository().getUserProfile();
+          unawaited(
+            NotificationTopicService().subscribeUserTopics(
+              categoryId: profile.categoryId,
+            ),
+          );
+          if (mounted) context.go(AppRoutes.home);
+        } catch (e) {
+          await LocalStorage().clearAuth();
+          if (mounted) context.go(AppRoutes.login);
+        }
       }
-    }
-  }
-
-  Future<void> _subscribeToUserCategoryTopic() async {
-    try {
-      final profile = await ProfileRepository().getUserProfile();
-      debugPrint(
-        '=== SPLASH DEBUG: CATEGORY ID = ${profile.categoryId.isNotEmpty ? profile.categoryId : 'EMPTY'} ===',
-      );
-      await NotificationTopicService().subscribeUserTopics(
-        categoryId: profile.categoryId,
-      );
-    } catch (e) {
-      debugPrint('=== SPLASH DEBUG: CATEGORY TOPIC SUBSCRIBE ERROR: $e ===');
     }
   }
 

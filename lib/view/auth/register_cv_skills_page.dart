@@ -5,6 +5,7 @@ import 'package:gowork/widget/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/widget/search/filter_dropdown.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
+import 'package:gowork/model/filter_option.dart';
 import 'package:go_router/go_router.dart';
 
 class RegisterCVPage extends StatefulWidget {
@@ -305,31 +306,23 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         FilterDropdown(
                           label: 'اختر مجالك المهني',
                           hint: 'لم يتم الاختيار',
-                          value:
-                              viewModel.selectedCategoryId != null
-                                  ? viewModel.categories
-                                      .firstWhere(
-                                        (cat) =>
-                                            cat['id'].toString() ==
-                                            viewModel.selectedCategoryId,
-                                        orElse: () => <String, dynamic>{},
-                                      )['name']
-                                      ?.toString()
-                                  : null,
-                          items:
-                              viewModel.categories
-                                  .map((cat) => cat['name'].toString())
-                                  .toList(),
-                          onChanged: (String? newFieldValue) {
-                            if (newFieldValue != null) {
-                              final chosenCat = viewModel.categories.firstWhere(
-                                (cat) =>
-                                    cat['name'].toString() == newFieldValue,
-                              );
-                              viewModel.setCategory(chosenCat['id'].toString());
-                            } else {
-                              viewModel.setCategory(null);
-                            }
+                          value: viewModel.selectedCategoryId != null
+                              ? FilterOption(
+                                  label: viewModel.categories.firstWhere(
+                                    (cat) => cat['id'].toString() == viewModel.selectedCategoryId,
+                                    orElse: () => <String, dynamic>{'name': ''},
+                                  )['name']?.toString() ?? '',
+                                  rawValue: viewModel.selectedCategoryId!,
+                                )
+                              : null,
+                          items: viewModel.categories
+                              .map((cat) => FilterOption(
+                                    label: cat['name'].toString(),
+                                    rawValue: cat['id'].toString(),
+                                  ))
+                              .toList(),
+                          onChanged: (FilterOption? newFieldValue) {
+                            viewModel.setCategory(newFieldValue?.rawValue);
                           },
                         )
                       else

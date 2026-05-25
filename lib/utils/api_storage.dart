@@ -38,8 +38,7 @@ class ApiClient {
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
             // Token expired or invalid, clear local storage
-            await LocalStorage().remove('token');
-            await LocalStorage().remove('userId');
+            await LocalStorage().clearAuth();
             // We return a specialized exception so UI can route to login if needed
             return handler.next(
               e.copyWith(

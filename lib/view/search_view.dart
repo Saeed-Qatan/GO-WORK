@@ -8,6 +8,7 @@ import '../widget/search/search_job_card.dart';
 import '../theme/app_colors.dart';
 import '../routing/app_router.dart';
 import '../widget/common/animated_empty_state.dart';
+import '../model/filter_option.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -62,8 +63,8 @@ class _SearchViewState extends State<SearchView> {
                                 value: viewModel.selectedCategory,
                                 items:
                                     viewModel.isCategoriesLoading
-                                        ? ['جاري التحميل...']
-                                        : viewModel.categoryNames,
+                                        ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+                                        : viewModel.categoryOptions,
                                 onChanged: viewModel.setCategory,
                               ),
                             ),
@@ -79,8 +80,8 @@ class _SearchViewState extends State<SearchView> {
                                 value: viewModel.selectedLocation,
                                 items:
                                     viewModel.isLocationTypesLoading
-                                        ? ['جاري التحميل...']
-                                        : viewModel.locationNames,
+                                        ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+                                        : viewModel.locationOptions,
                                 onChanged: viewModel.setLocation,
                                 showSearch: false,
                               ),
@@ -93,8 +94,8 @@ class _SearchViewState extends State<SearchView> {
                                 value: viewModel.selectedCountry,
                                 items:
                                     viewModel.isCountriesLoading
-                                        ? ['جاري التحميل...']
-                                        : viewModel.countryNames,
+                                        ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+                                        : viewModel.countryOptions,
                                 onChanged: viewModel.setCountry,
                               ),
                             ),
@@ -110,8 +111,8 @@ class _SearchViewState extends State<SearchView> {
                                 value: viewModel.selectedType,
                                 items:
                                     viewModel.isJobTypesLoading
-                                        ? ['جاري التحميل...']
-                                        : viewModel.jobTypeNames,
+                                        ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+                                        : viewModel.jobTypeOptions,
                                 onChanged: viewModel.setType,
                                 showSearch: false,
                               ),

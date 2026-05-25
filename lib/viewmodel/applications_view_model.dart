@@ -17,11 +17,8 @@ class ApplicationsViewModel extends ChangeNotifier {
 
     final rawStatusValues = _statuses.map(_extractStatusValue).whereType<String>();
 
-    if (rawStatusValues.isNotEmpty) {
-      for (final rawStatus in rawStatusValues) {
-        _addUniqueTab(tabs, ApplicationFilterTab.fromRaw(rawStatus));
-      }
-      return tabs;
+    for (final rawStatus in rawStatusValues) {
+      _addUniqueTab(tabs, ApplicationFilterTab.fromRaw(rawStatus));
     }
 
     for (final application in _allApplications) {
@@ -57,10 +54,10 @@ class ApplicationsViewModel extends ChangeNotifier {
     fetchApplications();
   }
 
-  Future<void> fetchApplications() async {
-    _isLoading = true;
+  Future<void> fetchApplications({bool showLoading = true}) async {
+    if (showLoading) _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    if (showLoading) notifyListeners();
 
     try {
       _statuses = await _repository.getApplicationStatuses();
@@ -72,7 +69,7 @@ class ApplicationsViewModel extends ChangeNotifier {
     } catch (e) {
       _errorMessage = AppErrorParser.parse(e);
     } finally {
-      _isLoading = false;
+      if (showLoading) _isLoading = false;
       notifyListeners();
     }
   }
@@ -106,13 +103,26 @@ class ApplicationsViewModel extends ChangeNotifier {
   Future<String?> withdrawApplication(String applicationId) async {
     try {
       await _repository.withdrawApplication(applicationId);
-      await fetchApplications();
+      _markApplicationWithdrawn(applicationId);
+      await fetchApplications(showLoading: false);
       return null;
     } catch (e) {
       final message = AppErrorParser.parse(e);
       notifyListeners();
       return message;
     }
+  }
+
+  void _markApplicationWithdrawn(String applicationId) {
+    _allApplications = _allApplications.map((application) {
+      if (application.id != applicationId) return application;
+      return application.copyWith(
+        status: ApplicationStatus.withdrawn,
+        rawStatusName: ApplicationStatus.withdrawn.englishApiValue,
+      );
+    }).toList();
+    _applyFilter();
+    notifyListeners();
   }
 
   String? _extractStatusValue(dynamic status) {

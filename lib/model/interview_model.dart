@@ -84,6 +84,11 @@ class InterviewModel {
     return InterviewStatus.waiting;
   }
 
+  bool get isPast {
+    if (scheduledAt == null) return false;
+    return scheduledAt!.isBefore(DateTime.now());
+  }
+
   InterviewModel copyWith({InterviewStatus? status}) {
     return InterviewModel(
       id: id,
