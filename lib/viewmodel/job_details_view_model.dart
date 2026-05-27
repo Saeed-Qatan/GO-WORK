@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../model/home/home_model.dart';
 import '../services/job_service.dart';
 import '../utils/snackbar_service.dart';
 import '../utils/app_error_parser.dart';
 import '../utils/status_translator.dart';
 import '../widget/common/success_bottom_sheet.dart';
+import 'job_application_state_view_model.dart';
+import 'applications_view_model.dart';
 
 class JobDetailsViewModel extends ChangeNotifier {
   final JobService _jobService = JobService();
@@ -87,7 +90,11 @@ class JobDetailsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> applyToJob(BuildContext context, String jobId) async {
+  Future<void> applyToJob(
+    BuildContext context,
+    String jobId, {
+    JobApplicationStateViewModel? applicationState,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
@@ -101,6 +108,16 @@ class JobDetailsViewModel extends ChangeNotifier {
         // Also update local state so the apply button turns disabled immediately
         if (_jobDetails != null) {
           _jobDetails = _jobDetails!.copyWith(canApply: false);
+        }
+        applicationState?.markApplied(jobId);
+
+        // Refresh the applications list
+        if (context.mounted) {
+          try {
+            Provider.of<ApplicationsViewModel>(context, listen: false).fetchApplications(showLoading: false);
+          } catch (e) {
+            debugPrint('Failed to refresh applications: $e');
+          }
         }
 
         // Show success msg

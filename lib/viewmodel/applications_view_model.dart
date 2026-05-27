@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../model/applications/application_model.dart';
 import '../repository/applications_repository.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/local_storage.dart';
+import 'job_application_state_view_model.dart';
 
 class ApplicationsViewModel extends ChangeNotifier {
   final IApplicationsRepository _repository;
@@ -54,6 +57,18 @@ class ApplicationsViewModel extends ChangeNotifier {
       _statuses = data.statuses;
       _allApplications = data.applications;
 
+      // Merge locally stored withdrawn applications
+      final withdrawnApps = await _loadWithdrawnApplications();
+      final withdrawnStatus = _withdrawnStatus;
+      if (withdrawnStatus != null) {
+        for (final localApp in withdrawnApps) {
+          final exists = _allApplications.any((item) => item.id == localApp.id);
+          if (!exists) {
+            _allApplications.insert(0, localApp.withStatus(withdrawnStatus));
+          }
+        }
+      }
+
       if (_selectedFilterIndex >= filterTabItems.length) {
         _selectedFilterIndex = 0;
       }
@@ -78,17 +93,35 @@ class ApplicationsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String?> withdrawApplication(String applicationId) async {
+  Future<String?> withdrawApplication(
+    String applicationId, {
+    JobApplicationStateViewModel? applicationState,
+  }) async {
     try {
       final currentApplication = _findApplication(applicationId);
       await _repository.withdrawApplication(applicationId);
       final movedApplication = _moveApplicationToWithdrawnStatus(applicationId);
+
+      // Save to persistent storage
+      final withdrawnStatus = _withdrawnStatus;
+      if (movedApplication != null) {
+        await _saveWithdrawnApplication(movedApplication);
+      } else if (currentApplication != null && withdrawnStatus != null) {
+        await _saveWithdrawnApplication(currentApplication.withStatus(withdrawnStatus));
+      }
+
       await fetchApplications(showLoading: false);
       _restoreWithdrawnApplicationIfMissing(
         movedApplication ?? currentApplication,
       );
       _moveApplicationToWithdrawnStatus(applicationId);
       _selectWithdrawnTab();
+
+      final jobId = movedApplication?.jobId ?? currentApplication?.jobId;
+      if (jobId != null && jobId.isNotEmpty) {
+        applicationState?.markWithdrawn(jobId);
+      }
+
       return null;
     } catch (e) {
       notifyListeners();
@@ -160,6 +193,30 @@ class ApplicationsViewModel extends ChangeNotifier {
     _filteredApplications = _allApplications
         .where(selectedTab.matches)
         .toList();
+  }
+
+  Future<List<ApplicationModel>> _loadWithdrawnApplications() async {
+    try {
+      final jsonStr = await LocalStorage().getString('withdrawn_applications');
+      if (jsonStr == null || jsonStr.isEmpty) return [];
+      final List<dynamic> decoded = json.decode(jsonStr);
+      return decoded.map((item) => ApplicationModel.fromJson(item)).toList();
+    } catch (e) {
+      debugPrint('Error loading withdrawn applications: $e');
+      return [];
+    }
+  }
+
+  Future<void> _saveWithdrawnApplication(ApplicationModel app) async {
+    try {
+      final currentList = await _loadWithdrawnApplications();
+      currentList.removeWhere((item) => item.id == app.id);
+      currentList.add(app);
+      final jsonStr = json.encode(currentList.map((item) => item.toJson()).toList());
+      await LocalStorage().saveString('withdrawn_applications', jsonStr);
+    } catch (e) {
+      debugPrint('Error saving withdrawn application: $e');
+    }
   }
 }
 

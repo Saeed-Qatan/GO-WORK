@@ -171,4 +171,22 @@ class ApplicationModel {
       canWithdraw: canWithdraw ?? this.canWithdraw,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'jobId': jobId,
+      'role': role,
+      'company': company,
+      'companyLogo': companyLogo,
+      'date': date,
+      'statusId': statusId,
+      'statusValue': statusValue,
+      'statusRaw': statusRaw,
+      'statusLabel': statusLabel,
+      'statusColorHex': statusColorHex,
+      'statusBackgroundColorHex': statusBackgroundColorHex,
+      'canWithdraw': canWithdraw,
+    };
+  }
 }

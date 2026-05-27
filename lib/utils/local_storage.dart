@@ -48,6 +48,10 @@ class LocalStorage {
 
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
+    final withdrawnApps = prefs.getString('withdrawn_applications');
     await prefs.clear();
+    if (withdrawnApps != null) {
+      await prefs.setString('withdrawn_applications', withdrawnApps);
+    }
   }
 }

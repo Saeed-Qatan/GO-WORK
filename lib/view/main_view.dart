@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
+import 'package:provider/provider.dart';
 import 'home_view.dart';
 import 'search_view.dart';
 import 'applications_view.dart';
 import 'interviews_view.dart';
 import 'settings_view.dart';
 import '../widget/custom_bottom_nav_bar.dart';
+import '../viewmodel/applications_view_model.dart';
 
 class MainView extends StatefulWidget {
   const MainView({super.key});
@@ -45,6 +47,9 @@ class _MainViewState extends State<MainView> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 2) {
+            context.read<ApplicationsViewModel>().fetchApplications(showLoading: false);
+          }
         },
       ),
     );

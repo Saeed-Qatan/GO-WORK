@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../model/home/home_model.dart';
 import '../theme/app_colors.dart';
 import '../viewmodel/job_details_view_model.dart';
+import '../viewmodel/job_application_state_view_model.dart';
 import '../widget/common/pressable_button.dart';
 import 'dart:ui';
 
@@ -89,9 +90,9 @@ class _JobDetailsViewState extends State<JobDetailsView> {
           ),
         ),
       ),
-      body: Consumer<JobDetailsViewModel>(
-        builder: (context, viewModel, child) {
-          final job = viewModel.jobDetails ?? widget.job;
+      body: Consumer2<JobDetailsViewModel, JobApplicationStateViewModel>(
+        builder: (context, viewModel, appState, child) {
+          final job = appState.resolveJob(viewModel.jobDetails ?? widget.job);
           final bool isLoading = viewModel.isLoading;
 
           String formattedExpDate = 'غير محدد';
@@ -464,6 +465,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                                       ? () => viewModel.applyToJob(
                                           context,
                                           job.id,
+                                          applicationState: appState,
                                         )
                                       : null,
                                   style: ElevatedButton.styleFrom(
@@ -486,9 +488,9 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Text(
-                                        'قدم الآن',
-                                        style: TextStyle(
+                                      Text(
+                                        job.canApply == false ? 'تم التقديم' : 'قدم الآن',
+                                        style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w800,
                                         ),

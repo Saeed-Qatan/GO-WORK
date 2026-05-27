@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../viewmodel/applications_view_model.dart';
+import '../viewmodel/job_application_state_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widget/applications/application_card.dart';
@@ -94,7 +95,10 @@ class _ApplicationsViewState extends State<ApplicationsView> {
     if (!mounted) return;
     setState(() => _isWithdrawing = true);
 
-    final errorMsg = await viewModel.withdrawApplication(applicationId);
+    final errorMsg = await viewModel.withdrawApplication(
+      applicationId,
+      applicationState: context.read<JobApplicationStateViewModel>(),
+    );
 
     if (!mounted) return;
     setState(() => _isWithdrawing = false);

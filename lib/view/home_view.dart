@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../viewmodel/home_view_model.dart';
+import '../viewmodel/job_application_state_view_model.dart';
 import '../model/home/home_model.dart';
 import '../widget/home/home_header.dart';
 import '../widget/home/stat_card.dart';
@@ -154,26 +155,33 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         )
                       else
-                        ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: jobs.length,
-                          itemBuilder: (context, index) {
-                            final job = jobs[index];
-                            return JobCard(
-                                  job: job,
-                                  applyButtonText: AppConstants.applyNow,
-                                )
-                                .animate(
-                                  key: ValueKey('job_${isLoading}_${job.id}'),
-                                )
-                                .fade(duration: 500.ms, delay: (index * 100).ms)
-                                .slideY(
-                                  begin: 0.1,
-                                  duration: 500.ms,
-                                  curve: Curves.easeOutQuart,
-                                );
+                        Consumer<JobApplicationStateViewModel>(
+                          builder: (context, appState, child) {
+                            return ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: jobs.length,
+                              itemBuilder: (context, index) {
+                                final job = jobs[index];
+                                final resolvedJob = appState.resolveJob(job);
+                                return JobCard(
+                                      job: resolvedJob,
+                                      applyButtonText: resolvedJob.canApply == false
+                                          ? 'تم التقديم'
+                                          : AppConstants.applyNow,
+                                    )
+                                    .animate(
+                                      key: ValueKey('job_${isLoading}_${job.id}'),
+                                    )
+                                    .fade(duration: 500.ms, delay: (index * 100).ms)
+                                    .slideY(
+                                      begin: 0.1,
+                                      duration: 500.ms,
+                                      curve: Curves.easeOutQuart,
+                                    );
+                              },
+                            );
                           },
                         ),
                       const SizedBox(height: 24),

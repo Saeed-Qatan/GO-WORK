@@ -21,6 +21,7 @@ import 'viewmodel/applications_view_model.dart';
 import 'viewmodel/interviews_view_model.dart';
 import 'viewmodel/profile_view_model.dart';
 import 'viewmodel/job_details_view_model.dart';
+import 'viewmodel/job_application_state_view_model.dart';
 import 'viewmodel/settings_view_model.dart';
 import 'viewmodel/notifications_view_model.dart';
 import 'repository/interviews_repository.dart';
@@ -92,6 +93,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => JobApplicationStateViewModel()),
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(
           create: (_) =>

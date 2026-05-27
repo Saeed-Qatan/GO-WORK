@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../model/home/home_model.dart';
 
@@ -154,9 +154,9 @@ class SearchJobCard extends StatelessWidget {
                             vertical: 8,
                           ),
                         ),
-                        child: const Text(
-                          'عرض التفاصيل',
-                          style: TextStyle(
+                        child: Text(
+                          job.canApply == false ? 'تم التقديم' : 'عرض التفاصيل',
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

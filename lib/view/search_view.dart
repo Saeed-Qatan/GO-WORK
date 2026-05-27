@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../viewmodel/search_view_model.dart';
+import '../viewmodel/job_application_state_view_model.dart';
 import '../widget/search/custom_search_header.dart';
 import '../widget/search/filter_dropdown.dart';
 import '../widget/search/search_job_card.dart';
@@ -234,21 +235,26 @@ class _SearchViewState extends State<SearchView> {
                             ),
                           )
                         else
-                          ListView.builder(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: viewModel.jobs.length,
-                            itemBuilder: (context, index) {
-                              final jobItem = viewModel.jobs[index];
-                              return SearchJobCard(
-                                job: jobItem,
-                                isUrgent: index == 0,
-                                showBookmark: true,
-                                onTap: () {
-                                  context.push(
-                                    AppRoutes.jobDetails,
-                                    extra: jobItem,
+                          Consumer<JobApplicationStateViewModel>(
+                            builder: (context, appState, child) {
+                              return ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: viewModel.jobs.length,
+                                itemBuilder: (context, index) {
+                                  final jobItem = viewModel.jobs[index];
+                                  final resolvedJob = appState.resolveJob(jobItem);
+                                  return SearchJobCard(
+                                    job: resolvedJob,
+                                    isUrgent: index == 0,
+                                    showBookmark: true,
+                                    onTap: () {
+                                      context.push(
+                                        AppRoutes.jobDetails,
+                                        extra: resolvedJob,
+                                      );
+                                    },
                                   );
                                 },
                               );
