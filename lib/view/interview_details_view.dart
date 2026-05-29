@@ -277,56 +277,7 @@ class InterviewDetailsView extends StatelessWidget {
 
             // Interactive Meeting Link Button if Remote
             if (interview.meetingLink?.trim().isNotEmpty == true)
-              Container(
-                width: double.infinity,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF5C6BC0), Color(0xFF3F51B5)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF3F51B5).withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () => _openMeetingLink(context),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.videocam_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          'الانضمام للمقابلة (رابط الاجتماع)',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ).animate().fade(duration: 400.ms, delay: 250.ms).slideY(
-                    begin: 0.2,
-                    curve: Curves.easeOutCubic,
-                    duration: 400.ms,
-                    delay: 250.ms,
-                  ),
+              _buildMeetingButton(context),
           ],
         ),
       ),
@@ -420,7 +371,79 @@ class InterviewDetailsView extends StatelessWidget {
     );
   }
 
+  Widget _buildMeetingButton(BuildContext context) {
+    final bool isBlocked = interview.status == InterviewStatus.declined;
+
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: isBlocked
+            ? const LinearGradient(
+                colors: [Color(0xFFE0E0E0), Color(0xFFBDBDBD)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : const LinearGradient(
+                colors: [Color(0xFF5C6BC0), Color(0xFF3F51B5)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isBlocked
+                ? Colors.black.withValues(alpha: 0.05)
+                : const Color(0xFF3F51B5).withValues(alpha: 0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _openMeetingLink(context),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.videocam_rounded,
+                color: isBlocked ? Colors.grey[600] : Colors.white,
+                size: 24,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                isBlocked
+                    ? 'رابط المقابلة محجوب (تم الاعتذار/الإلغاء)'
+                    : 'الانضمام للمقابلة (رابط الاجتماع)',
+                style: TextStyle(
+                  color: isBlocked ? Colors.grey[700] : Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fade(duration: 400.ms, delay: 250.ms).slideY(
+          begin: 0.2,
+          curve: Curves.easeOutCubic,
+          duration: 400.ms,
+          delay: 250.ms,
+        );
+  }
+
   Future<void> _openMeetingLink(BuildContext context) async {
+    if (interview.status == InterviewStatus.declined) {
+      SnackbarService.showWarning(
+        'لا يمكنك الانضمام لمقابلة قمت بالاعتذار عنها أو تم إلغاؤها',
+      );
+      return;
+    }
+
     final rawLink = interview.meetingLink?.trim();
     if (rawLink == null || rawLink.isEmpty) return;
 
