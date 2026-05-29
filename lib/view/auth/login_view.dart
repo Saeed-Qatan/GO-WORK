@@ -7,6 +7,7 @@ import 'package:gowork/widget/custom_text_field.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:provider/provider.dart';
+import 'package:gowork/utils/snackbar_service.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -144,16 +145,6 @@ class _LoginViewState extends State<LoginView> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    if (viewModel.errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Text(
-                          viewModel.errorMessage!,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: cs.error),
-                        ),
-                      ),
                     CustomButton(
                       text: AppConstants.loginButton,
                       isLoading: viewModel.isLoading,
@@ -165,7 +156,14 @@ class _LoginViewState extends State<LoginView> {
                           );
                           if (success) {
                             if (context.mounted) {
+                              SnackbarService.showSuccess('تم تسجيل الدخول بنجاح');
                               context.go(AppRoutes.home);
+                            }
+                          } else {
+                            if (context.mounted) {
+                              SnackbarService.showError(
+                                viewModel.errorMessage ?? 'فشل تسجيل الدخول',
+                              );
                             }
                           }
                         }

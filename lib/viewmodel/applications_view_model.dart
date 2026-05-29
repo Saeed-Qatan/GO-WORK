@@ -61,7 +61,9 @@ class ApplicationsViewModel extends ChangeNotifier {
       final optimisticApps = await _loadOptimisticApplications();
       final appliedStatus = _appliedStatus;
       for (var optApp in optimisticApps) {
-        final exists = _allApplications.any((item) => item.jobId.trim() == optApp.jobId.trim());
+        final exists = _allApplications.any(
+          (item) => item.jobId.trim() == optApp.jobId.trim(),
+        );
         if (!exists) {
           if (appliedStatus != null) {
             optApp = optApp.withStatus(appliedStatus);
@@ -78,9 +80,13 @@ class ApplicationsViewModel extends ChangeNotifier {
       final withdrawnStatus = _withdrawnStatus;
       if (withdrawnStatus != null) {
         for (final localApp in withdrawnApps) {
-          final index = _allApplications.indexWhere((item) => item.id == localApp.id);
+          final index = _allApplications.indexWhere(
+            (item) => item.id == localApp.id,
+          );
           if (index != -1) {
-            _allApplications[index] = _allApplications[index].withStatus(withdrawnStatus);
+            _allApplications[index] = _allApplications[index].withStatus(
+              withdrawnStatus,
+            );
           } else {
             _allApplications.insert(0, localApp.withStatus(withdrawnStatus));
           }
@@ -125,7 +131,9 @@ class ApplicationsViewModel extends ChangeNotifier {
       if (movedApplication != null) {
         await _saveWithdrawnApplication(movedApplication);
       } else if (currentApplication != null && withdrawnStatus != null) {
-        await _saveWithdrawnApplication(currentApplication.withStatus(withdrawnStatus));
+        await _saveWithdrawnApplication(
+          currentApplication.withStatus(withdrawnStatus),
+        );
       }
 
       await fetchApplications(showLoading: false);
@@ -230,7 +238,9 @@ class ApplicationsViewModel extends ChangeNotifier {
       final currentList = await _loadWithdrawnApplications();
       currentList.removeWhere((item) => item.id == app.id);
       currentList.add(app);
-      final jsonStr = json.encode(currentList.map((item) => item.toJson()).toList());
+      final jsonStr = json.encode(
+        currentList.map((item) => item.toJson()).toList(),
+      );
       await LocalStorage().saveString('withdrawn_applications', jsonStr);
     } catch (e) {
       debugPrint('Error saving withdrawn application: $e');
@@ -254,7 +264,9 @@ class ApplicationsViewModel extends ChangeNotifier {
       final currentList = await _loadOptimisticApplications();
       currentList.removeWhere((item) => item.jobId == app.jobId);
       currentList.add(app);
-      final jsonStr = json.encode(currentList.map((item) => item.toJson()).toList());
+      final jsonStr = json.encode(
+        currentList.map((item) => item.toJson()).toList(),
+      );
       await LocalStorage().saveString('optimistic_applications', jsonStr);
     } catch (e) {
       debugPrint('Error saving optimistic application: $e');
@@ -265,7 +277,9 @@ class ApplicationsViewModel extends ChangeNotifier {
     try {
       final currentList = await _loadOptimisticApplications();
       currentList.removeWhere((item) => item.jobId == jobId);
-      final jsonStr = json.encode(currentList.map((item) => item.toJson()).toList());
+      final jsonStr = json.encode(
+        currentList.map((item) => item.toJson()).toList(),
+      );
       await LocalStorage().saveString('optimistic_applications', jsonStr);
     } catch (e) {
       debugPrint('Error removing optimistic application: $e');
@@ -307,7 +321,9 @@ class ApplicationsViewModel extends ChangeNotifier {
   }) async {
     final trimmedJobId = jobId.trim();
     // Avoid duplicates
-    final exists = _allApplications.any((app) => app.jobId.trim() == trimmedJobId);
+    final exists = _allApplications.any(
+      (app) => app.jobId.trim() == trimmedJobId,
+    );
     if (exists) return;
 
     final appliedStatus = _appliedStatus;

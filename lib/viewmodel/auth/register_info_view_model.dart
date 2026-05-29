@@ -51,12 +51,12 @@ class RegisterInfoViewModel extends ChangeNotifier {
     if (v.length < 8) return 'يجب أن لا تقل كلمة المرور عن 8 أحرف';
 
     bool hasUppercase = v.contains(RegExp(r'[A-Z]'));
-    bool hasLowercase = v.contains(RegExp(r'[a-z]'));
     bool hasDigits = v.contains(RegExp(r'[0-9]'));
+    bool hasSpecial = v.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
 
-    if (!hasUppercase) return 'يجب أن تحتوي على حرف إنجليزي كبير (A-Z)';
-    if (!hasLowercase) return 'يجب أن تحتوي على حرف إنجليزي صغير (a-z)';
-    if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل (0-9)';
+    if (!hasUppercase) return 'يجب أن تحتوي على حرف كبير واحد على الأقل';
+    if (!hasDigits) return 'يجب أن تحتوي على رقم واحد على الأقل';
+    if (!hasSpecial) return 'يجب أن تحتوي على رمز خاص واحد على الأقل';
 
     return null;
   }

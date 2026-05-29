@@ -4,6 +4,8 @@ import 'package:gowork/core/constants/api_constants.dart';
 import 'dart:io';
 import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/utils/local_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/routing/app_router.dart';
 
 class ApiClient {
   late final Dio _dio;
@@ -39,6 +41,10 @@ class ApiClient {
           if (e.response?.statusCode == 401) {
             // Token expired or invalid, clear local storage
             await LocalStorage().clearAuth();
+            
+            // Navigate to Session Expired globally
+            rootNavigatorKey.currentContext?.go(AppRoutes.sessionExpired);
+            
             // We return a specialized exception so UI can route to login if needed
             return handler.next(
               e.copyWith(
@@ -46,6 +52,13 @@ class ApiClient {
               ),
             );
           }
+
+          if (e.type == DioExceptionType.connectionError ||
+              e.type == DioExceptionType.connectionTimeout) {
+            // Navigate to No Internet globally
+            rootNavigatorKey.currentContext?.go(AppRoutes.noInternet);
+          }
+          
           return handler.next(e);
         },
       ),

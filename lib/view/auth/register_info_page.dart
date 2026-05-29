@@ -8,6 +8,7 @@ import 'package:gowork/viewmodel/auth/register_info_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:gowork/widget/custom_text_field.dart';
 import 'package:provider/provider.dart';
+import 'package:gowork/widget/common/password_rules_widget.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -125,6 +126,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           hint: 'كلمة المرور',
                           isPassword: true,
                           validator: viewModel.validatePassword,
+                        ),
+                        PasswordRulesWidget(
+                          controller: viewModel.passwordController,
                         ),
                         const SizedBox(height: 10),
                         CustomTextField(

@@ -21,6 +21,8 @@ import 'package:gowork/view/settings_view.dart';
 import 'package:gowork/view/feedback_view.dart';
 import 'package:gowork/view/notifications_view.dart';
 import 'package:gowork/model/home/home_model.dart';
+import 'package:gowork/view/error/no_internet_view.dart';
+import 'package:gowork/view/error/session_expired_view.dart';
 
 /// Centralized route names
 class AppRoutes {
@@ -40,6 +42,8 @@ class AppRoutes {
   static const String feedback = '/feedback';
   static const String jobDetails = '/jobDetails';
   static const String notifications = '/notifications';
+  static const String noInternet = '/error/noInternet';
+  static const String sessionExpired = '/error/sessionExpired';
 }
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -137,6 +141,14 @@ final GoRouter appRouter = GoRouter(
           },
         );
       },
+    ),
+    GoRoute(
+      path: AppRoutes.noInternet,
+      builder: (context, state) => const NoInternetView(),
+    ),
+    GoRoute(
+      path: AppRoutes.sessionExpired,
+      builder: (context, state) => const SessionExpiredView(),
     ),
   ],
 );

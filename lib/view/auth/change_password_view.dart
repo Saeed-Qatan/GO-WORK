@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/viewmodel/auth/change_password_view_model.dart';
 import 'package:gowork/theme/app_colors.dart';
+import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/widget/common/password_rules_widget.dart';
 
 class ChangePasswordView extends StatelessWidget {
   const ChangePasswordView({super.key});
@@ -55,21 +57,13 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            viewModel.successMessage ?? 'تم تغيير كلمة المرور بنجاح',
-          ),
-          backgroundColor: Colors.green,
-        ),
+      SnackbarService.showSuccess(
+        viewModel.successMessage ?? 'تم تغيير كلمة المرور بنجاح',
       );
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(viewModel.errorMessage ?? 'حدث خطأ غير متوقع'),
-          backgroundColor: Colors.red,
-        ),
+      SnackbarService.showError(
+        viewModel.errorMessage ?? 'حدث خطأ غير متوقع',
       );
     }
   }
@@ -128,13 +122,25 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
                   setState(() => _obscureNew = !_obscureNew);
                 },
                 validator: (val) {
-                  if (val == null || val.isEmpty)
+                  if (val == null || val.isEmpty) {
                     return 'يرجى إدخال كلمة المرور الجديدة';
-                  if (val.length < 6)
-                    return 'يجب أن لا تقل كلمة المرور عن 6 أحرف';
+                  }
+                  if (val.length < 8) {
+                    return 'يجب أن لا تقل كلمة المرور عن 8 أحرف';
+                  }
+                  if (!val.contains(RegExp(r'[A-Z]'))) {
+                    return 'يجب أن تحتوي على حرف كبير واحد على الأقل';
+                  }
+                  if (!val.contains(RegExp(r'[0-9]'))) {
+                    return 'يجب أن تحتوي على رقم واحد على الأقل';
+                  }
+                  if (!val.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'))) {
+                    return 'يجب أن تحتوي على رمز خاص واحد على الأقل';
+                  }
                   return null;
                 },
               ),
+              PasswordRulesWidget(controller: _newPasswordController),
               const SizedBox(height: 16),
 
               // Confirm Password
