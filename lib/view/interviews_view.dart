@@ -1,10 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/constants/app_constants.dart';
 import '../model/interview_model.dart';
+import '../routing/app_router.dart';
 import '../theme/app_colors.dart';
 import '../viewmodel/interviews_view_model.dart';
 import '../widget/common/animated_empty_state.dart';
@@ -123,7 +125,18 @@ class _InterviewsViewState extends State<InterviewsView> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      actions: const [],
+      actions: [
+        IconButton(
+          icon: const Icon(
+            Icons.archive_outlined,
+            color: AppColors.primary,
+            size: 26,
+          ),
+          tooltip: 'الأرشيف والمحذوفات',
+          onPressed: () => context.push(AppRoutes.deletedInterviews),
+        ),
+        const SizedBox(width: 12),
+      ],
     );
   }
 

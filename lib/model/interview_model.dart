@@ -77,7 +77,13 @@ class InterviewModel {
     final s = statusString.toLowerCase();
     if (s == 'confirmed') return InterviewStatus.confirmed;
     if (s == 'scheduled') return InterviewStatus.scheduled;
-    if (s == 'declined' || s == 'rejected' || s == 'cancelled') {
+    if (s == 'declined' ||
+        s == 'rejected' ||
+        s == 'cancelled' ||
+        s == 'missinterview' ||
+        s == 'missinginterview' ||
+        s == 'not_attending' ||
+        s == 'no_show') {
       return InterviewStatus.declined;
     }
     if (s == 'waiting' || s == 'pending') return InterviewStatus.waiting;

@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../model/interview_model.dart';
+import '../../routing/app_router.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/snackbar_service.dart';
 import '../../viewmodel/interviews_view_model.dart';
 import 'interview_action_button.dart';
-import 'interview_countdown_banner.dart';
 import 'interview_date_badge.dart';
-import 'interview_detail_row.dart';
-import 'interview_meeting_link_button.dart';
-import 'interview_note_row.dart';
 import 'interview_status_chip.dart';
 import 'interview_status_mapper.dart';
 
-/// Orchestrates all interview card sub-components into a single card layout.
-///
-/// Presentation Layer — zero business logic. All mapping is delegated to
-/// [InterviewStatusMapper]; all sub-widgets are extracted as separate focused files.
+/// Orchestrates simplified interview card layout carrying only title, company, date, and actions.
 class InterviewCard extends StatelessWidget {
   final InterviewModel interview;
 
@@ -28,13 +23,6 @@ class InterviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusMeta = InterviewStatusMapper.forStatus(interview.status);
     final typeMeta = InterviewStatusMapper.forType(interview.interviewType);
-    final countdown = InterviewStatusMapper.buildCountdown(
-      interview.scheduledAt,
-    );
-    final timeLabel = InterviewStatusMapper.buildTimeLabel(
-      interview.date,
-      interview.time,
-    );
     final canRespond =
         (interview.status == InterviewStatus.scheduled ||
             interview.status == InterviewStatus.waiting) &&
@@ -71,21 +59,13 @@ class InterviewCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeader(context, statusMeta, typeMeta),
-                if (countdown != null)
-                  InterviewCountdownBanner(countdown: countdown),
-                _buildDetails(typeMeta.isOnline, timeLabel),
-                if (interview.meetingLink?.trim().isNotEmpty == true)
-                  InterviewMeetingLinkButton(
-                    link: interview.meetingLink!.trim(),
-                    onTap: () => _openMeetingLink(context),
-                  ),
-                if (canRespond)
-                  _buildActions(
-                    context,
-                    isSubmitting: isSubmitting,
-                    isCancelSubmitting: isCancelSubmitting,
-                    isConfirmSubmitting: isConfirmSubmitting,
-                  ),
+                _buildActions(
+                  context,
+                  canRespond: canRespond,
+                  isSubmitting: isSubmitting,
+                  isCancelSubmitting: isCancelSubmitting,
+                  isConfirmSubmitting: isConfirmSubmitting,
+                ),
               ],
             ),
           ),
@@ -93,8 +73,6 @@ class InterviewCard extends StatelessWidget {
       },
     );
   }
-
-  // ── Section builders ─────────────────────────────────────────────────────
 
   Widget _buildHeader(
     BuildContext context,
@@ -153,7 +131,7 @@ class InterviewCard extends StatelessWidget {
             icon: const Icon(
               Icons.delete_outline_rounded,
               size: 24,
-              color: AppColors.error,
+              color: AppColors.textSecondary,
             ),
             onPressed: () => _confirmDismiss(context),
             padding: EdgeInsets.zero,
@@ -190,42 +168,9 @@ class InterviewCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDetails(bool isOnline, String timeLabel) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        children: [
-          InterviewDetailRow(
-            icon: Icons.access_time_rounded,
-            label: 'الموعد',
-            text: timeLabel,
-          ),
-          if (interview.location.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            InterviewDetailRow(
-              icon: isOnline
-                  ? Icons.videocam_outlined
-                  : Icons.location_on_outlined,
-              label: 'الموقع',
-              text: interview.location,
-            ),
-          ],
-          if (interview.notes?.trim().isNotEmpty == true) ...[
-            const SizedBox(height: 10),
-            InterviewNoteRow(note: interview.notes!.trim()),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildActions(
     BuildContext context, {
+    required bool canRespond,
     required bool isSubmitting,
     required bool isCancelSubmitting,
     required bool isConfirmSubmitting,
@@ -235,92 +180,150 @@ class InterviewCard extends StatelessWidget {
         const Divider(height: 1, color: AppColors.divider),
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Expanded(
-                child: InterviewActionButton(
-                  label: AppConstants.declineAttendance,
-                  icon: Icons.close_rounded,
-                  color: AppColors.error,
-                  isLoading: isCancelSubmitting,
-                  onPressed: isSubmitting
-                      ? null
-                      : () => _submitAction(context, 'cancel'),
+          child: canRespond
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: _buildDeclineButton(context, isSubmitting, isCancelSubmitting),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildConfirmButton(context, isSubmitting, isConfirmSubmitting),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildDetailsButton(context),
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: _buildDetailsButton(context),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: InterviewActionButton(
-                  label: AppConstants.confirmAttendance,
-                  icon: Icons.check_rounded,
-                  color: AppColors.success,
-                  isLoading: isConfirmSubmitting,
-                  onPressed: isSubmitting
-                      ? null
-                      : () => _submitAction(context, 'confirm'),
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );
   }
 
-  // ── Actions ──────────────────────────────────────────────────────────────
+  Widget _buildDeclineButton(
+    BuildContext context,
+    bool isSubmitting,
+    bool isCancelSubmitting,
+  ) {
+    return _buildThemeButton(
+      label: 'اعتذار',
+      icon: Icons.close_rounded,
+      backgroundColor: const Color(0xFFF5F5F5),
+      foregroundColor: const Color(0xFF757575),
+      isLoading: isCancelSubmitting,
+      onPressed: isSubmitting
+          ? null
+          : () => _submitAction(context, 'cancel'),
+    );
+  }
+
+  Widget _buildConfirmButton(
+    BuildContext context,
+    bool isSubmitting,
+    bool isConfirmSubmitting,
+  ) {
+    return _buildThemeButton(
+      label: 'تأكيد الحضور',
+      icon: Icons.check_rounded,
+      backgroundColor: const Color(0xFFE8EAF6),
+      foregroundColor: const Color(0xFF3F51B5),
+      isLoading: isConfirmSubmitting,
+      onPressed: isSubmitting
+          ? null
+          : () => _submitAction(context, 'confirm'),
+    );
+  }
+
+  Widget _buildDetailsButton(BuildContext context) {
+    return _buildThemeButton(
+      label: 'التفاصيل',
+      icon: Icons.info_outline_rounded,
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      isLoading: false,
+      onPressed: () => context.push(
+        AppRoutes.interviewDetails,
+        extra: interview,
+      ),
+    );
+  }
+
+  Widget _buildThemeButton({
+    required String label,
+    required IconData icon,
+    required Color backgroundColor,
+    required Color foregroundColor,
+    required bool isLoading,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      height: 44,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          disabledBackgroundColor: backgroundColor.withValues(alpha: 0.5),
+          foregroundColor: foregroundColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: foregroundColor,
+                ),
+              )
+            else
+              Icon(icon, color: foregroundColor, size: 16),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: foregroundColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _submitAction(BuildContext context, String action) async {
     final viewModel = context.read<InterviewsViewModel>();
     final success = await viewModel.submitAction(interview.id, action);
     if (!context.mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? viewModel.successMessage ??
-                    (action == 'confirm'
-                        ? 'تم تأكيد المقابلة بنجاح'
-                        : 'تم إلغاء المقابلة بنجاح')
-              : viewModel.errorMessage ??
-                    'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: success ? AppColors.success : AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
-
-  Future<void> _openMeetingLink(BuildContext context) async {
-    final rawLink = interview.meetingLink?.trim();
-    if (rawLink == null || rawLink.isEmpty) return;
-
-    final normalized = rawLink.startsWith('http')
-        ? rawLink
-        : 'https://$rawLink';
-    final uri = Uri.tryParse(normalized);
-
-    if (uri == null ||
-        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('تعذر فتح رابط المقابلة'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
+    if (success) {
+      SnackbarService.showSuccess(
+        viewModel.successMessage ??
+            (action == 'confirm' ? 'تم تأكيد المقابلة بنجاح' : 'تم إلغاء المقابلة بنجاح'),
+      );
+    } else {
+      SnackbarService.showError(
+        viewModel.errorMessage ?? 'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
       );
     }
   }
@@ -330,11 +333,11 @@ class InterviewCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text(
-          'إخفاء المقابلة',
+          'أرشفة المقابلة',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: const Text(
-          'هل أنت متأكد من رغبتك في إخفاء هذه المقابلة من القائمة؟',
+          'هل أنت متأكد من رغبتك في أرشفة ونقل هذه المقابلة للمحذوفات؟',
         ),
         actions: [
           TextButton(
@@ -347,10 +350,11 @@ class InterviewCard extends StatelessWidget {
               context.read<InterviewsViewModel>().dismissInterview(
                 interview.id,
               );
+              SnackbarService.showSuccess('تم أرشفة ونقل المقابلة بنجاح');
             },
             child: const Text(
-              'إخفاء',
-              style: TextStyle(color: AppColors.error),
+              'أرشفة',
+              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
             ),
           ),
         ],

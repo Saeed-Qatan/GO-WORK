@@ -18,7 +18,18 @@ class InterviewsViewModel extends ChangeNotifier {
   // ── State ───────────────────────────────────────────────────────────────
 
   List<InterviewModel> _interviews = [];
-  List<InterviewModel> get interviews => List.unmodifiable(_interviews);
+  final Set<String> _deletedInterviewIds = {};
+  final Map<String, InterviewStatus> _localStatuses = {};
+
+  /// Returns interviews that have NOT been locally deleted.
+  List<InterviewModel> get interviews => List.unmodifiable(
+        _interviews.where((i) => !_deletedInterviewIds.contains(i.id)),
+      );
+
+  /// Returns interviews that have been locally deleted.
+  List<InterviewModel> get deletedInterviews => List.unmodifiable(
+        _interviews.where((i) => _deletedInterviewIds.contains(i.id)),
+      );
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -59,7 +70,13 @@ class InterviewsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _interviews = await _repository.getInterviews();
+      final fetched = await _repository.getInterviews();
+      _interviews = fetched.map((interview) {
+        if (_localStatuses.containsKey(interview.id)) {
+          return interview.copyWith(status: _localStatuses[interview.id]);
+        }
+        return interview;
+      }).toList();
     } catch (e) {
       _errorMessage = AppErrorParser.parse(e);
     } finally {
@@ -124,6 +141,8 @@ class InterviewsViewModel extends ChangeNotifier {
         ? InterviewStatus.confirmed
         : InterviewStatus.declined;
 
+    _localStatuses[interviewId] = newStatus;
+
     _interviews = _interviews.map((interview) {
       return interview.id == interviewId
           ? interview.copyWith(status: newStatus)
@@ -137,9 +156,15 @@ class InterviewsViewModel extends ChangeNotifier {
         : 'تم إلغاء المقابلة بنجاح';
   }
 
-  /// Dismisses an interview locally without making an API call.
+  /// Dismisses an interview locally (nests it under deleted interviews).
   void dismissInterview(String interviewId) {
-    _interviews = _interviews.where((i) => i.id != interviewId).toList();
+    _deletedInterviewIds.add(interviewId);
+    notifyListeners();
+  }
+
+  /// Restores a locally dismissed/deleted interview.
+  void restoreInterview(String interviewId) {
+    _deletedInterviewIds.remove(interviewId);
     notifyListeners();
   }
 
