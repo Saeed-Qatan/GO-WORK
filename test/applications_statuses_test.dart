@@ -1,8 +1,9 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:gowork/model/applications/application_model.dart';
 import 'package:gowork/repository/applications_repository.dart';
 import 'package:gowork/services/applications_service.dart';
 import 'package:gowork/viewmodel/applications_view_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeApplicationsService extends ApplicationsService {
   final Map<String, dynamic> statusesResponse;
@@ -56,6 +57,11 @@ class _FailingStatusesRepository implements IApplicationsRepository {
 }
 
 void main() {
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
+
   test(
     'parses statuses from data.items and labels applications from backend',
     () async {

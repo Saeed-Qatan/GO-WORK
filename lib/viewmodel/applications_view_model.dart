@@ -57,13 +57,31 @@ class ApplicationsViewModel extends ChangeNotifier {
       _statuses = data.statuses;
       _allApplications = data.applications;
 
-      // Merge locally stored withdrawn applications
+      // Merge back any persistent optimistic applications that are not yet returned by the backend
+      final optimisticApps = await _loadOptimisticApplications();
+      final appliedStatus = _appliedStatus;
+      for (var optApp in optimisticApps) {
+        final exists = _allApplications.any((item) => item.jobId.trim() == optApp.jobId.trim());
+        if (!exists) {
+          if (appliedStatus != null) {
+            optApp = optApp.withStatus(appliedStatus);
+          }
+          _allApplications.insert(0, optApp);
+        } else {
+          // The backend has finally registered the application! We can clean up our local storage
+          await _removeOptimisticApplication(optApp.jobId);
+        }
+      }
+
+      // Merge locally stored withdrawn applications and force withdrawn status on them
       final withdrawnApps = await _loadWithdrawnApplications();
       final withdrawnStatus = _withdrawnStatus;
       if (withdrawnStatus != null) {
         for (final localApp in withdrawnApps) {
-          final exists = _allApplications.any((item) => item.id == localApp.id);
-          if (!exists) {
+          final index = _allApplications.indexWhere((item) => item.id == localApp.id);
+          if (index != -1) {
+            _allApplications[index] = _allApplications[index].withStatus(withdrawnStatus);
+          } else {
             _allApplications.insert(0, localApp.withStatus(withdrawnStatus));
           }
         }
@@ -217,6 +235,106 @@ class ApplicationsViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error saving withdrawn application: $e');
     }
+  }
+
+  Future<List<ApplicationModel>> _loadOptimisticApplications() async {
+    try {
+      final jsonStr = await LocalStorage().getString('optimistic_applications');
+      if (jsonStr == null || jsonStr.isEmpty) return [];
+      final List<dynamic> decoded = json.decode(jsonStr);
+      return decoded.map((item) => ApplicationModel.fromJson(item)).toList();
+    } catch (e) {
+      debugPrint('Error loading optimistic applications: $e');
+      return [];
+    }
+  }
+
+  Future<void> _saveOptimisticApplication(ApplicationModel app) async {
+    try {
+      final currentList = await _loadOptimisticApplications();
+      currentList.removeWhere((item) => item.jobId == app.jobId);
+      currentList.add(app);
+      final jsonStr = json.encode(currentList.map((item) => item.toJson()).toList());
+      await LocalStorage().saveString('optimistic_applications', jsonStr);
+    } catch (e) {
+      debugPrint('Error saving optimistic application: $e');
+    }
+  }
+
+  Future<void> _removeOptimisticApplication(String jobId) async {
+    try {
+      final currentList = await _loadOptimisticApplications();
+      currentList.removeWhere((item) => item.jobId == jobId);
+      final jsonStr = json.encode(currentList.map((item) => item.toJson()).toList());
+      await LocalStorage().saveString('optimistic_applications', jsonStr);
+    } catch (e) {
+      debugPrint('Error removing optimistic application: $e');
+    }
+  }
+
+  /// Returns the "Applied" status from the backend statuses list.
+  ApplicationStatusModel? get _appliedStatus {
+    for (final status in _statuses) {
+      final normalized = ApplicationStatusMatcher.normalize(status.value);
+      final label = status.label.toLowerCase();
+      if (normalized == '0' ||
+          normalized == '1' ||
+          normalized == 'interviewed' ||
+          normalized.contains('submit') ||
+          normalized.contains('applied') ||
+          normalized.contains('pending') ||
+          normalized.contains('review') ||
+          label.contains('تقديم') ||
+          label.contains('مراجعة') ||
+          label.contains('applied') ||
+          label.contains('pending')) {
+        return status;
+      }
+    }
+    // Fallback: use the first status if available
+    return _statuses.isNotEmpty ? _statuses.first : null;
+  }
+
+  /// Optimistically adds an application locally from job data.
+  /// Called immediately after a successful apply API call so the
+  /// Applications page reflects the new entry without waiting for
+  /// the backend to return it via fetchApplications.
+  void addOptimisticApplication({
+    required String jobId,
+    required String jobTitle,
+    required String company,
+    String companyLogo = '',
+  }) async {
+    final trimmedJobId = jobId.trim();
+    // Avoid duplicates
+    final exists = _allApplications.any((app) => app.jobId.trim() == trimmedJobId);
+    if (exists) return;
+
+    final appliedStatus = _appliedStatus;
+    final now = DateTime.now().toIso8601String();
+
+    final optimisticApp = ApplicationModel(
+      id: 'local_$trimmedJobId',
+      jobId: trimmedJobId,
+      role: jobTitle,
+      company: company,
+      companyLogo: companyLogo,
+      date: now,
+      statusId: appliedStatus?.id ?? '0',
+      statusValue: appliedStatus?.value ?? '0',
+      statusRaw: appliedStatus?.value ?? '0',
+      statusLabel: appliedStatus?.label ?? 'تم التقديم',
+      statusColorHex: appliedStatus?.foregroundColorHex,
+      statusBackgroundColorHex: appliedStatus?.backgroundColorHex,
+      canWithdraw: true,
+    );
+
+    _allApplications.insert(0, optimisticApp);
+    _applyFilter();
+    notifyListeners();
+
+    // Persist to local storage
+    await _saveOptimisticApplication(optimisticApp);
   }
 }
 

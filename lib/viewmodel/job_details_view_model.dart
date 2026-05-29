@@ -111,12 +111,25 @@ class JobDetailsViewModel extends ChangeNotifier {
         }
         applicationState?.markApplied(jobId);
 
-        // Refresh the applications list
+        // Optimistically add the application locally so it appears
+        // immediately under the "تم التقديم" tab without waiting for
+        // the backend.
         if (context.mounted) {
           try {
-            Provider.of<ApplicationsViewModel>(context, listen: false).fetchApplications(showLoading: false);
+            final appVm = Provider.of<ApplicationsViewModel>(
+              context,
+              listen: false,
+            );
+            appVm.addOptimisticApplication(
+              jobId: jobId,
+              jobTitle: _jobDetails?.title ?? '',
+              company: _jobDetails?.company ?? '',
+              companyLogo: _jobDetails?.companyLogoUrl ?? '',
+            );
+            // Also refresh from backend in the background to sync
+            appVm.fetchApplications(showLoading: false);
           } catch (e) {
-            debugPrint('Failed to refresh applications: $e');
+            debugPrint('Failed to update applications: $e');
           }
         }
 
