@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -277,7 +276,88 @@ class InterviewDetailsView extends StatelessWidget {
 
             // Interactive Meeting Link Button if Remote
             if (interview.meetingLink?.trim().isNotEmpty == true)
-              _buildMeetingButton(context),
+              _buildMeetingLinkButton(context).animate().fade(duration: 400.ms, delay: 250.ms).slideY(
+                    begin: 0.2,
+                    curve: Curves.easeOutCubic,
+                    duration: 400.ms,
+                    delay: 250.ms,
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds the meeting link button.
+  /// When the interview is declined/rejected, the button is visually locked
+  /// and shows an explanatory snackbar instead of opening the link.
+  Widget _buildMeetingLinkButton(BuildContext context) {
+    final isDeclined = interview.status == InterviewStatus.declined;
+
+    return GestureDetector(
+      onTap: () {
+        if (isDeclined) {
+          SnackbarService.showError(
+            'لا يمكن الانضمام للمقابلة — تم إلغاء المقابلة أو الاعتذار عنها',
+          );
+          return;
+        }
+        _openMeetingLink(context);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: isDeclined
+              ? const LinearGradient(
+                  colors: [Color(0xFFB0B0B0), Color(0xFF9E9E9E)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFF5C6BC0), Color(0xFF3F51B5)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isDeclined
+              ? []
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF3F51B5).withValues(alpha: 0.2),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isDeclined ? Icons.videocam_off_rounded : Icons.videocam_rounded,
+              color: Colors.white.withValues(alpha: isDeclined ? 0.6 : 1.0),
+              size: 24,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              isDeclined
+                  ? 'رابط الاجتماع غير متاح'
+                  : 'الانضمام للمقابلة (رابط الاجتماع)',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: isDeclined ? 0.6 : 1.0),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (isDeclined) ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.lock_outline_rounded,
+                color: Colors.white.withValues(alpha: 0.6),
+                size: 18,
+              ),
+            ],
           ],
         ),
       ),
@@ -371,79 +451,9 @@ class InterviewDetailsView extends StatelessWidget {
     );
   }
 
-  Widget _buildMeetingButton(BuildContext context) {
-    final bool isBlocked = interview.status == InterviewStatus.declined;
-
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: isBlocked
-            ? const LinearGradient(
-                colors: [Color(0xFFE0E0E0), Color(0xFFBDBDBD)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              )
-            : const LinearGradient(
-                colors: [Color(0xFF5C6BC0), Color(0xFF3F51B5)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: isBlocked
-                ? Colors.black.withValues(alpha: 0.05)
-                : const Color(0xFF3F51B5).withValues(alpha: 0.2),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _openMeetingLink(context),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.videocam_rounded,
-                color: isBlocked ? Colors.grey[600] : Colors.white,
-                size: 24,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                isBlocked
-                    ? 'رابط المقابلة محجوب (تم الاعتذار/الإلغاء)'
-                    : 'الانضمام للمقابلة (رابط الاجتماع)',
-                style: TextStyle(
-                  color: isBlocked ? Colors.grey[700] : Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).animate().fade(duration: 400.ms, delay: 250.ms).slideY(
-          begin: 0.2,
-          curve: Curves.easeOutCubic,
-          duration: 400.ms,
-          delay: 250.ms,
-        );
-  }
-
+  /// Opens the meeting link, attempting to launch in a native app (e.g. Zoom/Teams/Meet)
+  /// before falling back to the external browser. Shows a custom error snackbar on failure.
   Future<void> _openMeetingLink(BuildContext context) async {
-    if (interview.status == InterviewStatus.declined) {
-      SnackbarService.showWarning(
-        'لا يمكنك الانضمام لمقابلة قمت بالاعتذار عنها أو تم إلغاؤها',
-      );
-      return;
-    }
-
     final rawLink = interview.meetingLink?.trim();
     if (rawLink == null || rawLink.isEmpty) return;
 
@@ -451,9 +461,34 @@ class InterviewDetailsView extends StatelessWidget {
         ? rawLink
         : 'https://$rawLink';
     final uri = Uri.tryParse(normalized);
+    if (uri == null) {
+      SnackbarService.showError('رابط المقابلة غير صالح');
+      return;
+    }
 
-    if (uri == null ||
-        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    // Try native app first (Zoom, Teams, Google Meet, etc.), then browser fallback.
+    bool launched = false;
+    try {
+      launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalNonBrowserApplication,
+      );
+    } catch (_) {
+      launched = false;
+    }
+
+    if (!launched) {
+      try {
+        launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (_) {
+        launched = false;
+      }
+    }
+
+    if (!launched) {
       SnackbarService.showError('تعذر فتح رابط المقابلة');
     }
   }
