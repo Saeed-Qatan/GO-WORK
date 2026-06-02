@@ -30,10 +30,7 @@ class DeletedInterviewsView extends StatelessWidget {
               elevation: 0,
               centerTitle: true,
               shape: const Border(
-                bottom: BorderSide(
-                  color: outlineVariant,
-                  width: 0.2,
-                ),
+                bottom: BorderSide(color: outlineVariant, width: 0.2),
               ),
               leading: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -86,43 +83,46 @@ class DeletedInterviewsView extends StatelessWidget {
             itemBuilder: (context, index) {
               final interview = deletedList[index];
               return Stack(
-                children: [
-                  InterviewCard(interview: interview),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.restore_from_trash_rounded,
-                          color: AppColors.primary,
-                        ),
-                        tooltip: 'استعادة المقابلة',
-                        onPressed: () {
-                          viewModel.restoreInterview(interview.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text(
-                                'تم استعادة المقابلة إلى القائمة الرئيسية بنجاح',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              backgroundColor: AppColors.success,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                    children: [
+                      InterviewCard(interview: interview),
+                      Positioned(
+                        top: 12,
+                        left: 12,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.restore_from_trash_rounded,
+                              color: AppColors.primary,
                             ),
-                          );
-                        },
+                            tooltip: 'استعادة المقابلة',
+                            onPressed: () async {
+                              await viewModel.restoreInterview(interview.id);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'تم استعادة المقابلة إلى القائمة الرئيسية بنجاح',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  backgroundColor: AppColors.success,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              )
+                    ],
+                  )
                   .animate()
                   .fade(duration: 350.ms, delay: (index * 50).ms)
                   .slideY(

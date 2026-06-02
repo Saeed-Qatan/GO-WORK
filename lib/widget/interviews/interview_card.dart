@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../model/interview_model.dart';
 import '../../routing/app_router.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/snackbar_service.dart';
 import '../../viewmodel/interviews_view_model.dart';
-import 'interview_action_button.dart';
 import 'interview_date_badge.dart';
 import 'interview_status_chip.dart';
 import 'interview_status_mapper.dart';
@@ -184,25 +182,25 @@ class InterviewCard extends StatelessWidget {
               ? Row(
                   children: [
                     Expanded(
-                      child: _buildDeclineButton(context, isSubmitting, isCancelSubmitting),
+                      child: _buildDeclineButton(
+                        context,
+                        isSubmitting,
+                        isCancelSubmitting,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _buildConfirmButton(context, isSubmitting, isConfirmSubmitting),
+                      child: _buildConfirmButton(
+                        context,
+                        isSubmitting,
+                        isConfirmSubmitting,
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildDetailsButton(context),
-                    ),
+                    Expanded(child: _buildDetailsButton(context)),
                   ],
                 )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: _buildDetailsButton(context),
-                    ),
-                  ],
-                ),
+              : Row(children: [Expanded(child: _buildDetailsButton(context))]),
         ),
       ],
     );
@@ -219,9 +217,7 @@ class InterviewCard extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F5F5),
       foregroundColor: const Color(0xFF757575),
       isLoading: isCancelSubmitting,
-      onPressed: isSubmitting
-          ? null
-          : () => _submitAction(context, 'cancel'),
+      onPressed: isSubmitting ? null : () => _submitAction(context, 'cancel'),
     );
   }
 
@@ -236,9 +232,7 @@ class InterviewCard extends StatelessWidget {
       backgroundColor: const Color(0xFFE8EAF6),
       foregroundColor: const Color(0xFF3F51B5),
       isLoading: isConfirmSubmitting,
-      onPressed: isSubmitting
-          ? null
-          : () => _submitAction(context, 'confirm'),
+      onPressed: isSubmitting ? null : () => _submitAction(context, 'confirm'),
     );
   }
 
@@ -249,10 +243,8 @@ class InterviewCard extends StatelessWidget {
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       isLoading: false,
-      onPressed: () => context.push(
-        AppRoutes.interviewDetails,
-        extra: interview,
-      ),
+      onPressed: () =>
+          context.push(AppRoutes.interviewDetails, extra: interview),
     );
   }
 
@@ -319,11 +311,14 @@ class InterviewCard extends StatelessWidget {
     if (success) {
       SnackbarService.showSuccess(
         viewModel.successMessage ??
-            (action == 'confirm' ? 'تم تأكيد المقابلة بنجاح' : 'تم إلغاء المقابلة بنجاح'),
+            (action == 'confirm'
+                ? 'تم تأكيد المقابلة بنجاح'
+                : 'تم إلغاء المقابلة بنجاح'),
       );
     } else {
       SnackbarService.showError(
-        viewModel.errorMessage ?? 'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
+        viewModel.errorMessage ??
+            'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
       );
     }
   }
@@ -345,16 +340,20 @@ class InterviewCard extends StatelessWidget {
             child: const Text('إلغاء'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.read<InterviewsViewModel>().dismissInterview(
+              await context.read<InterviewsViewModel>().dismissInterview(
                 interview.id,
               );
+              if (!context.mounted) return;
               SnackbarService.showSuccess('تم أرشفة ونقل المقابلة بنجاح');
             },
             child: const Text(
               'أرشفة',
-              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

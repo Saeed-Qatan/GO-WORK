@@ -72,6 +72,25 @@ class InterviewModel {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'role': role,
+      'company': company,
+      'companyLogo': companyLogo,
+      'date': date,
+      'time': time,
+      'interviewDate': scheduledAt?.toIso8601String(),
+      'location': location,
+      'interviewerName': interviewerName,
+      'interviewerRole': interviewerRole,
+      'status': status.name,
+      'interviewType': interviewType,
+      'meetingLink': meetingLink,
+      'notes': notes,
+    };
+  }
+
   static InterviewStatus _parseStatus(String? statusString) {
     if (statusString == null) return InterviewStatus.waiting;
     final s = statusString.toLowerCase();

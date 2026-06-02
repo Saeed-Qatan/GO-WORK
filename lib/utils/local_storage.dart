@@ -48,10 +48,23 @@ class LocalStorage {
 
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
-    final withdrawnApps = prefs.getString('withdrawn_applications');
+    final preservedStrings = <String, String?>{
+      'withdrawn_applications': prefs.getString('withdrawn_applications'),
+    };
+
+    for (final key in prefs.getKeys()) {
+      if (key.startsWith('interview_local_statuses_') ||
+          key.startsWith('deleted_interview_ids_') ||
+          key.startsWith('archived_interviews_')) {
+        preservedStrings[key] = prefs.getString(key);
+      }
+    }
+
     await prefs.clear();
-    if (withdrawnApps != null) {
-      await prefs.setString('withdrawn_applications', withdrawnApps);
+    for (final entry in preservedStrings.entries) {
+      if (entry.value != null) {
+        await prefs.setString(entry.key, entry.value!);
+      }
     }
   }
 }
