@@ -1,0 +1,57 @@
+class InterviewKeys {
+  InterviewKeys._();
+
+  static const String navInterviews = 'navInterviews';
+  static const String confirmed = 'confirmed';
+  static const String scheduled = 'scheduled';
+  static const String interviewsTitle = 'interviewsTitle';
+  static const String interviewsCountSuffix = 'interviewsCountSuffix';
+  static const String confirmAttendance = 'confirmAttendance';
+  static const String declineAttendance = 'declineAttendance';
+  static const String waitingConfirmation = 'waitingConfirmation';
+  static const String now = 'now';
+  static const String minutesAgo = 'minutesAgo';
+  static const String hoursAgo = 'hoursAgo';
+  static const String daysAgo = 'daysAgo';
+  static const String inDays = 'inDays';
+  static const String inHours = 'inHours';
+  static const String inMinutes = 'inMinutes';
+  static const String dateTimeNotSet = 'dateTimeNotSet';
+  static const String joinInterview = 'joinInterview';
+  static const String linkCopied = 'linkCopied';
+  static const String meetingLinkNotAvailable = 'meetingLinkNotAvailable';
+  static const String joinMeetingLink = 'joinMeetingLink';
+  static const String jobInterview = 'jobInterview';
+  static const String companyNotSpecified = 'companyNotSpecified';
+  static const String decline = 'decline';
+  static const String details = 'details';
+  static const String interviewConfirmedSuccess = 'interviewConfirmedSuccess';
+  static const String interviewCancelledSuccess = 'interviewCancelledSuccess';
+  static const String failedToUpdateInterview = 'failedToUpdateInterview';
+  static const String archiveInterview = 'archiveInterview';
+  static const String archiveInterviewConfirmation =
+      'archiveInterviewConfirmation';
+  static const String candidateInterviewsTitle = 'candidateInterviewsTitle';
+  static const String declineInterviewAlert = 'declineInterviewAlert';
+  static const String lockInterviewAlert = 'lockInterviewAlert';
+  static const String interviewDetails = 'interviewDetails';
+  static const String interviewInfo = 'interviewInfo';
+  static const String timeAndDate = 'timeAndDate';
+  static const String location = 'location';
+  static const String interviewerInfo = 'interviewerInfo';
+  static const String name = 'name';
+  static const String jobPosition = 'jobPosition';
+  static const String detailedNotes = 'detailedNotes';
+  static const String invalidMeetingLink = 'invalidMeetingLink';
+  static const String failedToOpenMeetingLink = 'failedToOpenMeetingLink';
+  static const String archive = 'archive';
+  static const String archiveSuccess = 'archiveSuccess';
+  static const String restoreInterview = 'restoreInterview';
+  static const String interviewRestoredSuccess = 'interviewRestoredSuccess';
+  static const String cleanList = 'cleanList';
+  static const String noDeletedInterviews = 'noDeletedInterviews';
+  static const String interviewsLoadFailed = 'interviewsLoadFailed';
+  static const String noInterviews = 'noInterviews';
+  static const String noInterviewsDescription = 'noInterviewsDescription';
+  static const String archivedAndDeleted = 'archivedAndDeleted';
+}
