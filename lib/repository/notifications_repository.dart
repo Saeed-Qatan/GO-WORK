@@ -1,37 +1,50 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
+
 import '../core/constants/api_constants.dart';
 import '../model/notification_model.dart';
 import '../utils/api_storage.dart';
 
-/// Handles all API communication related to notifications.
-/// Responsible for: fetching notifications, marking as read, and sending FCM token.
 class NotificationsRepository {
   final ApiClient _apiClient;
 
   NotificationsRepository({ApiClient? apiClient})
     : _apiClient = apiClient ?? ApiClient();
 
-  /// Fetches the list of notifications from the backend.
-  Future<List<NotificationModel>> getNotifications() async {
+  Future<NotificationsPage> getNotifications({
+    int pageNumber = 1,
+    int pageSize = 20,
+  }) async {
     try {
-      final response = await _apiClient.get(ApiConstants.notifications);
-      final rawList = _extractList(response);
-      return rawList
-          .map(
-            (json) => NotificationModel.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
+      final endpoint =
+          '${ApiConstants.notifications}?pageNumber=$pageNumber&pageSize=$pageSize';
+      final response = await _apiClient.get(endpoint);
+      return NotificationsPage.fromJson(response);
     } catch (e) {
       debugPrint('=== NOTIFICATIONS: fetch error: $e ===');
       rethrow;
     }
   }
 
-  /// Marks a specific notification as read on the backend.
-  Future<void> markAsRead(String notificationId) async {
+  Future<int> getUnreadCount() async {
     try {
-      await _apiClient.post(
-        '${ApiConstants.markNotificationRead}/$notificationId',
+      final response = await _apiClient.get(
+        ApiConstants.notificationsUnreadCount,
+      );
+      final data = response['data'];
+      if (data is Map<String, dynamic>) {
+        return _readInt(data['count']);
+      }
+      return _readInt(response['count']);
+    } catch (e) {
+      debugPrint('=== NOTIFICATIONS: unread count error: $e ===');
+      rethrow;
+    }
+  }
+
+  Future<void> markAsRead(int notificationId) async {
+    try {
+      await _apiClient.put(
+        ApiConstants.markNotificationRead(notificationId),
         {},
       );
     } catch (e) {
@@ -40,23 +53,73 @@ class NotificationsRepository {
     }
   }
 
-  /// Registers the device FCM token with the backend so it can target this user.
-  Future<void> registerFcmToken(String token) async {
+  Future<void> markAllAsRead() async {
     try {
-      await _apiClient.post(ApiConstants.registerFcmToken, {'token': token});
-      debugPrint('=== FCM TOKEN REGISTERED: $token ===');
+      await _apiClient.put(ApiConstants.markAllNotificationsRead, {});
     } catch (e) {
-      // Token registration failure should not block the user — log and continue.
-      debugPrint('=== NOTIFICATIONS: registerFcmToken error: $e ===');
+      debugPrint('=== NOTIFICATIONS: markAllAsRead error: $e ===');
+      rethrow;
     }
   }
 
-  List<dynamic> _extractList(Map<String, dynamic> response) {
-    if (response['data'] is List) return response['data'] as List;
-    if (response['notifications'] is List) {
-      return response['notifications'] as List;
+  Future<void> hideNotification(int notificationId) async {
+    try {
+      await _apiClient.delete(ApiConstants.hideNotification(notificationId));
+    } catch (e) {
+      debugPrint('=== NOTIFICATIONS: hideNotification error: $e ===');
+      rethrow;
     }
-    if (response['items'] is List) return response['items'] as List;
-    return [];
+  }
+
+  Future<void> registerDeviceToken({
+    required String token,
+    required String deviceType,
+  }) async {
+    try {
+      await _apiClient.post(ApiConstants.notificationDeviceTokens, {
+        'token': token,
+        'deviceType': deviceType,
+      });
+      debugPrint('=== FCM TOKEN REGISTERED: ${_maskToken(token)} ===');
+    } catch (e) {
+      debugPrint('=== NOTIFICATIONS: registerDeviceToken error: $e ===');
+    }
+  }
+
+  Future<void> removeDeviceToken(String token) async {
+    try {
+      await _apiClient.delete(
+        ApiConstants.removeNotificationDeviceToken(token),
+      );
+      debugPrint('=== FCM TOKEN REMOVED: ${_maskToken(token)} ===');
+    } catch (e) {
+      debugPrint('=== NOTIFICATIONS: removeDeviceToken error: $e ===');
+    }
+  }
+
+  Future<void> registerFcmToken(String token) {
+    return registerDeviceToken(token: token, deviceType: _deviceType());
+  }
+
+  static int _readInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _maskToken(String token) {
+    if (token.length <= 12) return '***';
+    return '${token.substring(0, 6)}...${token.substring(token.length - 6)}';
+  }
+
+  String _deviceType() {
+    if (kIsWeb) return 'web';
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'android';
+      case TargetPlatform.iOS:
+        return 'ios';
+      default:
+        return defaultTargetPlatform.name.toLowerCase();
+    }
   }
 }

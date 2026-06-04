@@ -43,14 +43,14 @@ class ApiConstants {
   static const String feedbacks = 'Feedbacks';
 
   // ================= Notifications Endpoints =================
-  /// جلب قائمة الإشعارات من الباك اند
-  static const String notifications = 'Notifications';
-
-  /// تحديث حالة إشعار معين كـ"مقروء"
-  static const String markNotificationRead = 'Notifications/mark-read';
-
-  /// تسجيل رمز الجهاز (FCM Token) في الباك اند
-  static const String registerFcmToken = 'Notifications/register-token';
+  static const String notifications = 'notifications';
+  static const String notificationsUnreadCount = 'notifications/unread-count';
+  static String markNotificationRead(int id) => 'notifications/$id/read';
+  static const String markAllNotificationsRead = 'notifications/read-all';
+  static String hideNotification(int id) => 'notifications/$id';
+  static const String notificationDeviceTokens = 'notifications/device-tokens';
+  static String removeNotificationDeviceToken(String token) =>
+      'notifications/device-tokens/${Uri.encodeComponent(token)}';
 
   // Headers عامة
   static const Map<String, String> headers = {'Accept': 'application/json'};

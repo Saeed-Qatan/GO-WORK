@@ -1,17 +1,18 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
 import '../../model/notification_model.dart';
 import '../../theme/app_colors.dart';
 
-/// A Dumb Widget that displays a single notification item.
-/// All interaction callbacks are injected from the parent.
 class NotificationCard extends StatelessWidget {
   final NotificationModel notification;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   const NotificationCard({
     super.key,
     required this.notification,
     required this.onTap,
+    required this.onDelete,
   });
 
   @override
@@ -20,18 +21,18 @@ class NotificationCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 250),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: notification.isRead
-              ? Colors.white
+              ? AppColors.surface
               : AppColors.primary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: notification.isRead
                 ? AppColors.border
-                : AppColors.primary.withValues(alpha: 0.3),
+                : AppColors.primary.withValues(alpha: 0.32),
           ),
           boxShadow: [
             BoxShadow(
@@ -44,29 +45,56 @@ class NotificationCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildIcon(),
-            const SizedBox(width: 14),
+            _buildLeading(),
+            const SizedBox(width: 12),
             Expanded(child: _buildContent(context)),
-            if (!notification.isRead) _buildUnreadDot(),
+            const SizedBox(width: 6),
+            Column(
+              children: [
+                _buildDeleteButton(),
+                if (!notification.isRead) ...[
+                  const SizedBox(height: 8),
+                  _buildUnreadDot(),
+                ],
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildLeading() {
+    final imageUrl = notification.imageUrl;
+    if (imageUrl != null && Uri.tryParse(imageUrl)?.isAbsolute == true) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Image.network(
+          imageUrl,
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildIcon(),
+        ),
+      );
+    }
+    return _buildIcon();
+  }
+
   Widget _buildIcon() {
+    final color = _typeColor();
     return Container(
-      width: 46,
-      height: 46,
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
         color: notification.isRead
             ? AppColors.inputBackground
-            : AppColors.primary.withValues(alpha: 0.12),
+            : color.withValues(alpha: 0.12),
         shape: BoxShape.circle,
       ),
       child: Icon(
-        Icons.notifications_outlined,
-        color: notification.isRead ? AppColors.textHint : AppColors.primary,
+        _typeIcon(),
+        color: notification.isRead ? AppColors.textHint : color,
         size: 22,
       ),
     );
@@ -79,10 +107,8 @@ class NotificationCard extends StatelessWidget {
         Text(
           notification.title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.bold,
-            color: notification.isRead
-                ? AppColors.textPrimary
-                : AppColors.textPrimary,
+            fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.bold,
+            color: AppColors.textPrimary,
             height: 1.4,
           ),
           maxLines: 2,
@@ -98,40 +124,96 @@ class NotificationCard extends StatelessWidget {
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
-        Text(
-          _formatDate(notification.createdAt),
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: AppColors.textHint),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Icon(Icons.schedule, size: 13, color: AppColors.textHint),
+            const SizedBox(width: 4),
+            Text(
+              _formatDate(notification.createdAt),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: AppColors.textHint),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildUnreadDot() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Container(
-        width: 9,
-        height: 9,
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-          shape: BoxShape.circle,
+  Widget _buildDeleteButton() {
+    return SizedBox(
+      width: 32,
+      height: 32,
+      child: IconButton(
+        tooltip: 'حذف',
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+        onPressed: onDelete,
+        icon: const Icon(
+          Icons.close_rounded,
+          size: 18,
+          color: AppColors.textHint,
         ),
       ),
     );
   }
 
+  Widget _buildUnreadDot() {
+    return Container(
+      width: 9,
+      height: 9,
+      decoration: const BoxDecoration(
+        color: AppColors.primary,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+
+  IconData _typeIcon() {
+    switch (notification.type) {
+      case NotificationType.jobCreated:
+        return Icons.work_outline;
+      case NotificationType.applicationAccepted:
+        return Icons.check_circle_outline;
+      case NotificationType.applicationRejected:
+        return Icons.cancel_outlined;
+      case NotificationType.interviewScheduled:
+        return Icons.event_available_outlined;
+      case NotificationType.general:
+      case NotificationType.unknown:
+        return Icons.notifications_outlined;
+    }
+  }
+
+  Color _typeColor() {
+    switch (notification.type) {
+      case NotificationType.applicationAccepted:
+        return AppColors.success;
+      case NotificationType.applicationRejected:
+        return AppColors.error;
+      case NotificationType.interviewScheduled:
+        return AppColors.warning;
+      case NotificationType.jobCreated:
+        return AppColors.primary;
+      case NotificationType.general:
+      case NotificationType.unknown:
+        return AppColors.info;
+    }
+  }
+
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    final diff = now.difference(date);
+    final diff = now.difference(date.toLocal());
 
     if (diff.inMinutes < 1) return 'الآن';
     if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} دقيقة';
     if (diff.inHours < 24) return 'منذ ${diff.inHours} ساعة';
     if (diff.inDays < 7) return 'منذ ${diff.inDays} يوم';
 
-    return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+    final localDate = date.toLocal();
+    final month = localDate.month.toString().padLeft(2, '0');
+    final day = localDate.day.toString().padLeft(2, '0');
+    return '${localDate.year}/$month/$day';
   }
 }

@@ -1,71 +1,214 @@
-/// Represents a single notification item received from the backend.
+enum NotificationType {
+  general,
+  jobCreated,
+  applicationAccepted,
+  applicationRejected,
+  interviewScheduled,
+  unknown,
+}
+
+enum NotificationDeliveryType { topic, user, unknown }
+
+/// Represents a single notification item received from the backend or FCM.
 class NotificationModel {
-  final String id;
+  final int id;
+  final int? notificationId;
   final String title;
   final String body;
-  final String? imageUrl;
+  final NotificationType type;
+  final String typeRaw;
+  final NotificationDeliveryType deliveryType;
+  final String? deliveryTypeRaw;
   final DateTime createdAt;
   final bool isRead;
+  final String? actionUrl;
+  final String? imageUrl;
 
   const NotificationModel({
     required this.id,
+    this.notificationId,
     required this.title,
     required this.body,
-    this.imageUrl,
+    required this.type,
+    required this.typeRaw,
+    required this.deliveryType,
+    this.deliveryTypeRaw,
     required this.createdAt,
     required this.isRead,
+    this.actionUrl,
+    this.imageUrl,
   });
 
-  /// Creates a [NotificationModel] from a backend JSON response.
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
+    final rawType = json['type']?.toString() ?? 'General';
+    final rawDeliveryType = json['deliveryType']?.toString();
+
     return NotificationModel(
-      id: json['id']?.toString() ?? '',
+      id: _parseInt(json['id']),
+      notificationId: _parseNullableInt(json['notificationId']),
       title: json['title']?.toString() ?? 'إشعار جديد',
       body: json['body']?.toString() ?? json['message']?.toString() ?? '',
-      imageUrl: json['imageUrl']?.toString(),
+      type: _parseType(rawType),
+      typeRaw: rawType,
+      deliveryType: _parseDeliveryType(rawDeliveryType),
+      deliveryTypeRaw: rawDeliveryType,
       createdAt: _parseDate(
         json['createdAt'] ?? json['date'] ?? json['timestamp'],
       ),
       isRead: json['isRead'] == true || json['read'] == true,
+      actionUrl: _emptyToNull(json['actionUrl']?.toString()),
+      imageUrl: _emptyToNull(json['imageUrl']?.toString()),
     );
   }
 
-  /// Creates a [NotificationModel] from an incoming FCM push message
-  /// (data arrives as key-value string pairs).
   factory NotificationModel.fromFcm({
     required String title,
     required String body,
-    String? id,
+    int? id,
+    int? notificationId,
+    String? type,
+    String? actionUrl,
     String? imageUrl,
   }) {
+    final rawType = type ?? 'General';
     return NotificationModel(
-      id: id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: id ?? DateTime.now().millisecondsSinceEpoch,
+      notificationId: notificationId,
       title: title,
       body: body,
-      imageUrl: imageUrl,
+      type: _parseType(rawType),
+      typeRaw: rawType,
+      deliveryType: NotificationDeliveryType.unknown,
       createdAt: DateTime.now(),
       isRead: false,
+      actionUrl: _emptyToNull(actionUrl),
+      imageUrl: _emptyToNull(imageUrl),
     );
   }
 
-  /// Returns a copy of this model with [isRead] set to true.
-  NotificationModel copyWithRead() {
+  NotificationModel copyWith({
+    int? id,
+    int? notificationId,
+    String? title,
+    String? body,
+    NotificationType? type,
+    String? typeRaw,
+    NotificationDeliveryType? deliveryType,
+    String? deliveryTypeRaw,
+    DateTime? createdAt,
+    bool? isRead,
+    String? actionUrl,
+    String? imageUrl,
+  }) {
     return NotificationModel(
-      id: id,
-      title: title,
-      body: body,
-      imageUrl: imageUrl,
-      createdAt: createdAt,
-      isRead: true,
+      id: id ?? this.id,
+      notificationId: notificationId ?? this.notificationId,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      type: type ?? this.type,
+      typeRaw: typeRaw ?? this.typeRaw,
+      deliveryType: deliveryType ?? this.deliveryType,
+      deliveryTypeRaw: deliveryTypeRaw ?? this.deliveryTypeRaw,
+      createdAt: createdAt ?? this.createdAt,
+      isRead: isRead ?? this.isRead,
+      actionUrl: actionUrl ?? this.actionUrl,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
+  }
+
+  NotificationModel copyWithRead() => copyWith(isRead: true);
+
+  static NotificationType _parseType(String? value) {
+    switch (value?.trim().toLowerCase()) {
+      case 'general':
+        return NotificationType.general;
+      case 'jobcreated':
+        return NotificationType.jobCreated;
+      case 'applicationaccepted':
+        return NotificationType.applicationAccepted;
+      case 'applicationrejected':
+        return NotificationType.applicationRejected;
+      case 'interviewscheduled':
+        return NotificationType.interviewScheduled;
+      default:
+        return NotificationType.unknown;
+    }
+  }
+
+  static NotificationDeliveryType _parseDeliveryType(String? value) {
+    switch (value?.trim().toLowerCase()) {
+      case 'topic':
+        return NotificationDeliveryType.topic;
+      case 'user':
+        return NotificationDeliveryType.user;
+      default:
+        return NotificationDeliveryType.unknown;
+    }
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ??
+        DateTime.now().millisecondsSinceEpoch;
+  }
+
+  static int? _parseNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
   }
 
   static DateTime _parseDate(dynamic value) {
     if (value == null) return DateTime.now();
-    try {
-      return DateTime.parse(value.toString());
-    } catch (_) {
-      return DateTime.now();
-    }
+    return DateTime.tryParse(value.toString()) ?? DateTime.now();
+  }
+
+  static String? _emptyToNull(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
+  }
+}
+
+class NotificationsPage {
+  final List<NotificationModel> items;
+  final int currentPage;
+  final int pageSize;
+  final int totalCount;
+  final int totalPages;
+
+  const NotificationsPage({
+    required this.items,
+    required this.currentPage,
+    required this.pageSize,
+    required this.totalCount,
+    required this.totalPages,
+  });
+
+  bool get hasMore => currentPage < totalPages;
+
+  factory NotificationsPage.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] is Map<String, dynamic>
+        ? json['data'] as Map<String, dynamic>
+        : json;
+    final rawItems = data['items'] is List
+        ? data['items'] as List
+        : <dynamic>[];
+
+    return NotificationsPage(
+      items: rawItems
+          .whereType<Map<String, dynamic>>()
+          .map(NotificationModel.fromJson)
+          .toList(),
+      currentPage: _readInt(data['currentPage'], fallback: 1),
+      pageSize: _readInt(data['pageSize'], fallback: rawItems.length),
+      totalCount: _readInt(data['totalCount'], fallback: rawItems.length),
+      totalPages: _readInt(data['totalPages'], fallback: 1),
+    );
+  }
+
+  static int _readInt(dynamic value, {required int fallback}) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? fallback;
   }
 }

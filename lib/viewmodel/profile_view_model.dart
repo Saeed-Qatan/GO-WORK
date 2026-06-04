@@ -1,7 +1,8 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../model/profile_model.dart';
 import '../repository/profile_repository.dart';
+import '../repository/notifications_repository.dart';
 import '../services/notification_topic_service.dart';
 import '../utils/local_storage.dart';
 import '../utils/app_error_parser.dart';
@@ -9,6 +10,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   final ProfileRepository _repository = ProfileRepository();
+  final NotificationsRepository _notificationsRepository =
+      NotificationsRepository();
   final LocalStorage _storage = LocalStorage();
   final NotificationTopicService? _notificationTopicService;
   ProfileModel? _profile;
@@ -114,6 +117,10 @@ class ProfileViewModel extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        await _notificationsRepository.removeDeviceToken(token);
+      }
       await FirebaseMessaging.instance.deleteToken();
       debugPrint('=== FCM: Token deleted on logout ===');
     } catch (e) {

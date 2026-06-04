@@ -281,7 +281,7 @@ class PushNotificationService {
       model.title,
       model.body,
       details,
-      payload: model.id,
+      payload: model.id.toString(),
     );
   }
 
@@ -302,17 +302,23 @@ class PushNotificationService {
     if (title == null && body == null) return null;
 
     return NotificationModel.fromFcm(
-      id:
-          message.messageId ??
-          data['id']?.toString() ??
-          DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _parseOptionalInt(data['id']) ?? message.messageId?.hashCode,
+      notificationId: _parseOptionalInt(data['notificationId']),
       title: title ?? 'New notification',
       body: body ?? '',
+      type: data['type']?.toString(),
+      actionUrl: data['actionUrl']?.toString(),
       imageUrl:
           notification?.android?.imageUrl ??
           notification?.apple?.imageUrl ??
           data['imageUrl']?.toString() ??
           data['image']?.toString(),
     );
+  }
+
+  int? _parseOptionalInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
   }
 }
