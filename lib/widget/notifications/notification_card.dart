@@ -17,104 +17,104 @@ class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: notification.isRead
-              ? AppColors.surface
-              : AppColors.primary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: notification.isRead
-                ? AppColors.border
-                : AppColors.primary.withValues(alpha: 0.32),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    final unread = !notification.isRead;
+    final accentColor = _typeColor();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      child: Material(
+        color: unread
+            ? AppColors.primary.withValues(alpha: 0.06)
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: unread
+                    ? accentColor.withValues(alpha: 0.34)
+                    : AppColors.border,
+              ),
             ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildLeading(),
-            const SizedBox(width: 12),
-            Expanded(child: _buildContent(context)),
-            const SizedBox(width: 6),
-            Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDeleteButton(),
-                if (!notification.isRead) ...[
-                  const SizedBox(height: 8),
-                  _buildUnreadDot(),
-                ],
+                _buildLeading(accentColor, unread),
+                const SizedBox(width: 12),
+                Expanded(child: _buildContent(context, unread)),
+                const SizedBox(width: 8),
+                _buildTrailing(unread),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLeading() {
+  Widget _buildLeading(Color color, bool unread) {
     final imageUrl = notification.imageUrl;
     if (imageUrl != null && Uri.tryParse(imageUrl)?.isAbsolute == true) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         child: Image.network(
           imageUrl,
-          width: 48,
-          height: 48,
+          width: 46,
+          height: 46,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildIcon(),
+          errorBuilder: (_, __, ___) => _buildIcon(color, unread),
         ),
       );
     }
-    return _buildIcon();
+
+    return _buildIcon(color, unread);
   }
 
-  Widget _buildIcon() {
-    final color = _typeColor();
+  Widget _buildIcon(Color color, bool unread) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 46,
+      height: 46,
       decoration: BoxDecoration(
-        color: notification.isRead
-            ? AppColors.inputBackground
-            : color.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
+        color: unread
+            ? color.withValues(alpha: 0.13)
+            : AppColors.inputBackground,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
         _typeIcon(),
-        color: notification.isRead ? AppColors.textHint : color,
+        color: unread ? color : AppColors.textHint,
         size: 22,
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(BuildContext context, bool unread) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          notification.title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.bold,
-            color: AppColors.textPrimary,
-            height: 1.4,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                notification.title,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: unread ? FontWeight.w800 : FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  height: 1.35,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (unread) ...[const SizedBox(width: 8), _buildUnreadDot()],
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         Text(
           notification.body,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -127,7 +127,7 @@ class NotificationCard extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            Icon(Icons.schedule, size: 13, color: AppColors.textHint),
+            const Icon(Icons.schedule, size: 13, color: AppColors.textHint),
             const SizedBox(width: 4),
             Text(
               _formatDate(notification.createdAt),
@@ -141,19 +141,19 @@ class NotificationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDeleteButton() {
+  Widget _buildTrailing(bool unread) {
     return SizedBox(
-      width: 32,
-      height: 32,
+      width: 34,
+      height: 34,
       child: IconButton(
         tooltip: 'حذف',
         padding: EdgeInsets.zero,
         visualDensity: VisualDensity.compact,
         onPressed: onDelete,
-        icon: const Icon(
-          Icons.close_rounded,
-          size: 18,
-          color: AppColors.textHint,
+        icon: Icon(
+          Icons.delete_outline_rounded,
+          size: 20,
+          color: unread ? AppColors.error : AppColors.textHint,
         ),
       ),
     );

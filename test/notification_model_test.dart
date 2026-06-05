@@ -44,5 +44,50 @@ void main() {
       expect(notification.isRead, isFalse);
       expect(notification.actionUrl, '/interviews/90');
     });
+
+    test('serializes and restores local cache payload', () {
+      final original = NotificationModel.fromJson({
+        'id': 12,
+        'notificationId': 50,
+        'title': 'Title',
+        'body': 'Body',
+        'type': 'General',
+        'deliveryType': 'User',
+        'createdAt': '2026-06-02T16:30:00Z',
+        'isRead': true,
+        'actionUrl': '/jobs/100',
+      });
+
+      final restored = NotificationModel.fromJson(original.toJson());
+
+      expect(restored.id, original.id);
+      expect(restored.isRead, isTrue);
+      expect(restored.createdAt, original.createdAt);
+      expect(restored.actionUrl, original.actionUrl);
+    });
+
+    test('parses flexible isRead values', () {
+      expect(
+        NotificationModel.fromJson({'id': 1, 'isRead': true}).isRead,
+        isTrue,
+      );
+      expect(
+        NotificationModel.fromJson({'id': 1, 'isRead': 'true'}).isRead,
+        isTrue,
+      );
+      expect(NotificationModel.fromJson({'id': 1, 'isRead': 1}).isRead, isTrue);
+      expect(
+        NotificationModel.fromJson({'id': 1, 'isRead': false}).isRead,
+        isFalse,
+      );
+      expect(
+        NotificationModel.fromJson({'id': 1, 'isRead': 'false'}).isRead,
+        isFalse,
+      );
+      expect(
+        NotificationModel.fromJson({'id': 1, 'isRead': 0}).isRead,
+        isFalse,
+      );
+    });
   });
 }

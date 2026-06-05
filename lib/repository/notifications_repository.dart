@@ -31,12 +31,17 @@ class NotificationsRepository {
         ApiConstants.notificationsUnreadCount,
       );
       final data = response['data'];
+      if (data is int) return data;
+      if (data is String) return _readInt(data);
       if (data is Map<String, dynamic>) {
-        return _readInt(data['count']);
+        return _readInt(
+          data['count'] ?? data['unreadCount'] ?? data['totalCount'],
+        );
       }
-      return _readInt(response['count']);
+      return _readInt(
+        response['count'] ?? response['unreadCount'] ?? response['totalCount'],
+      );
     } catch (e) {
-      debugPrint('=== NOTIFICATIONS: unread count error: $e ===');
       rethrow;
     }
   }
@@ -48,8 +53,15 @@ class NotificationsRepository {
         {},
       );
     } catch (e) {
-      debugPrint('=== NOTIFICATIONS: markAsRead error: $e ===');
-      rethrow;
+      debugPrint(
+        '=== NOTIFICATIONS: markAsRead PUT error, trying legacy POST: $e ===',
+      );
+      try {
+        await _apiClient.post('Notifications/mark-read/$notificationId', {});
+      } catch (fallbackError) {
+        debugPrint('=== NOTIFICATIONS: markAsRead error: $fallbackError ===');
+        rethrow;
+      }
     }
   }
 

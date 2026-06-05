@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gowork/model/notification_model.dart';
 import 'package:gowork/repository/notifications_repository.dart';
+import 'package:gowork/services/notifications_local_store.dart';
 import 'package:gowork/services/push_notification_service.dart';
 import 'package:gowork/viewmodel/notifications_view_model.dart';
 
@@ -10,7 +11,9 @@ class _FakeNotificationsRepository extends NotificationsRepository {
   final Map<int, NotificationsPage> pages;
   int unreadCount;
   bool failMarkRead = false;
+  bool failMarkAll = false;
   bool failHide = false;
+  bool failGetNotifications = false;
   int markReadCount = 0;
   int markAllCount = 0;
   int hideCount = 0;
@@ -22,6 +25,7 @@ class _FakeNotificationsRepository extends NotificationsRepository {
     int pageNumber = 1,
     int pageSize = 20,
   }) async {
+    if (failGetNotifications) throw Exception('fetch failed');
     return pages[pageNumber] ??
         const NotificationsPage(
           items: [],
@@ -39,17 +43,21 @@ class _FakeNotificationsRepository extends NotificationsRepository {
   Future<void> markAsRead(int notificationId) async {
     markReadCount++;
     if (failMarkRead) throw Exception('mark failed');
+    unreadCount = (unreadCount - 1).clamp(0, 1 << 31).toInt();
   }
 
   @override
   Future<void> markAllAsRead() async {
     markAllCount++;
+    if (failMarkAll) throw Exception('mark all failed');
+    unreadCount = 0;
   }
 
   @override
   Future<void> hideNotification(int notificationId) async {
     hideCount++;
     if (failHide) throw Exception('hide failed');
+    unreadCount = (unreadCount - 1).clamp(0, 1 << 31).toInt();
   }
 }
 
@@ -65,7 +73,30 @@ class _FakePushNotificationService extends PushNotificationService {
   }
 }
 
+class _FakeNotificationsLocalStore extends NotificationsLocalStore {
+  List<NotificationModel> stored;
+  int saveCount = 0;
+
+  _FakeNotificationsLocalStore([this.stored = const []]);
+
+  @override
+  Future<List<NotificationModel>> load() async => stored;
+
+  @override
+  Future<void> save(List<NotificationModel> notifications) async {
+    saveCount++;
+    stored = List<NotificationModel>.from(notifications);
+  }
+
+  @override
+  Future<void> upsert(NotificationModel notification) async {
+    await save([notification, ...stored]);
+  }
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('NotificationsViewModel', () {
     test('loads first page and unread count', () async {
       final repository = _FakeNotificationsRepository(
@@ -83,6 +114,7 @@ void main() {
       final viewModel = NotificationsViewModel(
         repository: repository,
         pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
         autoFetchUnreadCount: false,
       );
 
@@ -115,6 +147,7 @@ void main() {
       final viewModel = NotificationsViewModel(
         repository: repository,
         pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
         autoFetchUnreadCount: false,
       );
 
@@ -125,7 +158,38 @@ void main() {
       expect(viewModel.hasMore, isFalse);
     });
 
-    test('rolls back optimistic mark as read on failure', () async {
+    test('marks notification as read after API succeeds', () async {
+      final repository = _FakeNotificationsRepository(
+        unreadCount: 0,
+        pages: {
+          1: NotificationsPage(
+            items: [_notification(id: 1, isRead: false)],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 1,
+            totalPages: 1,
+          ),
+        },
+      );
+      final localStore = _FakeNotificationsLocalStore();
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      final result = await viewModel.markAsRead(1);
+
+      expect(result, isTrue);
+      expect(viewModel.notifications.single.isRead, isTrue);
+      expect(viewModel.unreadCount, 0);
+      expect(repository.markReadCount, 1);
+      expect(localStore.stored.single.isRead, isTrue);
+    });
+
+    test('marks as read locally without rollback when API fails', () async {
       final repository = _FakeNotificationsRepository(
         unreadCount: 1,
         pages: {
@@ -141,14 +205,16 @@ void main() {
       final viewModel = NotificationsViewModel(
         repository: repository,
         pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
         autoFetchUnreadCount: false,
       );
 
       await viewModel.fetchNotifications();
-      await viewModel.markAsRead(1);
+      final result = await viewModel.markAsRead(1);
 
-      expect(viewModel.notifications.single.isRead, isFalse);
-      expect(viewModel.unreadCount, 1);
+      expect(result, isTrue);
+      expect(viewModel.notifications.single.isRead, isTrue);
+      expect(viewModel.unreadCount, 0);
       expect(repository.markReadCount, 1);
     });
 
@@ -171,18 +237,52 @@ void main() {
       final viewModel = NotificationsViewModel(
         repository: repository,
         pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
         autoFetchUnreadCount: false,
       );
 
       await viewModel.fetchNotifications();
-      await viewModel.markAllAsRead();
+      final result = await viewModel.markAllAsRead();
 
+      expect(result, isTrue);
       expect(viewModel.notifications.every((item) => item.isRead), isTrue);
       expect(viewModel.unreadCount, 0);
       expect(repository.markAllCount, 1);
     });
 
-    test('hides notification optimistically', () async {
+    test('does not mark all as read locally when API fails', () async {
+      final repository = _FakeNotificationsRepository(
+        unreadCount: 2,
+        pages: {
+          1: NotificationsPage(
+            items: [
+              _notification(id: 1, isRead: false),
+              _notification(id: 2, isRead: false),
+            ],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 2,
+            totalPages: 1,
+          ),
+        },
+      )..failMarkAll = true;
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      final result = await viewModel.markAllAsRead();
+
+      expect(result, isFalse);
+      expect(viewModel.notifications.every((item) => item.isRead), isFalse);
+      expect(viewModel.unreadCount, 2);
+      expect(repository.markAllCount, 1);
+    });
+
+    test('hides notification after API succeeds', () async {
       final repository = _FakeNotificationsRepository(
         unreadCount: 1,
         pages: {
@@ -198,15 +298,46 @@ void main() {
       final viewModel = NotificationsViewModel(
         repository: repository,
         pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
         autoFetchUnreadCount: false,
       );
 
       await viewModel.fetchNotifications();
-      await viewModel.hideNotification(1);
+      final result = await viewModel.hideNotification(1);
 
+      expect(result, isTrue);
       expect(viewModel.notifications, isEmpty);
       expect(viewModel.viewState, NotificationsViewState.empty);
       expect(viewModel.unreadCount, 0);
+      expect(repository.hideCount, 1);
+    });
+
+    test('does not hide notification locally when API fails', () async {
+      final repository = _FakeNotificationsRepository(
+        unreadCount: 1,
+        pages: {
+          1: NotificationsPage(
+            items: [_notification(id: 1, isRead: false)],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 1,
+            totalPages: 1,
+          ),
+        },
+      )..failHide = true;
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      final result = await viewModel.hideNotification(1);
+
+      expect(result, isFalse);
+      expect(viewModel.notifications.single.id, 1);
+      expect(viewModel.unreadCount, 1);
       expect(repository.hideCount, 1);
     });
 
@@ -227,6 +358,7 @@ void main() {
       final viewModel = NotificationsViewModel(
         repository: repository,
         pushService: pushService,
+        localStore: _FakeNotificationsLocalStore(),
         autoFetchUnreadCount: false,
       );
 
@@ -237,6 +369,54 @@ void main() {
       expect(viewModel.notifications.single.id, 9);
       expect(viewModel.viewState, NotificationsViewState.loaded);
       expect(viewModel.unreadCount, 4);
+    });
+
+    test('uses cached notifications when remote fetch fails', () async {
+      final repository = _FakeNotificationsRepository(pages: {})
+        ..failGetNotifications = true;
+      final localStore = _FakeNotificationsLocalStore([
+        _notification(id: 8, isRead: false),
+      ]);
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+
+      expect(viewModel.viewState, NotificationsViewState.loaded);
+      expect(viewModel.notifications.single.id, 8);
+      expect(viewModel.unreadCount, 1);
+    });
+
+    test('updates local cache after hiding notification', () async {
+      final localStore = _FakeNotificationsLocalStore();
+      final repository = _FakeNotificationsRepository(
+        unreadCount: 1,
+        pages: {
+          1: NotificationsPage(
+            items: [_notification(id: 1), _notification(id: 2)],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 2,
+            totalPages: 1,
+          ),
+        },
+      );
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      await viewModel.hideNotification(1);
+
+      expect(localStore.stored.map((item) => item.id), [2]);
+      expect(repository.hideCount, 1);
     });
   });
 }
@@ -251,7 +431,7 @@ NotificationModel _notification({required int id, bool isRead = false}) {
     typeRaw: 'General',
     deliveryType: NotificationDeliveryType.user,
     deliveryTypeRaw: 'User',
-    createdAt: DateTime.utc(2026, 6, 2, 16, 30),
+    createdAt: DateTime.utc(2026, 6, 2, 16, 30, 0, 100 - id),
     isRead: isRead,
     actionUrl: '/jobs/$id',
   );

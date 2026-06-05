@@ -6,6 +6,7 @@ class _FakeApiClient extends ApiClient {
   final List<String> calls = [];
   Map<String, dynamic> nextGetResponse = {};
   Map<String, dynamic>? lastPostBody;
+  bool failPut = false;
 
   @override
   Future<Map<String, dynamic>> get(
@@ -25,6 +26,7 @@ class _FakeApiClient extends ApiClient {
     bool skipAuth = false,
   }) async {
     calls.add('PUT $endpoint');
+    if (failPut) throw Exception('put failed');
     return {
       'success': true,
       'data': {'message': 'ok'},
@@ -130,6 +132,18 @@ void main() {
         'token': 'abc token',
         'deviceType': 'android',
       });
+    });
+
+    test('falls back to legacy mark-read endpoint when PUT fails', () async {
+      final apiClient = _FakeApiClient()..failPut = true;
+      final repository = NotificationsRepository(apiClient: apiClient);
+
+      await repository.markAsRead(12);
+
+      expect(apiClient.calls, [
+        'PUT notifications/12/read',
+        'POST Notifications/mark-read/12',
+      ]);
     });
   });
 }

@@ -55,10 +55,25 @@ class NotificationModel {
       createdAt: _parseDate(
         json['createdAt'] ?? json['date'] ?? json['timestamp'],
       ),
-      isRead: json['isRead'] == true || json['read'] == true,
+      isRead: _parseBool(json['isRead'] ?? json['read']),
       actionUrl: _emptyToNull(json['actionUrl']?.toString()),
       imageUrl: _emptyToNull(json['imageUrl']?.toString()),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'notificationId': notificationId,
+      'title': title,
+      'body': body,
+      'type': typeRaw,
+      'deliveryType': deliveryTypeRaw,
+      'createdAt': createdAt.toIso8601String(),
+      'isRead': isRead,
+      'actionUrl': actionUrl,
+      'imageUrl': imageUrl,
+    };
   }
 
   factory NotificationModel.fromFcm({
@@ -161,6 +176,21 @@ class NotificationModel {
   static DateTime _parseDate(dynamic value) {
     if (value == null) return DateTime.now();
     return DateTime.tryParse(value.toString()) ?? DateTime.now();
+  }
+
+  static bool _parseBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    switch (value?.toString().trim().toLowerCase()) {
+      case 'true':
+      case '1':
+      case 'yes':
+      case 'y':
+        return true;
+      default:
+        return false;
+    }
   }
 
   static String? _emptyToNull(String? value) {

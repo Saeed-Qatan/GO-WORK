@@ -13,6 +13,7 @@ import 'utils/snackbar_service.dart';
 import 'utils/local_storage.dart';
 import 'services/notification_topic_service.dart';
 import 'services/push_notification_service.dart';
+import 'services/job_service.dart';
 import 'repository/profile_repository.dart';
 
 import 'viewmodel/auth/login_view_model.dart';
@@ -31,6 +32,16 @@ final PushNotificationService pushNotificationService =
     PushNotificationService();
 final NotificationTopicService notificationTopicService =
     NotificationTopicService();
+
+const Set<String> _knownInternalRoutes = {
+  AppRoutes.home,
+  AppRoutes.profile,
+  AppRoutes.settings,
+  AppRoutes.feedback,
+  AppRoutes.notifications,
+  AppRoutes.changePassword,
+  AppRoutes.deletedInterviews,
+};
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -79,8 +90,95 @@ Future<void> _subscribeToCurrentUserTopics() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final JobService _jobService = JobService();
+  StreamSubscription<NotificationTapAction>? _notificationTapSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationTapSubscription = pushNotificationService.onNotificationTapped
+        .listen(_openNotificationsFromSystemTap);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!pushNotificationService.hasPendingNotificationTap) return;
+      final pendingAction = pushNotificationService
+          .takePendingTappedNotificationAction();
+      if (pendingAction != null) {
+        _openNotificationsFromSystemTap(pendingAction);
+      }
+    });
+  }
+
+  Future<void> _openNotificationsFromSystemTap(
+    NotificationTapAction action,
+  ) async {
+    _markTappedNotificationRead(action.notificationId);
+
+    if (await _openActionUrl(action.actionUrl)) return;
+    appRouter.go(AppRoutes.notifications);
+  }
+
+  void _markTappedNotificationRead(int? notificationId) {
+    if (notificationId == null) return;
+
+    final navigatorContext = rootNavigatorKey.currentContext;
+    if (navigatorContext == null) return;
+
+    try {
+      unawaited(
+        navigatorContext.read<NotificationsViewModel>().markAsRead(
+          notificationId,
+        ),
+      );
+    } catch (e) {
+      debugPrint('=== NOTIFICATION TAP MARK READ ERROR: $e ===');
+    }
+  }
+
+  Future<bool> _openActionUrl(String? actionUrl) async {
+    final target = actionUrl?.trim();
+    if (target == null || target.isEmpty) return false;
+
+    final uri = Uri.tryParse(target);
+    final path = uri?.path.isNotEmpty == true ? uri!.path : target;
+    final internalPath = path.startsWith('/') ? path : '/$path';
+    final pathUri = Uri.tryParse(internalPath);
+    if (pathUri == null) return false;
+    final segments = pathUri.pathSegments;
+
+    if (segments.length == 2 && segments.first.toLowerCase() == 'jobs') {
+      try {
+        final job = await _jobService.getJobById(segments[1]);
+        if (job == null) return false;
+        appRouter.go(AppRoutes.jobDetails, extra: job);
+        return true;
+      } catch (e) {
+        debugPrint('=== NOTIFICATION TAP JOB ACTION ERROR: $e ===');
+        return false;
+      }
+    }
+
+    if (_knownInternalRoutes.contains(internalPath)) {
+      appRouter.go(internalPath);
+      return true;
+    }
+
+    return false;
+  }
+
+  @override
+  void dispose() {
+    _notificationTapSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
