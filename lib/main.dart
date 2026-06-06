@@ -108,6 +108,7 @@ class _MyAppState extends State<MyApp> {
         .listen(_openNotificationsFromSystemTap);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(pushNotificationService.ensureDeviceNotificationSetup());
       if (!pushNotificationService.hasPendingNotificationTap) return;
       final pendingAction = pushNotificationService
           .takePendingTappedNotificationAction();

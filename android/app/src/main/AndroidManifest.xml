@@ -37,7 +37,10 @@
         <!-- FCM: Default notification channel for background messages -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="gowork_notifications_channel" />
+            android:value="gowork_notifications_high_channel" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

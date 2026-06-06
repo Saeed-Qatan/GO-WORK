@@ -10,11 +10,15 @@ import '../model/notification_model.dart';
 import '../repository/notifications_repository.dart';
 import 'notifications_local_store.dart';
 
-const String _notificationChannelId = 'gowork_notifications_channel';
+const String _notificationChannelId = 'gowork_notifications_high_channel';
+const String _legacyNotificationChannelId = 'gowork_notifications_channel';
+const String _defaultNotificationChannelId = 'default';
+const String _highImportanceChannelId = 'high_importance_channel';
 const String _notificationChannelName = 'GoWork Notifications';
+const String _legacyNotificationChannelName = 'GoWork Notifications';
 const String _notificationChannelDescription =
     'Notifications from GoWork application';
-const String _notificationIcon = '@mipmap/ic_launcher';
+const String _notificationIcon = 'ic_notification';
 
 class NotificationTapAction {
   final int? notificationId;
@@ -61,18 +65,50 @@ Future<void> _showBackgroundLocalNotification(RemoteMessage message) async {
   );
   await localNotifications.initialize(initSettings);
 
-  const channel = AndroidNotificationChannel(
+  const highChannel = AndroidNotificationChannel(
     _notificationChannelId,
     _notificationChannelName,
     description: _notificationChannelDescription,
     importance: Importance.max,
     playSound: true,
+    enableVibration: true,
+    showBadge: true,
+  );
+  const legacyChannel = AndroidNotificationChannel(
+    _legacyNotificationChannelId,
+    _legacyNotificationChannelName,
+    description: _notificationChannelDescription,
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+    showBadge: true,
+  );
+  const defaultChannel = AndroidNotificationChannel(
+    _defaultNotificationChannelId,
+    _notificationChannelName,
+    description: _notificationChannelDescription,
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+    showBadge: true,
+  );
+  const highImportanceChannel = AndroidNotificationChannel(
+    _highImportanceChannelId,
+    _notificationChannelName,
+    description: _notificationChannelDescription,
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+    showBadge: true,
   );
   final androidNotifications = localNotifications
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
       >();
-  await androidNotifications?.createNotificationChannel(channel);
+  await androidNotifications?.createNotificationChannel(highChannel);
+  await androidNotifications?.createNotificationChannel(legacyChannel);
+  await androidNotifications?.createNotificationChannel(defaultChannel);
+  await androidNotifications?.createNotificationChannel(highImportanceChannel);
 
   const details = NotificationDetails(
     android: AndroidNotificationDetails(
@@ -150,6 +186,7 @@ class PushNotificationService {
   final NotificationsRepository _repository;
   final NotificationsLocalStore _localStore;
   StreamSubscription<String>? _tokenRefreshSubscription;
+  bool _localNotificationsReady = false;
 
   final StreamController<NotificationModel> _notificationStreamController =
       StreamController<NotificationModel>.broadcast();
@@ -181,6 +218,15 @@ class PushNotificationService {
     await registerCurrentToken();
     _listenToForegroundMessages();
     _listenToNotificationTaps();
+  }
+
+  Future<void> ensureDeviceNotificationSetup() async {
+    try {
+      await _setupLocalNotifications();
+      await _requestPermissions();
+    } catch (e) {
+      debugPrint('=== FCM: ENSURE NOTIFICATION SETUP ERROR: $e ===');
+    }
   }
 
   Future<void> registerCurrentToken() async {
@@ -221,6 +267,11 @@ class PushNotificationService {
   }
 
   Future<void> _setupLocalNotifications() async {
+    if (_localNotificationsReady) {
+      await _createAndroidNotificationChannels();
+      return;
+    }
+
     const androidSettings = AndroidInitializationSettings(_notificationIcon);
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
@@ -249,25 +300,67 @@ class PushNotificationService {
       );
     }
 
-    const channel = AndroidNotificationChannel(
-      _notificationChannelId,
-      _notificationChannelName,
-      description: _notificationChannelDescription,
-      importance: Importance.max,
-      playSound: true,
-    );
+    await _createAndroidNotificationChannels();
 
-    final androidNotifications = _localNotifications
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-
-    await androidNotifications?.createNotificationChannel(channel);
+    final androidNotifications = _androidNotifications();
     final androidPermissionGranted = await androidNotifications
         ?.requestNotificationsPermission();
     debugPrint(
       '=== LOCAL NOTIFICATIONS ANDROID PERMISSION: $androidPermissionGranted ===',
     );
+    _localNotificationsReady = true;
+  }
+
+  Future<void> _createAndroidNotificationChannels() async {
+    const highChannel = AndroidNotificationChannel(
+      _notificationChannelId,
+      _notificationChannelName,
+      description: _notificationChannelDescription,
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+    const legacyChannel = AndroidNotificationChannel(
+      _legacyNotificationChannelId,
+      _legacyNotificationChannelName,
+      description: _notificationChannelDescription,
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+    const defaultChannel = AndroidNotificationChannel(
+      _defaultNotificationChannelId,
+      _notificationChannelName,
+      description: _notificationChannelDescription,
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+    const highImportanceChannel = AndroidNotificationChannel(
+      _highImportanceChannelId,
+      _notificationChannelName,
+      description: _notificationChannelDescription,
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+
+    final androidNotifications = _androidNotifications();
+    await androidNotifications?.createNotificationChannel(highChannel);
+    await androidNotifications?.createNotificationChannel(legacyChannel);
+    await androidNotifications?.createNotificationChannel(defaultChannel);
+    await androidNotifications?.createNotificationChannel(highImportanceChannel);
+  }
+
+  AndroidFlutterLocalNotificationsPlugin? _androidNotifications() {
+    return _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
   }
 
   Future<void> _requestPermissions() async {
