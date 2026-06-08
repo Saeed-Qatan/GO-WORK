@@ -152,9 +152,7 @@ class SearchJobCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          job.canApply == false
-                              ? 'ØªÙ… Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…'
-                              : 'Ø¹Ø±Ø¶ Ø§Ù„ØªÙØ§ØµÙŠÙ„',
+                          job.canApply == false ? 'تم التقديم' : 'عرض التفاصيل',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -194,7 +192,7 @@ class SearchJobCard extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    'Ø¹Ø§Ø¬Ù„',
+                    'جديد',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 12,

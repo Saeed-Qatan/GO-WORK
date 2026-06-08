@@ -238,6 +238,7 @@ class SearchViewModel extends ChangeNotifier {
   List<JobModel> _applyClientFilters(List<JobModel> jobs) {
     final selectedCategory = _selectedCategory;
     final selectedCountry = _selectedCountry;
+    final selectedLocation = _selectedLocation;
     final selectedType = _selectedType;
 
     return jobs.where((job) {
@@ -251,12 +252,37 @@ class SearchViewModel extends ChangeNotifier {
         return false;
       }
 
+      if (selectedLocation != null &&
+          !_matchesWorkMode(job, selectedLocation)) {
+        return false;
+      }
+
       if (selectedType != null && !_matchesJobType(job, selectedType)) {
         return false;
       }
 
       return true;
     }).toList();
+  }
+
+  bool _matchesWorkMode(JobModel job, FilterOption selectedLocation) {
+    final selectedRaw = selectedLocation.rawValue?.trim();
+    if (selectedRaw == null || selectedRaw.isEmpty) return true;
+
+    final jobRaw = job.workMode.trim();
+    if (jobRaw.isEmpty) return false;
+
+    if (StatusTranslator.normalize(jobRaw) ==
+        StatusTranslator.normalize(selectedRaw)) {
+      return true;
+    }
+
+    final selectedLabel = StatusTranslator.workModeLabel(selectedRaw);
+    final jobLabel = StatusTranslator.workModeLabel(jobRaw);
+    if (selectedLabel.trim().isEmpty || jobLabel.trim().isEmpty) return false;
+
+    return StatusTranslator.normalize(selectedLabel) ==
+        StatusTranslator.normalize(jobLabel);
   }
 
   bool _matchesJobType(JobModel job, FilterOption selectedType) {
