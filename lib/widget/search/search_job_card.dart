@@ -43,7 +43,6 @@ class SearchJobCard extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Company Logo
                       Container(
                         width: 48,
                         height: 48,
@@ -66,6 +65,12 @@ class SearchJobCard extends StatelessWidget {
                                 child: Image.network(
                                   job.companyLogoUrl,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.business,
+                                      color: AppColors.primary,
+                                    );
+                                  },
                                 ),
                               )
                             : const Icon(
@@ -74,16 +79,14 @@ class SearchJobCard extends StatelessWidget {
                               ),
                       ),
                       const SizedBox(width: 12),
-
-                      // Job Info
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(
-                                right: 30.0,
-                              ), // Space for bookmark
+                              padding: const EdgeInsetsDirectional.only(
+                                end: 30,
+                              ),
                               child: Text(
                                 job.title,
                                 style: Theme.of(context).textTheme.titleMedium
@@ -110,10 +113,7 @@ class SearchJobCard extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Tags Row
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -135,10 +135,7 @@ class SearchJobCard extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Footer: Salary and Match
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -155,7 +152,9 @@ class SearchJobCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          job.canApply == false ? 'تم التقديم' : 'عرض التفاصيل',
+                          job.canApply == false
+                              ? 'ØªÙ… Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…'
+                              : 'Ø¹Ø±Ø¶ Ø§Ù„ØªÙØ§ØµÙŠÙ„',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -168,20 +167,16 @@ class SearchJobCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Bookmark Icon
             if (showBookmark)
-              PositionedDirectional(
+              const PositionedDirectional(
                 top: 12,
                 end: 12,
-                child: const Icon(
+                child: Icon(
                   Icons.bookmark_border,
                   color: AppColors.textSecondary,
                   size: 24,
                 ),
               ),
-
-            // Urgent Badge
             if (isUrgent)
               PositionedDirectional(
                 top: 0,
@@ -192,14 +187,14 @@ class SearchJobCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFF4081), // Pink/Red
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
+                    color: Color(0xFFFF4081),
+                    borderRadius: BorderRadiusDirectional.only(
+                      topStart: Radius.circular(16),
+                      bottomEnd: Radius.circular(16),
                     ),
                   ),
                   child: const Text(
-                    'عاجل',
+                    'Ø¹Ø§Ø¬Ù„',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 12,

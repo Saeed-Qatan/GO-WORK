@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../core/constants/api_constants.dart';
 import '../model/search/filter_option.dart';
 import '../model/home/home_model.dart';
@@ -185,6 +185,10 @@ class SearchViewModel extends ChangeNotifier {
     if (_isDisposed) return;
     _isLoading = true;
     _errorMessage = null;
+    _debugLog('=== SEARCH VM: searchJobs start ===');
+    _debugLog(
+      '=== SEARCH VM: query="$_searchQuery", category="${_selectedCategory?.rawValue}", locationType="${_selectedLocation?.rawValue}", jobType="${_selectedType?.rawValue}", country="${_selectedCountry?.rawValue}" ===',
+    );
     notifyListeners();
 
     try {
@@ -196,9 +200,12 @@ class SearchViewModel extends ChangeNotifier {
         country: _selectedCountry?.rawValue,
       );
       _applySorting();
+      _debugLog('=== SEARCH VM: jobs loaded=${_jobs.length} ===');
     } catch (e) {
-      debugPrint('Error searching jobs: $e');
       _errorMessage = AppErrorParser.parse(e);
+      _debugLog(
+        '=== SEARCH VM ERROR (${e.runtimeType}): $e | parsed=$_errorMessage ===',
+      );
       _jobs = [];
     } finally {
       _isLoading = false;
@@ -252,5 +259,11 @@ class SearchViewModel extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     super.dispose();
+  }
+
+  void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint(message);
+    }
   }
 }

@@ -244,7 +244,9 @@ class _SearchViewState extends State<SearchView> {
                                 itemCount: viewModel.jobs.length,
                                 itemBuilder: (context, index) {
                                   final jobItem = viewModel.jobs[index];
-                                  final resolvedJob = appState.resolveJob(jobItem);
+                                  final resolvedJob = appState.resolveJob(
+                                    jobItem,
+                                  );
                                   return SearchJobCard(
                                     job: resolvedJob,
                                     isUrgent: index == 0,
