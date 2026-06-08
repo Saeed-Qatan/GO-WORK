@@ -58,6 +58,7 @@ class SearchViewModel extends ChangeNotifier {
   FilterOption? _selectedLocation;
   FilterOption? _selectedType;
   FilterOption? _selectedCountry;
+  int _searchRequestId = 0;
 
   FilterOption? get selectedCategory => _selectedCategory;
   FilterOption? get selectedLocation => _selectedLocation;
@@ -183,6 +184,7 @@ class SearchViewModel extends ChangeNotifier {
 
   Future<void> searchJobs() async {
     if (_isDisposed) return;
+    final requestId = ++_searchRequestId;
     _isLoading = true;
     _errorMessage = null;
     _debugLog('=== SEARCH VM: searchJobs start ===');
@@ -192,22 +194,26 @@ class SearchViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _jobs = await _repository.searchJobs(
+      final jobs = await _repository.searchJobs(
         query: _searchQuery,
         category: _selectedCategory?.rawValue,
         workMode: _selectedLocation?.rawValue,
         type: _selectedType?.rawValue,
         country: _selectedCountry?.rawValue,
       );
+      if (_isDisposed || requestId != _searchRequestId) return;
+      _jobs = _applyClientFilters(jobs);
       _applySorting();
       _debugLog('=== SEARCH VM: jobs loaded=${_jobs.length} ===');
     } catch (e) {
+      if (_isDisposed || requestId != _searchRequestId) return;
       _errorMessage = AppErrorParser.parse(e);
       _debugLog(
         '=== SEARCH VM ERROR (${e.runtimeType}): $e | parsed=$_errorMessage ===',
       );
       _jobs = [];
     } finally {
+      if (_isDisposed || requestId != _searchRequestId) return;
       _isLoading = false;
       if (!_isDisposed) notifyListeners();
     }
@@ -227,6 +233,33 @@ class SearchViewModel extends ChangeNotifier {
         return bSalary.compareTo(aSalary);
       });
     }
+  }
+
+  List<JobModel> _applyClientFilters(List<JobModel> jobs) {
+    final selectedType = _selectedType;
+    if (selectedType == null) return List<JobModel>.from(jobs);
+
+    return jobs.where((job) => _matchesJobType(job, selectedType)).toList();
+  }
+
+  bool _matchesJobType(JobModel job, FilterOption selectedType) {
+    final selectedRaw = selectedType.rawValue?.trim();
+    if (selectedRaw == null || selectedRaw.isEmpty) return true;
+
+    final jobRaw = job.type.trim();
+    if (jobRaw.isEmpty) return false;
+
+    if (StatusTranslator.normalize(jobRaw) ==
+        StatusTranslator.normalize(selectedRaw)) {
+      return true;
+    }
+
+    final selectedLabel = StatusTranslator.jobTypeLabel(selectedRaw);
+    final jobLabel = StatusTranslator.jobTypeLabel(jobRaw);
+    if (selectedLabel.trim().isEmpty || jobLabel.trim().isEmpty) return false;
+
+    return StatusTranslator.normalize(selectedLabel) ==
+        StatusTranslator.normalize(jobLabel);
   }
 
   List<FilterOption> _mapOptions(
