@@ -15,6 +15,7 @@ import 'package:gowork/view/auth/reset_password_view.dart';
 import 'package:gowork/view/auth/change_password_view.dart';
 import 'package:gowork/view/job_details_view.dart';
 import 'package:gowork/view/main_view.dart';
+import 'package:gowork/view/onboarding_view.dart';
 import 'package:gowork/view/edit_profile_view.dart';
 import 'package:gowork/view/profile_view.dart';
 import 'package:gowork/view/settings_view.dart';
@@ -30,6 +31,7 @@ import 'package:gowork/view/deleted_interviews_view.dart';
 /// Centralized route names
 class AppRoutes {
   static const String splash = '/';
+  static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String registerInfo = '/registerInfo';
   static const String registerPhoto = '/registerPhoto';
@@ -61,6 +63,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashView(),
+    ),
+    GoRoute(
+      path: AppRoutes.onboarding,
+      builder: (context, state) {
+        final nextRoute = state.uri.queryParameters['next'];
+        final safeNextRoute = nextRoute == AppRoutes.home
+            ? AppRoutes.home
+            : AppRoutes.login;
+
+        return OnboardingView(nextRoute: safeNextRoute);
+      },
     ),
     GoRoute(
       path: AppRoutes.login,

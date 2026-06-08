@@ -6,7 +6,10 @@ class _FakeApiClient extends ApiClient {
   final List<String> calls = [];
   Map<String, dynamic> nextGetResponse = {};
   Map<String, dynamic>? lastPostBody;
+  bool failGet = false;
   bool failPut = false;
+  bool failDelete = false;
+  bool failPost = false;
 
   @override
   Future<Map<String, dynamic>> get(
@@ -15,6 +18,7 @@ class _FakeApiClient extends ApiClient {
     bool skipAuth = false,
   }) async {
     calls.add('GET $endpoint');
+    if (failGet) throw Exception('get failed');
     return nextGetResponse;
   }
 
@@ -42,6 +46,7 @@ class _FakeApiClient extends ApiClient {
   }) async {
     calls.add('POST $endpoint');
     lastPostBody = body;
+    if (failPost) throw Exception('post failed');
     return {
       'success': true,
       'data': {'message': 'ok'},
@@ -55,6 +60,7 @@ class _FakeApiClient extends ApiClient {
     bool skipAuth = false,
   }) async {
     calls.add('DELETE $endpoint');
+    if (failDelete) throw Exception('delete failed');
     return {
       'success': true,
       'data': {'message': 'ok'},
@@ -64,7 +70,7 @@ class _FakeApiClient extends ApiClient {
 
 void main() {
   group('NotificationsRepository', () {
-    test('fetches paginated notifications from new endpoint', () async {
+    test('fetches paginated notifications from documented endpoint', () async {
       final apiClient = _FakeApiClient()
         ..nextGetResponse = {
           'data': {
@@ -95,6 +101,24 @@ void main() {
       expect(page.hasMore, isTrue);
     });
 
+    test('uses default documented pagination params', () async {
+      final apiClient = _FakeApiClient()
+        ..nextGetResponse = {
+          'data': {
+            'items': [],
+            'currentPage': 1,
+            'pageSize': 20,
+            'totalCount': 0,
+            'totalPages': 1,
+          },
+        };
+      final repository = NotificationsRepository(apiClient: apiClient);
+
+      await repository.getNotifications();
+
+      expect(apiClient.calls, ['GET notifications?pageNumber=1&pageSize=20']);
+    });
+
     test('reads unread count from wrapped data response', () async {
       final apiClient = _FakeApiClient()
         ..nextGetResponse = {
@@ -108,7 +132,7 @@ void main() {
       expect(count, 5);
     });
 
-    test('uses documented mutation endpoints', () async {
+    test('uses only documented mutation endpoints', () async {
       final apiClient = _FakeApiClient();
       final repository = NotificationsRepository(apiClient: apiClient);
 
@@ -134,15 +158,72 @@ void main() {
       });
     });
 
-    test('falls back to legacy mark-read endpoint when PUT fails', () async {
+    test('rethrows get notifications failures', () async {
+      final apiClient = _FakeApiClient()..failGet = true;
+      final repository = NotificationsRepository(apiClient: apiClient);
+
+      expect(
+        repository.getNotifications(),
+        throwsA(isA<Exception>()),
+      );
+      expect(apiClient.calls, ['GET notifications?pageNumber=1&pageSize=20']);
+    });
+
+    test('rethrows unread count failures so view model can fallback', () async {
+      final apiClient = _FakeApiClient()..failGet = true;
+      final repository = NotificationsRepository(apiClient: apiClient);
+
+      expect(
+        repository.getUnreadCount(),
+        throwsA(isA<Exception>()),
+      );
+      expect(apiClient.calls, ['GET notifications/unread-count']);
+    });
+
+    test('rethrows documented mark-read failures without legacy fallback', () async {
       final apiClient = _FakeApiClient()..failPut = true;
       final repository = NotificationsRepository(apiClient: apiClient);
 
-      await repository.markAsRead(12);
+      expect(
+        repository.markAsRead(12),
+        throwsA(isA<Exception>()),
+      );
 
-      expect(apiClient.calls, [
-        'PUT notifications/12/read',
-        'POST Notifications/mark-read/12',
+      expect(apiClient.calls, ['PUT notifications/12/read']);
+    });
+
+    test('rethrows mark-all and hide failures', () async {
+      final markAllClient = _FakeApiClient()..failPut = true;
+      final markAllRepository = NotificationsRepository(
+        apiClient: markAllClient,
+      );
+
+      expect(markAllRepository.markAllAsRead(), throwsA(isA<Exception>()));
+      expect(markAllClient.calls, ['PUT notifications/read-all']);
+
+      final hideClient = _FakeApiClient()..failDelete = true;
+      final hideRepository = NotificationsRepository(apiClient: hideClient);
+
+      expect(hideRepository.hideNotification(12), throwsA(isA<Exception>()));
+      expect(hideClient.calls, ['DELETE notifications/12']);
+    });
+
+    test('device token failures are swallowed by repository', () async {
+      final postClient = _FakeApiClient()..failPost = true;
+      final postRepository = NotificationsRepository(apiClient: postClient);
+
+      await postRepository.registerDeviceToken(
+        token: 'abc token',
+        deviceType: 'android',
+      );
+      expect(postClient.calls, ['POST notifications/device-tokens']);
+
+      final deleteClient = _FakeApiClient()..failDelete = true;
+      final deleteRepository = NotificationsRepository(apiClient: deleteClient);
+
+      await deleteRepository.removeDeviceToken('abc token');
+      expect(deleteClient.calls, [
+        'DELETE notifications/device-tokens/abc%20token',
       ]);
     });
   });

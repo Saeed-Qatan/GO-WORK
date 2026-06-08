@@ -14,9 +14,11 @@ class _FakeNotificationsRepository extends NotificationsRepository {
   bool failMarkAll = false;
   bool failHide = false;
   bool failGetNotifications = false;
+  bool failUnreadCount = false;
   int markReadCount = 0;
   int markAllCount = 0;
   int hideCount = 0;
+  final List<int> markReadIds = [];
 
   _FakeNotificationsRepository({required this.pages, this.unreadCount = 0});
 
@@ -37,11 +39,15 @@ class _FakeNotificationsRepository extends NotificationsRepository {
   }
 
   @override
-  Future<int> getUnreadCount() async => unreadCount;
+  Future<int> getUnreadCount() async {
+    if (failUnreadCount) throw Exception('unread count failed');
+    return unreadCount;
+  }
 
   @override
   Future<void> markAsRead(int notificationId) async {
     markReadCount++;
+    markReadIds.add(notificationId);
     if (failMarkRead) throw Exception('mark failed');
     unreadCount = (unreadCount - 1).clamp(0, 1 << 31).toInt();
   }
@@ -125,6 +131,49 @@ void main() {
       expect(viewModel.unreadCount, 2);
     });
 
+    test('uses empty state when remote feed has no notifications', () async {
+      final repository = _FakeNotificationsRepository(
+        pages: {
+          1: const NotificationsPage(
+            items: [],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 0,
+            totalPages: 1,
+          ),
+        },
+      );
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+
+      expect(viewModel.viewState, NotificationsViewState.empty);
+      expect(viewModel.notifications, isEmpty);
+      expect(viewModel.unreadCount, 0);
+    });
+
+    test('uses error state when remote fetch fails without cache', () async {
+      final repository = _FakeNotificationsRepository(pages: {})
+        ..failGetNotifications = true;
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+
+      expect(viewModel.viewState, NotificationsViewState.error);
+      expect(viewModel.notifications, isEmpty);
+      expect(viewModel.errorMessage, isNotNull);
+    });
+
     test('loads more pages when available', () async {
       final repository = _FakeNotificationsRepository(
         pages: {
@@ -186,7 +235,36 @@ void main() {
       expect(viewModel.notifications.single.isRead, isTrue);
       expect(viewModel.unreadCount, 0);
       expect(repository.markReadCount, 1);
+      expect(repository.markReadIds, [1]);
       expect(localStore.stored.single.isRead, isTrue);
+    });
+
+    test('falls back to local unread count when unread-count API fails', () async {
+      final repository = _FakeNotificationsRepository(
+        pages: {
+          1: NotificationsPage(
+            items: [
+              _notification(id: 1, isRead: false),
+              _notification(id: 2, isRead: true),
+            ],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 2,
+            totalPages: 1,
+          ),
+        },
+      )..failUnreadCount = true;
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      await viewModel.fetchUnreadCount();
+
+      expect(viewModel.unreadCount, 1);
     });
 
     test('marks as read locally without rollback when API fails', () async {

@@ -151,10 +151,6 @@ class NotificationsViewModel extends ChangeNotifier {
     if (index != -1 && _notifications[index].isRead) return true;
 
     final previousUnreadCount = _unreadCount;
-    final serverNotificationId = index == -1
-        ? notificationId
-        : (_notifications[index].notificationId ?? notificationId);
-
     if (index != -1) {
       _notifications[index] = _notifications[index].copyWithRead();
       _unreadCount = (_unreadCount - 1).clamp(0, 1 << 31).toInt();
@@ -163,7 +159,7 @@ class NotificationsViewModel extends ChangeNotifier {
     }
 
     try {
-      await _repository.markAsRead(serverNotificationId);
+      await _repository.markAsRead(notificationId);
       await fetchUnreadCount(notify: false);
       notifyListeners();
       return true;

@@ -26,6 +26,39 @@ void main() {
       expect(notification.imageUrl, 'https://example.com/images/job.png');
     });
 
+    test('parses all documented notification type enum values', () {
+      final cases = {
+        'General': NotificationType.general,
+        'JobCreated': NotificationType.jobCreated,
+        'ApplicationAccepted': NotificationType.applicationAccepted,
+        'ApplicationRejected': NotificationType.applicationRejected,
+        'InterviewScheduled': NotificationType.interviewScheduled,
+      };
+
+      for (final entry in cases.entries) {
+        final notification = NotificationModel.fromJson({
+          'id': 1,
+          'type': entry.key,
+        });
+
+        expect(notification.type, entry.value, reason: entry.key);
+        expect(notification.typeRaw, entry.key);
+      }
+    });
+
+    test('keeps unknown enum values from breaking parsing', () {
+      final notification = NotificationModel.fromJson({
+        'id': 1,
+        'type': 'SomethingNew',
+        'deliveryType': 'AnotherTarget',
+      });
+
+      expect(notification.type, NotificationType.unknown);
+      expect(notification.typeRaw, 'SomethingNew');
+      expect(notification.deliveryType, NotificationDeliveryType.unknown);
+      expect(notification.deliveryTypeRaw, 'AnotherTarget');
+    });
+
     test('parses FCM payload fields', () {
       final notification = NotificationModel.fromFcm(
         id: 77,

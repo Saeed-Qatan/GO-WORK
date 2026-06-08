@@ -7,6 +7,7 @@ import 'package:gowork/utils/local_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:gowork/repository/profile_repository.dart';
+import 'package:gowork/services/onboarding_storage.dart';
 import 'package:gowork/services/notification_topic_service.dart';
 
 import 'package:gowork/theme/app_colors.dart';
@@ -19,6 +20,8 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> {
+  final OnboardingStorage _onboardingStorage = OnboardingStorage();
+
   @override
   void initState() {
     super.initState();
@@ -35,24 +38,42 @@ class _SplashViewState extends State<SplashView> {
 
     final token = await LocalStorage().getString('token');
 
-    if (mounted) {
-      if (token == null || token.isEmpty) {
-        context.go(AppRoutes.login);
-      } else {
-        try {
-          final profile = await ProfileRepository().getUserProfile();
-          unawaited(
-            NotificationTopicService().subscribeUserTopics(
-              categoryId: profile.categoryId,
-            ),
-          );
-          if (mounted) context.go(AppRoutes.home);
-        } catch (e) {
-          await LocalStorage().clearAuth();
-          if (mounted) context.go(AppRoutes.login);
-        }
-      }
+    if (!mounted) return;
+
+    if (token == null || token.isEmpty) {
+      await _goToStartupRoute(AppRoutes.login);
+      return;
     }
+
+    try {
+      final profile = await ProfileRepository().getUserProfile();
+      unawaited(
+        NotificationTopicService().subscribeUserTopics(
+          categoryId: profile.categoryId,
+        ),
+      );
+      if (mounted) await _goToStartupRoute(AppRoutes.home);
+    } catch (e) {
+      await LocalStorage().clearAuth();
+      if (mounted) await _goToStartupRoute(AppRoutes.login);
+    }
+  }
+
+  Future<void> _goToStartupRoute(String nextRoute) async {
+    final hasSeenOnboarding = await _onboardingStorage.hasSeenOnboarding();
+    if (!mounted) return;
+
+    if (hasSeenOnboarding) {
+      context.go(nextRoute);
+      return;
+    }
+
+    context.go(
+      Uri(
+        path: AppRoutes.onboarding,
+        queryParameters: {'next': nextRoute},
+      ).toString(),
+    );
   }
 
   @override

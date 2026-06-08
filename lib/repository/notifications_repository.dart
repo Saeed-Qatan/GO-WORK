@@ -53,15 +53,8 @@ class NotificationsRepository {
         {},
       );
     } catch (e) {
-      debugPrint(
-        '=== NOTIFICATIONS: markAsRead PUT error, trying legacy POST: $e ===',
-      );
-      try {
-        await _apiClient.post('Notifications/mark-read/$notificationId', {});
-      } catch (fallbackError) {
-        debugPrint('=== NOTIFICATIONS: markAsRead error: $fallbackError ===');
-        rethrow;
-      }
+      debugPrint('=== NOTIFICATIONS: markAsRead error: $e ===');
+      rethrow;
     }
   }
 
