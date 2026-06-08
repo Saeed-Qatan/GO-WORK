@@ -237,11 +237,17 @@ class SearchViewModel extends ChangeNotifier {
 
   List<JobModel> _applyClientFilters(List<JobModel> jobs) {
     final selectedCategory = _selectedCategory;
+    final selectedCountry = _selectedCountry;
     final selectedType = _selectedType;
 
     return jobs.where((job) {
       if (selectedCategory != null &&
           !_matchesText(job.category, selectedCategory.rawValue)) {
+        return false;
+      }
+
+      if (selectedCountry != null &&
+          !_matchesText(job.country, selectedCountry.rawValue)) {
         return false;
       }
 
