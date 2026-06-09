@@ -8,9 +8,11 @@ import '../utils/status_translator.dart';
 import '../widget/common/success_bottom_sheet.dart';
 import 'job_application_state_view_model.dart';
 import 'applications_view_model.dart';
+import 'session_resettable.dart';
 
-class JobDetailsViewModel extends ChangeNotifier {
+class JobDetailsViewModel extends ChangeNotifier implements SessionResettable {
   final JobService _jobService = JobService();
+  int _sessionVersion = 0;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -22,6 +24,7 @@ class JobDetailsViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> fetchJobDetails(String jobId) async {
+    final requestVersion = _sessionVersion;
     _isLoading = true;
     _errorMessage = null;
     // We notify listeners so the view can show a loading state
@@ -29,6 +32,7 @@ class JobDetailsViewModel extends ChangeNotifier {
 
     try {
       final job = await _jobService.getJobById(jobId);
+      if (requestVersion != _sessionVersion) return;
       if (job != null) {
         if (_jobDetails != null) {
           _jobDetails = JobModel(
@@ -76,10 +80,13 @@ class JobDetailsViewModel extends ChangeNotifier {
         _errorMessage = 'تعذر تحميل تفاصيل الوظيفة';
       }
     } catch (e) {
+      if (requestVersion != _sessionVersion) return;
       _errorMessage = AppErrorParser.parse(e);
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (requestVersion == _sessionVersion) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -164,5 +171,14 @@ class JobDetailsViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void resetSessionState({bool notify = true}) {
+    _sessionVersion++;
+    _isLoading = false;
+    _jobDetails = null;
+    _errorMessage = null;
+    if (notify) notifyListeners();
   }
 }

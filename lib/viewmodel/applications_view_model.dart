@@ -5,9 +5,12 @@ import '../repository/applications_repository.dart';
 import '../utils/app_error_parser.dart';
 import '../utils/local_storage.dart';
 import 'job_application_state_view_model.dart';
+import 'session_resettable.dart';
 
-class ApplicationsViewModel extends ChangeNotifier {
+class ApplicationsViewModel extends ChangeNotifier implements SessionResettable {
   final IApplicationsRepository _repository;
+  final LocalStorage _storage;
+  int _sessionVersion = 0;
   List<ApplicationModel> _allApplications = [];
   List<ApplicationModel> _filteredApplications = [];
   List<ApplicationStatusModel> _statuses = [];
@@ -18,8 +21,10 @@ class ApplicationsViewModel extends ChangeNotifier {
 
   ApplicationsViewModel({
     IApplicationsRepository? repository,
+    LocalStorage? storage,
     bool autoFetch = true,
-  }) : _repository = repository ?? ApplicationsRepository() {
+  }) : _repository = repository ?? ApplicationsRepository(),
+       _storage = storage ?? LocalStorage() {
     if (autoFetch) fetchApplications();
   }
 
@@ -48,12 +53,14 @@ class ApplicationsViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> fetchApplications({bool showLoading = true}) async {
+    final requestVersion = _sessionVersion;
     if (showLoading) _isLoading = true;
     _errorMessage = null;
     if (showLoading) notifyListeners();
 
     try {
       final data = await _repository.getApplicationsData();
+      if (requestVersion != _sessionVersion) return;
       _statuses = data.statuses;
       _allApplications = data.applications;
 
@@ -72,6 +79,7 @@ class ApplicationsViewModel extends ChangeNotifier {
         } else {
           // The backend has finally registered the application! We can clean up our local storage
           await _removeOptimisticApplication(optApp.jobId);
+          if (requestVersion != _sessionVersion) return;
         }
       }
 
@@ -99,14 +107,17 @@ class ApplicationsViewModel extends ChangeNotifier {
 
       _applyFilter();
     } catch (e) {
+      if (requestVersion != _sessionVersion) return;
       _errorMessage = AppErrorParser.parse(e);
       _allApplications = [];
       _filteredApplications = [];
       _statuses = [];
       _selectedFilterIndex = 0;
     } finally {
-      if (showLoading) _isLoading = false;
-      notifyListeners();
+      if (requestVersion == _sessionVersion) {
+        if (showLoading) _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -223,7 +234,9 @@ class ApplicationsViewModel extends ChangeNotifier {
 
   Future<List<ApplicationModel>> _loadWithdrawnApplications() async {
     try {
-      final jsonStr = await LocalStorage().getString('withdrawn_applications');
+      final jsonStr = await _storage.getScopedString(
+        'withdrawn_applications',
+      );
       if (jsonStr == null || jsonStr.isEmpty) return [];
       final List<dynamic> decoded = json.decode(jsonStr);
       return decoded.map((item) => ApplicationModel.fromJson(item)).toList();
@@ -241,7 +254,7 @@ class ApplicationsViewModel extends ChangeNotifier {
       final jsonStr = json.encode(
         currentList.map((item) => item.toJson()).toList(),
       );
-      await LocalStorage().saveString('withdrawn_applications', jsonStr);
+      await _storage.saveScopedString('withdrawn_applications', jsonStr);
     } catch (e) {
       debugPrint('Error saving withdrawn application: $e');
     }
@@ -249,7 +262,9 @@ class ApplicationsViewModel extends ChangeNotifier {
 
   Future<List<ApplicationModel>> _loadOptimisticApplications() async {
     try {
-      final jsonStr = await LocalStorage().getString('optimistic_applications');
+      final jsonStr = await _storage.getScopedString(
+        'optimistic_applications',
+      );
       if (jsonStr == null || jsonStr.isEmpty) return [];
       final List<dynamic> decoded = json.decode(jsonStr);
       return decoded.map((item) => ApplicationModel.fromJson(item)).toList();
@@ -267,7 +282,7 @@ class ApplicationsViewModel extends ChangeNotifier {
       final jsonStr = json.encode(
         currentList.map((item) => item.toJson()).toList(),
       );
-      await LocalStorage().saveString('optimistic_applications', jsonStr);
+      await _storage.saveScopedString('optimistic_applications', jsonStr);
     } catch (e) {
       debugPrint('Error saving optimistic application: $e');
     }
@@ -280,7 +295,7 @@ class ApplicationsViewModel extends ChangeNotifier {
       final jsonStr = json.encode(
         currentList.map((item) => item.toJson()).toList(),
       );
-      await LocalStorage().saveString('optimistic_applications', jsonStr);
+      await _storage.saveScopedString('optimistic_applications', jsonStr);
     } catch (e) {
       debugPrint('Error removing optimistic application: $e');
     }
@@ -351,6 +366,18 @@ class ApplicationsViewModel extends ChangeNotifier {
 
     // Persist to local storage
     await _saveOptimisticApplication(optimisticApp);
+  }
+
+  @override
+  void resetSessionState({bool notify = true}) {
+    _sessionVersion++;
+    _allApplications = [];
+    _filteredApplications = [];
+    _statuses = [];
+    _selectedFilterIndex = 0;
+    _isLoading = false;
+    _errorMessage = null;
+    if (notify) notifyListeners();
   }
 }
 

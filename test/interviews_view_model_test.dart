@@ -181,6 +181,41 @@ void main() {
     );
   });
 
+  test('session reset clears memory without deleting scoped local state', () async {
+    final storage = LocalStorage();
+    final interview = _interview(id: 'interview-to-archive');
+
+    await storage.saveString('userId', 'user-a');
+    final viewModel = InterviewsViewModel(
+      repository: _FakeInterviewsRepository([interview]),
+    );
+
+    await viewModel.fetchInterviews();
+    await viewModel.dismissInterview('interview-to-archive');
+
+    expect(viewModel.interviews, isEmpty);
+    expect(viewModel.deletedInterviews.single.id, 'interview-to-archive');
+
+    viewModel.resetSessionState();
+
+    expect(viewModel.interviews, isEmpty);
+    expect(viewModel.deletedInterviews, isEmpty);
+    expect(
+      await storage.getString('deleted_interview_ids_user-a'),
+      isNotNull,
+    );
+
+    final reopenedViewModel = InterviewsViewModel(
+      repository: _FakeInterviewsRepository(<InterviewModel>[]),
+    );
+    await reopenedViewModel.fetchInterviews();
+
+    expect(
+      reopenedViewModel.deletedInterviews.single.id,
+      'interview-to-archive',
+    );
+  });
+
   test(
     'restored interviews stay restored across view model recreation',
     () async {

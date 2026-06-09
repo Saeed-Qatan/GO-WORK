@@ -69,10 +69,7 @@ Future<void> _initializeNotifications() async {
 Future<void> _subscribeToCurrentUserTopics() async {
   final token = await LocalStorage().getString('token');
   if (token == null || token.isEmpty) {
-    final cachedCategoryId = await LocalStorage().getString('categoryId');
-    await notificationTopicService.subscribeUserTopics(
-      categoryId: cachedCategoryId,
-    );
+    await notificationTopicService.subscribeUserTopics(categoryId: null);
     return;
   }
 

@@ -9,6 +9,7 @@ import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/utils/app_error_parser.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
+import 'package:gowork/utils/session_state_reset.dart';
 
 class EmailVerificationViewModel extends ChangeNotifier {
   final List<TextEditingController> controllers = List.generate(
@@ -111,6 +112,7 @@ class EmailVerificationViewModel extends ChangeNotifier {
       }
 
       if (context.mounted) {
+        resetSessionState(context);
         context.go(AppRoutes.home);
       }
     } catch (e) {

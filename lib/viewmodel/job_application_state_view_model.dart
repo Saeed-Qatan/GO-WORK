@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 import '../model/home/home_model.dart';
+import 'session_resettable.dart';
 
-class JobApplicationStateViewModel extends ChangeNotifier {
+class JobApplicationStateViewModel extends ChangeNotifier
+    implements SessionResettable {
   final Map<String, bool> _canApplyByJobId = {};
 
   bool canApplyFor(JobModel job) {
@@ -29,5 +31,11 @@ class JobApplicationStateViewModel extends ChangeNotifier {
 
     _canApplyByJobId[normalizedJobId] = canApply;
     notifyListeners();
+  }
+
+  @override
+  void resetSessionState({bool notify = true}) {
+    _canApplyByJobId.clear();
+    if (notify) notifyListeners();
   }
 }

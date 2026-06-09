@@ -7,13 +7,15 @@ import '../services/notification_topic_service.dart';
 import '../utils/local_storage.dart';
 import '../utils/app_error_parser.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'session_resettable.dart';
 
-class ProfileViewModel extends ChangeNotifier {
+class ProfileViewModel extends ChangeNotifier implements SessionResettable {
   final ProfileRepository _repository = ProfileRepository();
   final NotificationsRepository _notificationsRepository =
       NotificationsRepository();
   final LocalStorage _storage = LocalStorage();
   final NotificationTopicService? _notificationTopicService;
+  int _sessionVersion = 0;
   ProfileModel? _profile;
   ProfileModel? get profile => _profile;
 
@@ -30,33 +32,40 @@ class ProfileViewModel extends ChangeNotifier {
     String? previousCategoryId,
     String? preferredCategoryId,
   }) async {
+    final requestVersion = _sessionVersion;
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       final oldCategoryId = previousCategoryId ?? _profile?.categoryId;
-      _profile = await _repository.getUserProfile();
+      final profile = await _repository.getUserProfile();
+      if (requestVersion != _sessionVersion) return;
+      _profile = profile;
       final requestedCategoryId = preferredCategoryId?.trim();
       if (_profile != null &&
           requestedCategoryId != null &&
           requestedCategoryId.isNotEmpty) {
         _profile = _profile!.copyWith(categoryId: requestedCategoryId);
-        await _storage.saveString('categoryId', requestedCategoryId);
+        await _storage.saveScopedString('categoryId', requestedCategoryId);
       }
       debugPrint(
         '=== PROFILE DEBUG: CATEGORY ID = ${_profile?.categoryId.isNotEmpty == true ? _profile!.categoryId : 'EMPTY'} ===',
       );
+      if (requestVersion != _sessionVersion) return;
       await _notificationTopicService?.syncUserTopics(
         previousCategoryId: oldCategoryId,
         categoryId: _profile?.categoryId,
       );
     } catch (e) {
+      if (requestVersion != _sessionVersion) return;
       debugPrint('Error fetching profile: $e');
       _errorMessage = AppErrorParser.parse(e);
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (requestVersion == _sessionVersion) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -128,7 +137,15 @@ class ProfileViewModel extends ChangeNotifier {
     }
 
     await _storage.clear();
+    resetSessionState();
+  }
+
+  @override
+  void resetSessionState({bool notify = true}) {
+    _sessionVersion++;
     _profile = null;
-    notifyListeners();
+    _isLoading = false;
+    _errorMessage = null;
+    if (notify) notifyListeners();
   }
 }

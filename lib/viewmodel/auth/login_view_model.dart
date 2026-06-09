@@ -3,7 +3,6 @@ import '../../repository/login_repository.dart';
 import '../../repository/profile_repository.dart';
 import '../../services/notification_topic_service.dart';
 import '../../services/push_notification_service.dart';
-import 'package:gowork/utils/local_storage.dart';
 import 'package:gowork/utils/app_error_parser.dart';
 
 class LoginViewModel extends ChangeNotifier {
@@ -38,10 +37,7 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _repository.login(email, password);
-
-      await LocalStorage().saveString('token', response.token);
-      await LocalStorage().saveString('userId', response.userId);
+      await _repository.login(email, password);
       await _pushNotificationService?.registerCurrentToken();
       await _subscribeToUserTopics();
 

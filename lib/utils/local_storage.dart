@@ -40,22 +40,48 @@ class LocalStorage {
     await prefs.remove(key);
   }
 
+  Future<String> currentUserScope() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId')?.trim();
+    return userId == null || userId.isEmpty ? 'anonymous' : userId;
+  }
+
+  Future<String> scopedKey(String key) async {
+    final scope = await currentUserScope();
+    return '${key}_$scope';
+  }
+
+  Future<void> saveScopedString(String key, String value) async {
+    await saveString(await scopedKey(key), value);
+  }
+
+  Future<String?> getScopedString(String key) async {
+    return getString(await scopedKey(key));
+  }
+
+  Future<void> removeScoped(String key) async {
+    await remove(await scopedKey(key));
+  }
+
   Future<void> clearAuth() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('userId');
+    await prefs.remove('categoryId');
   }
 
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
-    final preservedStrings = <String, String?>{
-      'withdrawn_applications': prefs.getString('withdrawn_applications'),
-    };
+    final preservedStrings = <String, String?>{};
 
     for (final key in prefs.getKeys()) {
       if (key.startsWith('interview_local_statuses_') ||
           key.startsWith('deleted_interview_ids_') ||
-          key.startsWith('archived_interviews_')) {
+          key.startsWith('archived_interviews_') ||
+          key.startsWith('withdrawn_applications_') ||
+          key.startsWith('optimistic_applications_') ||
+          key.startsWith('cached_notifications_') ||
+          key.startsWith('categoryId_')) {
         preservedStrings[key] = prefs.getString(key);
       }
     }

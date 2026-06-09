@@ -3,9 +3,18 @@ import '../model/home/home_model.dart';
 import '../repository/home_repository.dart';
 import '../repository/profile_repository.dart';
 import '../utils/app_error_parser.dart';
+import 'session_resettable.dart';
 
-class HomeViewModel extends ChangeNotifier {
-  final HomeRepository _repository = HomeRepository();
+class HomeViewModel extends ChangeNotifier implements SessionResettable {
+  final HomeRepository _repository;
+  final ProfileRepository _profileRepository;
+  int _sessionVersion = 0;
+
+  HomeViewModel({
+    HomeRepository? repository,
+    ProfileRepository? profileRepository,
+  }) : _repository = repository ?? HomeRepository(),
+       _profileRepository = profileRepository ?? ProfileRepository();
 
   List<StatModel> _stats = [];
   List<StatModel> get stats => _stats;
@@ -44,6 +53,7 @@ class HomeViewModel extends ChangeNotifier {
   int get selectedIndex => _selectedIndex;
 
   Future<void> fetchHomeData({bool forceRefresh = false}) async {
+    final requestVersion = _sessionVersion;
     if (forceRefresh) {
       _repository.clearCache();
     }
@@ -58,24 +68,30 @@ class HomeViewModel extends ChangeNotifier {
         _repository.getUserName(),
       ]);
 
-      // Fetch profile to guarantee we get the correct avatarUrl
-      final profileRepo = ProfileRepository();
+      if (requestVersion != _sessionVersion) return;
+
+      var nextUserProfileImage = _userProfileImage;
+      String? nextUserName;
       try {
-        final profile = await profileRepo.getUserProfile();
-        _userProfileImage = profile.avatarUrl;
-        if (_userName.isEmpty) {
-          _userName = profile.name;
-        }
+        final profile = await _profileRepository.getUserProfile();
+        nextUserProfileImage = profile.avatarUrl;
+        nextUserName = profile.name;
       } catch (e) {
         debugPrint('Failed to load profile for avatar: $e');
       }
 
+      if (requestVersion != _sessionVersion) return;
+
+      _userProfileImage = nextUserProfileImage;
       _stats = results[0] as List<StatModel>;
       _jobs = results[1] as List<JobModel>;
-      if (_userName.isEmpty) {
+      if (nextUserName != null && nextUserName.isNotEmpty) {
+        _userName = nextUserName;
+      } else if (_userName.isEmpty) {
         _userName = results[2] as String;
       }
     } catch (e) {
+      if (requestVersion != _sessionVersion) return;
       debugPrint('Error fetching home data: $e');
       _errorMessage = AppErrorParser.parse(e);
       // Ensure we don't display completely empty stats which would break UI
@@ -87,8 +103,10 @@ class HomeViewModel extends ChangeNotifier {
         ];
       }
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (requestVersion == _sessionVersion) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -101,5 +119,20 @@ class HomeViewModel extends ChangeNotifier {
   void onSearchChanged(String query) {
     _searchQuery = query;
     notifyListeners();
+  }
+
+  @override
+  void resetSessionState({bool notify = true}) {
+    _sessionVersion++;
+    _repository.clearCache();
+    _stats = [];
+    _jobs = [];
+    _searchQuery = '';
+    _userName = '';
+    _userProfileImage = '';
+    _isLoading = false;
+    _errorMessage = null;
+    _selectedIndex = 0;
+    if (notify) notifyListeners();
   }
 }

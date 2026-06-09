@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../../routing/app_router.dart';
-import '../../../viewmodel/profile_view_model.dart';
+import 'package:gowork/routing/app_router.dart';
+import 'package:gowork/utils/session_state_reset.dart';
+import 'package:gowork/viewmodel/profile_view_model.dart';
 
 class DeleteAccount extends StatelessWidget {
   const DeleteAccount({super.key});
@@ -68,6 +69,7 @@ class DeleteAccount extends StatelessWidget {
     if (shouldLogout == true && context.mounted) {
       await context.read<ProfileViewModel>().logout();
       if (context.mounted) {
+        resetSessionState(context);
         context.go(AppRoutes.login);
       }
     }

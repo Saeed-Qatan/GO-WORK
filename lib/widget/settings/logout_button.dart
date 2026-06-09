@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../../routing/app_router.dart';
-import '../../../viewmodel/profile_view_model.dart';
-import '../../../utils/snackbar_service.dart';
+import 'package:gowork/routing/app_router.dart';
+import 'package:gowork/utils/session_state_reset.dart';
+import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/viewmodel/profile_view_model.dart';
 
 class LogoutButton extends StatelessWidget {
   const LogoutButton({super.key});
@@ -70,6 +71,7 @@ class LogoutButton extends StatelessWidget {
       await context.read<ProfileViewModel>().logout();
       if (context.mounted) {
         SnackbarService.showSuccess('تم تسجيل الخروج بنجاح');
+        resetSessionState(context);
         context.go(AppRoutes.login);
       }
     }

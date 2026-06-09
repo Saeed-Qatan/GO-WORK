@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:gowork/theme/app_colors.dart';
+import 'package:gowork/utils/session_state_reset.dart';
 import 'error_page_view.dart';
 
 /// A view shown when the user's session has expired (401 Unauthorized).
@@ -17,7 +18,10 @@ class SessionExpiredView extends StatelessWidget {
         icon: Icons.history_toggle_off_rounded,
         themeColor: AppColors.primary,
         actionLabel: 'تسجيل الدخول',
-        onAction: () => context.go(AppRoutes.login),
+        onAction: () {
+          resetSessionState(context);
+          context.go(AppRoutes.login);
+        },
       ),
     );
   }
