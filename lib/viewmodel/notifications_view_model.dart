@@ -11,10 +11,11 @@ import '../services/notifications_local_store.dart';
 import '../services/push_notification_service.dart';
 import '../utils/app_error_parser.dart';
 import '../utils/snackbar_service.dart';
+import 'session_resettable.dart';
 
 enum NotificationsViewState { initial, loading, loaded, empty, error }
 
-class NotificationsViewModel extends ChangeNotifier {
+class NotificationsViewModel extends ChangeNotifier implements SessionResettable {
   static const int _defaultPageSize = 20;
 
   final NotificationsRepository _repository;
@@ -24,6 +25,7 @@ class NotificationsViewModel extends ChangeNotifier {
   final bool _autoFetchUnreadCount;
 
   StreamSubscription<NotificationModel>? _pushSubscription;
+  int _sessionVersion = 0;
 
   List<NotificationModel> _notifications = [];
   List<NotificationModel> get notifications => _notifications;
@@ -66,11 +68,14 @@ class NotificationsViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchNotifications({bool refresh = false}) async {
+    final requestVersion = _sessionVersion;
     if (_viewState == NotificationsViewState.loading && !refresh) return;
 
     if (_notifications.isEmpty) {
-      await _loadCachedNotifications();
+      await _loadCachedNotifications(requestVersion: requestVersion);
     }
+
+    if (requestVersion != _sessionVersion) return;
 
     if (_notifications.isEmpty) {
       _viewState = NotificationsViewState.loading;
@@ -88,6 +93,7 @@ class NotificationsViewModel extends ChangeNotifier {
         pageSize: _defaultPageSize,
       );
       final cached = await _localStore.load();
+      if (requestVersion != _sessionVersion) return;
       _notifications = _mergeNotifications(remote: page.items, local: cached);
       _currentPage = page.currentPage;
       _totalPages = page.totalPages;
@@ -96,6 +102,7 @@ class NotificationsViewModel extends ChangeNotifier {
       await fetchUnreadCount(notify: false);
     } catch (e) {
       final cached = await _localStore.load();
+      if (requestVersion != _sessionVersion) return;
       if (cached.isNotEmpty) {
         _notifications = cached;
         _unreadCount = cached.where((n) => !n.isRead).length;
@@ -106,7 +113,9 @@ class NotificationsViewModel extends ChangeNotifier {
       }
       debugPrint('=== NOTIFICATIONS VM ERROR: $e ===');
     } finally {
-      notifyListeners();
+      if (requestVersion == _sessionVersion) {
+        notifyListeners();
+      }
     }
   }
 
@@ -121,6 +130,7 @@ class NotificationsViewModel extends ChangeNotifier {
   }
 
   Future<void> loadMore() async {
+    final requestVersion = _sessionVersion;
     if (_isLoadingMore || !hasMore) return;
 
     _isLoadingMore = true;
@@ -131,6 +141,7 @@ class NotificationsViewModel extends ChangeNotifier {
         pageNumber: _currentPage + 1,
         pageSize: _defaultPageSize,
       );
+      if (requestVersion != _sessionVersion) return;
       _notifications = [..._notifications, ...page.items];
       _notifications = _dedupeAndSort(_notifications);
       _currentPage = page.currentPage;
@@ -141,8 +152,10 @@ class NotificationsViewModel extends ChangeNotifier {
       SnackbarService.showError(AppErrorParser.parse(e));
       debugPrint('=== NOTIFICATIONS LOAD MORE ERROR: $e ===');
     } finally {
-      _isLoadingMore = false;
-      notifyListeners();
+      if (requestVersion == _sessionVersion) {
+        _isLoadingMore = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -272,8 +285,9 @@ class NotificationsViewModel extends ChangeNotifier {
         : NotificationsViewState.loaded;
   }
 
-  Future<void> _loadCachedNotifications() async {
+  Future<void> _loadCachedNotifications({int? requestVersion}) async {
     final cached = await _localStore.load();
+    if (requestVersion != null && requestVersion != _sessionVersion) return;
     if (cached.isEmpty || _notifications.isNotEmpty) return;
 
     _notifications = cached;
@@ -320,5 +334,18 @@ class NotificationsViewModel extends ChangeNotifier {
   void dispose() {
     _pushSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void resetSessionState({bool notify = true}) {
+    _sessionVersion++;
+    _notifications = [];
+    _unreadCount = 0;
+    _viewState = NotificationsViewState.initial;
+    _errorMessage = null;
+    _currentPage = 0;
+    _totalPages = 1;
+    _isLoadingMore = false;
+    if (notify) notifyListeners();
   }
 }

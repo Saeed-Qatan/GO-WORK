@@ -125,18 +125,18 @@ class _FeedbackBodyState extends State<_FeedbackBody> {
                         children: [
                           Expanded(
                             child: _FeedbackTypeOption(
-                              type: FeedbackType.suggestion,
+                              type: FeedbackType.complaint,
                               selectedType: _selectedType,
-                              icon: Icons.lightbulb_outline,
+                              icon: Icons.report_problem_outlined,
                               onSelected: _setFeedbackType,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: _FeedbackTypeOption(
-                              type: FeedbackType.complaint,
+                              type: FeedbackType.suggestion,
                               selectedType: _selectedType,
-                              icon: Icons.report_problem_outlined,
+                              icon: Icons.lightbulb_outline,
                               onSelected: _setFeedbackType,
                             ),
                           ),

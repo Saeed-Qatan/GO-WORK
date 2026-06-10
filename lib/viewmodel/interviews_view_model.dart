@@ -7,12 +7,13 @@ import '../repository/interviews_repository.dart';
 import '../utils/app_error_parser.dart';
 import '../utils/local_storage.dart';
 import '../utils/status_translator.dart';
+import 'session_resettable.dart';
 
 /// Manages state and business logic for the Interviews screen.
 ///
 /// The [IInterviewsRepository] is injected via the constructor to keep
 /// this ViewModel fully testable without any framework dependency.
-class InterviewsViewModel extends ChangeNotifier {
+class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
   static const String _localStatusesStorageKeyPrefix =
       'interview_local_statuses';
   static const String _deletedInterviewIdsStorageKeyPrefix =
@@ -22,6 +23,7 @@ class InterviewsViewModel extends ChangeNotifier {
 
   final IInterviewsRepository _repository;
   final LocalStorage _storage;
+  int _sessionVersion = 0;
 
   InterviewsViewModel({
     required IInterviewsRepository repository,
@@ -92,6 +94,7 @@ class InterviewsViewModel extends ChangeNotifier {
   ///
   /// Pass [showLoading] = false for silent background refreshes.
   Future<void> fetchInterviews({bool showLoading = true}) async {
+    final requestVersion = _sessionVersion;
     if (showLoading) _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -99,6 +102,7 @@ class InterviewsViewModel extends ChangeNotifier {
     try {
       await _ensureLocalStateLoaded();
       final fetched = await _repository.getInterviews();
+      if (requestVersion != _sessionVersion) return;
       _interviews = fetched.map((interview) {
         if (_localStatuses.containsKey(interview.id)) {
           return interview.copyWith(status: _localStatuses[interview.id]);
@@ -107,10 +111,13 @@ class InterviewsViewModel extends ChangeNotifier {
       }).toList();
       await _refreshArchivedSnapshotsFromFetchedInterviews();
     } catch (e) {
+      if (requestVersion != _sessionVersion) return;
       _errorMessage = AppErrorParser.parse(e);
     } finally {
-      if (showLoading) _isLoading = false;
-      notifyListeners();
+      if (requestVersion == _sessionVersion) {
+        if (showLoading) _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -409,5 +416,17 @@ class InterviewsViewModel extends ChangeNotifier {
   void _clearSubmitting() {
     _submittingInterviewId = null;
     _submittingAction = null;
+  }
+
+  @override
+  void resetSessionState({bool notify = true}) {
+    _sessionVersion++;
+    _interviews = [];
+    _resetLocalStateForScope('anonymous');
+    _isLoading = false;
+    _errorMessage = null;
+    _successMessage = null;
+    _clearSubmitting();
+    if (notify) notifyListeners();
   }
 }

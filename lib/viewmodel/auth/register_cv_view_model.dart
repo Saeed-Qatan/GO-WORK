@@ -12,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/main.dart'; // للوصول إلى notificationTopicService
-import 'package:gowork/utils/local_storage.dart';
 
 class RegisterCVViewModel extends ChangeNotifier {
   final skillController = TextEditingController();
@@ -199,7 +198,6 @@ class RegisterCVViewModel extends ChangeNotifier {
 
       await RegisterService().register(data);
 
-      await LocalStorage().saveString('categoryId', categoryId);
       await notificationTopicService.syncUserTopics(
         previousCategoryId: null,
         categoryId: data.categoryId,

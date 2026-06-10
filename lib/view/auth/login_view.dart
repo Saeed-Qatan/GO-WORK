@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:provider/provider.dart';
 import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/utils/session_state_reset.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -157,6 +158,7 @@ class _LoginViewState extends State<LoginView> {
                           if (success) {
                             if (context.mounted) {
                               SnackbarService.showSuccess('تم تسجيل الدخول بنجاح');
+                              resetSessionState(context);
                               context.go(AppRoutes.home);
                             }
                           } else {

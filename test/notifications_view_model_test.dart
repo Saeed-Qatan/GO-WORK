@@ -5,7 +5,9 @@ import 'package:gowork/model/notification_model.dart';
 import 'package:gowork/repository/notifications_repository.dart';
 import 'package:gowork/services/notifications_local_store.dart';
 import 'package:gowork/services/push_notification_service.dart';
+import 'package:gowork/utils/local_storage.dart';
 import 'package:gowork/viewmodel/notifications_view_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeNotificationsRepository extends NotificationsRepository {
   final Map<int, NotificationsPage> pages;
@@ -104,6 +106,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('NotificationsViewModel', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
     test('loads first page and unread count', () async {
       final repository = _FakeNotificationsRepository(
         unreadCount: 2,
@@ -495,6 +501,34 @@ void main() {
 
       expect(localStore.stored.map((item) => item.id), [2]);
       expect(repository.hideCount, 1);
+    });
+
+    test('local notification cache is scoped to the current user', () async {
+      final storage = LocalStorage();
+      final store = NotificationsLocalStore(storage: storage);
+
+      await storage.saveString('userId', 'user-a');
+      await store.save([_notification(id: 1)]);
+
+      await storage.clear();
+      await storage.saveString('userId', 'user-b');
+
+      expect(await store.load(), isEmpty);
+
+      await store.save([_notification(id: 2)]);
+
+      await storage.clear();
+      await storage.saveString('userId', 'user-a');
+
+      expect((await store.load()).single.id, 1);
+      expect(
+        await storage.getString('cached_notifications_user-a'),
+        isNotNull,
+      );
+      expect(
+        await storage.getString('cached_notifications_user-b'),
+        isNotNull,
+      );
     });
   });
 }

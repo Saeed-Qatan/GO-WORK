@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gowork/model/applications/application_model.dart';
 import 'package:gowork/repository/applications_repository.dart';
 import 'package:gowork/services/applications_service.dart';
+import 'package:gowork/utils/local_storage.dart';
 import 'package:gowork/viewmodel/applications_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -305,6 +306,105 @@ void main() {
       expect(viewModel.applications.single.statusLabelFromBackend, 'تم السحب');
     },
   );
+
+  test('local optimistic applications are scoped to the current user', () async {
+    final storage = LocalStorage();
+    final service = _FakeApplicationsService(
+      statusesResponse: {
+        'data': [
+          {'value': 'PendingReview', 'label': 'PendingReview'},
+        ],
+      },
+      applicationsResponse: {'data': <Map<String, dynamic>>[]},
+    );
+
+    await storage.saveString('userId', 'user-a');
+    final userAViewModel = ApplicationsViewModel(
+      repository: ApplicationsRepository(service: service),
+      autoFetch: false,
+    );
+    await userAViewModel.fetchApplications();
+    userAViewModel.addOptimisticApplication(
+      jobId: 'job-user-a',
+      jobTitle: 'User A Job',
+      company: 'Company A',
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      await storage.getString('optimistic_applications_user-a'),
+      isNotNull,
+    );
+
+    await storage.clear();
+    await storage.saveString('userId', 'user-b');
+    final userBViewModel = ApplicationsViewModel(
+      repository: ApplicationsRepository(service: service),
+      autoFetch: false,
+    );
+    await userBViewModel.fetchApplications();
+
+    expect(userBViewModel.applications, isEmpty);
+
+    await storage.clear();
+    await storage.saveString('userId', 'user-a');
+    final reopenedUserAViewModel = ApplicationsViewModel(
+      repository: ApplicationsRepository(service: service),
+      autoFetch: false,
+    );
+    await reopenedUserAViewModel.fetchApplications();
+
+    expect(reopenedUserAViewModel.applications.single.jobId, 'job-user-a');
+  });
+
+  test('local withdrawn applications are scoped to the current user', () async {
+    final storage = LocalStorage();
+    final userAService = _ChangingApplicationsService(
+      statusesResponse: {
+        'data': [
+          {'value': 'PendingReview', 'label': 'PendingReview'},
+          {'value': 'Withdrawn', 'label': 'Withdrawn'},
+        ],
+      },
+      responses: [
+        {
+          'data': [
+            {
+              'id': 'app-user-a',
+              'jobId': 'job-user-a',
+              'status': 'PendingReview',
+            },
+          ],
+        },
+        {'data': <Map<String, dynamic>>[]},
+      ],
+    );
+
+    await storage.saveString('userId', 'user-a');
+    final userAViewModel = ApplicationsViewModel(
+      repository: ApplicationsRepository(service: userAService),
+      autoFetch: false,
+    );
+    await userAViewModel.fetchApplications();
+    await userAViewModel.withdrawApplication('app-user-a');
+
+    expect(await storage.getString('withdrawn_applications_user-a'), isNotNull);
+
+    await storage.clear();
+    await storage.saveString('userId', 'user-b');
+    final userBViewModel = ApplicationsViewModel(
+      repository: ApplicationsRepository(
+        service: _FakeApplicationsService(
+          statusesResponse: userAService.statusesResponse,
+          applicationsResponse: {'data': <Map<String, dynamic>>[]},
+        ),
+      ),
+      autoFetch: false,
+    );
+    await userBViewModel.fetchApplications();
+
+    expect(userBViewModel.applications, isEmpty);
+  });
 }
 
 class _ChangingApplicationsService extends ApplicationsService {

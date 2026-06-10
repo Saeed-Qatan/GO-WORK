@@ -4,15 +4,20 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/notification_model.dart';
+import '../utils/local_storage.dart';
 
 class NotificationsLocalStore {
   static const String _storageKey = 'cached_notifications';
   static const int _maxCachedNotifications = 100;
+  final LocalStorage _storage;
+
+  NotificationsLocalStore({LocalStorage? storage})
+    : _storage = storage ?? LocalStorage();
 
   Future<List<NotificationModel>> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_storageKey);
+      final raw = prefs.getString(await _storage.scopedKey(_storageKey));
       if (raw == null || raw.isEmpty) return const [];
 
       final decoded = jsonDecode(raw);
@@ -34,7 +39,7 @@ class NotificationsLocalStore {
       final deduped = _dedupe(notifications).take(_maxCachedNotifications);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-        _storageKey,
+        await _storage.scopedKey(_storageKey),
         jsonEncode(deduped.map((item) => item.toJson()).toList()),
       );
     } catch (e) {
