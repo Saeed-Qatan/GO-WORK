@@ -503,6 +503,47 @@ void main() {
       expect(repository.hideCount, 1);
     });
 
+    test('syncs cached notifications into current list after background push', () async {
+      final localStore = _FakeNotificationsLocalStore([
+        _notification(id: 2, isRead: false),
+        _notification(id: 1, isRead: true),
+      ]);
+      final viewModel = NotificationsViewModel(
+        repository: _FakeNotificationsRepository(pages: {}),
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.syncCachedNotifications();
+
+      expect(viewModel.notifications.map((item) => item.id), [1, 2]);
+      expect(viewModel.unreadCount, 1);
+      expect(viewModel.viewState, NotificationsViewState.loaded);
+    });
+
+    test('local store upsert dedupes and preserves read state', () async {
+      final storage = LocalStorage();
+      final store = NotificationsLocalStore(storage: storage);
+
+      await store.save([
+        _notification(id: 1, isRead: true),
+        _notification(id: 2, isRead: false),
+      ]);
+      await store.upsert(
+        _notification(id: 1, isRead: false).copyWith(
+          actionUrl: '/jobs/updated',
+          createdAt: DateTime.utc(2026, 6, 3),
+        ),
+      );
+
+      final stored = await store.load();
+
+      expect(stored.map((item) => item.id), [1, 2]);
+      expect(stored.first.isRead, isTrue);
+      expect(stored.first.actionUrl, '/jobs/updated');
+    });
+
     test('local notification cache is scoped to the current user', () async {
       final storage = LocalStorage();
       final store = NotificationsLocalStore(storage: storage);

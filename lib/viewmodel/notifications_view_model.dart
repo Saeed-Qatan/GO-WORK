@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../model/notification_model.dart';
 import '../repository/notifications_repository.dart';
-import '../routing/app_router.dart';
 import '../services/job_service.dart';
+import '../services/notification_navigation_service.dart';
 import '../services/notifications_local_store.dart';
 import '../services/push_notification_service.dart';
 import '../utils/app_error_parser.dart';
@@ -20,7 +19,7 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
 
   final NotificationsRepository _repository;
   final PushNotificationService _pushService;
-  final JobService _jobService;
+  final NotificationNavigationService _navigationService;
   final NotificationsLocalStore _localStore;
   final bool _autoFetchUnreadCount;
 
@@ -53,11 +52,14 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
     NotificationsRepository? repository,
     PushNotificationService? pushService,
     JobService? jobService,
+    NotificationNavigationService? navigationService,
     NotificationsLocalStore? localStore,
     bool autoFetchUnreadCount = true,
   }) : _repository = repository ?? NotificationsRepository(),
        _pushService = pushService ?? PushNotificationService(),
-       _jobService = jobService ?? JobService(),
+       _navigationService =
+           navigationService ??
+           NotificationNavigationService(jobService: jobService),
        _localStore = localStore ?? NotificationsLocalStore(),
        _autoFetchUnreadCount = autoFetchUnreadCount {
     _subscribeToLiveNotifications();
@@ -232,24 +234,29 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
     final actionUrl = notification.actionUrl?.trim();
     if (actionUrl == null || actionUrl.isEmpty) return;
 
-    final uri = Uri.tryParse(actionUrl);
-    final segments = uri?.pathSegments ?? const <String>[];
-    if (segments.length == 2 && segments.first.toLowerCase() == 'jobs') {
-      if (!context.mounted) return;
-      await _openJob(context, segments[1]);
+    try {
+      final opened = await _navigationService.openActionUrl(
+        actionUrl,
+        context: context,
+        replace: false,
+      );
+      if (!opened) {
+        SnackbarService.showError('تعذر فتح الإشعار');
+      }
+    } catch (e) {
+      SnackbarService.showError(AppErrorParser.parse(e));
+      debugPrint('=== NOTIFICATION ACTION ERROR: $e ===');
     }
   }
 
-  Future<void> _openJob(BuildContext context, String jobId) async {
-    try {
-      final job = await _jobService.getJobById(jobId);
-      if (job == null) return;
-      if (!context.mounted) return;
-      context.push(AppRoutes.jobDetails, extra: job);
-    } catch (e) {
-      SnackbarService.showError(AppErrorParser.parse(e));
-      debugPrint('=== NOTIFICATION ACTION JOB ERROR: $e ===');
-    }
+  Future<void> syncCachedNotifications({bool notify = true}) async {
+    final cached = await _localStore.load();
+    if (cached.isEmpty) return;
+
+    _notifications = _mergeNotifications(remote: _notifications, local: cached);
+    _unreadCount = _notifications.where((n) => !n.isRead).length;
+    _setLoadedState();
+    if (notify) notifyListeners();
   }
 
   void _subscribeToLiveNotifications() {
@@ -305,7 +312,10 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
       byId[notification.id] = notification;
     }
     for (final notification in remote) {
-      byId[notification.id] = notification;
+      final existing = byId[notification.id];
+      byId[notification.id] = existing == null
+          ? notification
+          : _mergeNotification(existing: existing, incoming: notification);
     }
     return _dedupeAndSort(byId.values);
   }

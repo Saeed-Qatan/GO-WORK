@@ -11,14 +11,12 @@ import '../repository/notifications_repository.dart';
 import 'notifications_local_store.dart';
 
 const String _notificationChannelId = 'gowork_notifications_high_channel';
-const String _legacyNotificationChannelId = 'gowork_notifications_channel';
-const String _defaultNotificationChannelId = 'default';
-const String _highImportanceChannelId = 'high_importance_channel';
 const String _notificationChannelName = 'GoWork Notifications';
-const String _legacyNotificationChannelName = 'GoWork Notifications';
 const String _notificationChannelDescription =
     'Notifications from GoWork application';
 const String _notificationIcon = 'ic_notification';
+
+enum NotificationLifecycle { foreground, background, openedApp, initialMessage }
 
 class NotificationTapAction {
   final int? notificationId;
@@ -40,105 +38,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   _debugLogMessage(label: 'BACKGROUND', message: message);
 
-  if (message.notification == null) {
-    await _showBackgroundLocalNotification(message);
-  }
-
-  final model = _notificationFromMessage(message);
-  if (model != null) {
-    try {
-      await NotificationsLocalStore().upsert(model);
-    } catch (e) {
-      debugPrint('=== BACKGROUND NOTIFICATION CACHE ERROR: $e ===');
-    }
-  }
-}
-
-Future<void> _showBackgroundLocalNotification(RemoteMessage message) async {
-  final model = _notificationFromMessage(message);
-  if (model == null) return;
-
-  final localNotifications = FlutterLocalNotificationsPlugin();
-  const initSettings = InitializationSettings(
-    android: AndroidInitializationSettings(_notificationIcon),
-    iOS: DarwinInitializationSettings(),
+  final service = PushNotificationService(
+    localNotifications: FlutterLocalNotificationsPlugin(),
   );
-  await localNotifications.initialize(initSettings);
-
-  const highChannel = AndroidNotificationChannel(
-    _notificationChannelId,
-    _notificationChannelName,
-    description: _notificationChannelDescription,
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-    showBadge: true,
+  await service.showLocalNotification(
+    message,
+    lifecycle: NotificationLifecycle.background,
   );
-  const legacyChannel = AndroidNotificationChannel(
-    _legacyNotificationChannelId,
-    _legacyNotificationChannelName,
-    description: _notificationChannelDescription,
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-    showBadge: true,
-  );
-  const defaultChannel = AndroidNotificationChannel(
-    _defaultNotificationChannelId,
-    _notificationChannelName,
-    description: _notificationChannelDescription,
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-    showBadge: true,
-  );
-  const highImportanceChannel = AndroidNotificationChannel(
-    _highImportanceChannelId,
-    _notificationChannelName,
-    description: _notificationChannelDescription,
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-    showBadge: true,
-  );
-  final androidNotifications = localNotifications
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >();
-  await androidNotifications?.createNotificationChannel(highChannel);
-  await androidNotifications?.createNotificationChannel(legacyChannel);
-  await androidNotifications?.createNotificationChannel(defaultChannel);
-  await androidNotifications?.createNotificationChannel(highImportanceChannel);
-
-  const details = NotificationDetails(
-    android: AndroidNotificationDetails(
-      _notificationChannelId,
-      _notificationChannelName,
-      channelDescription: _notificationChannelDescription,
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: true,
-      icon: _notificationIcon,
-    ),
-    iOS: DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    ),
-  );
-
-  try {
-    await localNotifications.show(
-      (message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString())
-          .hashCode,
-      model.title,
-      model.body,
-      details,
-      payload: _notificationPayload(model),
-    );
-  } catch (e) {
-    debugPrint('=== LOCAL BACKGROUND NOTIFICATION SHOW ERROR: $e ===');
-  }
 }
 
 /// Logs all relevant fields of an FCM message including topic origin.
@@ -150,34 +56,20 @@ void _debugLogMessage({required String label, required RemoteMessage message}) {
   final topicName = isTopic ? from.replaceFirst('/topics/', '') : null;
   final isCategory = topicName?.startsWith('category_') ?? false;
 
-  debugPrint('\n╔════════════════════════════════════════════╗');
-  debugPrint('║  FCM [$label] MESSAGE RECEIVED');
-  debugPrint('╠════════════════════════════════════════════╣');
-  debugPrint('║  from       : $from');
-  debugPrint('║  is topic   : $isTopic');
-  debugPrint('║  topic name : ${topicName ?? "—"}');
-  debugPrint('║  is category: $isCategory');
+  debugPrint('=== FCM [$label] MESSAGE RECEIVED ===');
+  debugPrint('from       : $from');
+  debugPrint('is topic   : $isTopic');
+  debugPrint('topic name : ${topicName ?? "-"}');
+  debugPrint('is category: $isCategory');
   if (isCategory) {
     final categoryId = topicName!.replaceFirst('category_', '');
-    debugPrint('║  category id: $categoryId  ✅ MATCHED');
-  } else {
-    debugPrint('║  category id: —  ❌ NOT a category topic');
+    debugPrint('category id: $categoryId');
   }
-  debugPrint('╠════════════════════════════════════════════╣');
-  debugPrint('║  messageId  : ${message.messageId ?? "—"}');
-  debugPrint('║  sentTime   : ${message.sentTime ?? "—"}');
-  debugPrint('║  notif.title: ${message.notification?.title ?? "—"}');
-  debugPrint('║  notif.body : ${message.notification?.body ?? "—"}');
-  debugPrint('╠════════════════════════════════════════════╣');
-  debugPrint('║  data payload:');
-  if (message.data.isEmpty) {
-    debugPrint('║    (empty)');
-  } else {
-    message.data.forEach((key, value) {
-      debugPrint('║    $key: $value');
-    });
-  }
-  debugPrint('╚════════════════════════════════════════════╝\n');
+  debugPrint('messageId  : ${message.messageId ?? "-"}');
+  debugPrint('sentTime   : ${message.sentTime ?? "-"}');
+  debugPrint('notif.title: ${message.notification?.title ?? "-"}');
+  debugPrint('notif.body : ${message.notification?.body ?? "-"}');
+  debugPrint('data       : ${message.data}');
 }
 
 class PushNotificationService {
@@ -186,7 +78,10 @@ class PushNotificationService {
   final NotificationsRepository _repository;
   final NotificationsLocalStore _localStore;
   StreamSubscription<String>? _tokenRefreshSubscription;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
+  StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
   bool _localNotificationsReady = false;
+  bool _handlersRegistered = false;
 
   final StreamController<NotificationModel> _notificationStreamController =
       StreamController<NotificationModel>.broadcast();
@@ -213,17 +108,16 @@ class PushNotificationService {
 
   Future<void> initialize() async {
     _firebaseMessaging = FirebaseMessaging.instance;
-    await _setupLocalNotifications();
     await _requestPermissions();
+    await _setupLocalNotifications(createChannels: true);
     await registerCurrentToken();
-    _listenToForegroundMessages();
-    _listenToNotificationTaps();
+    await _registerHandlers();
   }
 
   Future<void> ensureDeviceNotificationSetup() async {
     try {
-      await _setupLocalNotifications();
       await _requestPermissions();
+      await _setupLocalNotifications(createChannels: true);
     } catch (e) {
       debugPrint('=== FCM: ENSURE NOTIFICATION SETUP ERROR: $e ===');
     }
@@ -241,7 +135,7 @@ class PushNotificationService {
         newToken,
       ) {
         debugPrint('=== FCM TOKEN REFRESHED: ${_maskToken(newToken)} ===');
-        _repository.registerFcmToken(newToken);
+        unawaited(_repository.registerFcmToken(newToken));
       });
     } catch (e) {
       debugPrint('=== FCM TOKEN ERROR: $e ===');
@@ -255,6 +149,8 @@ class PushNotificationService {
 
   void dispose() {
     _tokenRefreshSubscription?.cancel();
+    _foregroundMessageSubscription?.cancel();
+    _messageOpenedSubscription?.cancel();
     _notificationStreamController.close();
     _notificationTapStreamController.close();
   }
@@ -266,53 +162,67 @@ class PushNotificationService {
     return action;
   }
 
-  Future<void> _setupLocalNotifications() async {
-    if (_localNotificationsReady) {
-      await _createAndroidNotificationChannels();
-      return;
+  Future<NotificationModel?> showLocalNotification(
+    RemoteMessage message, {
+    required NotificationLifecycle lifecycle,
+  }) async {
+    final model = notificationFromRemoteMessage(message);
+    if (model == null) {
+      debugPrint('=== FCM: MESSAGE WITHOUT TITLE/BODY - skipping ===');
+      return null;
     }
 
-    const androidSettings = AndroidInitializationSettings(_notificationIcon);
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
+    await _safeUpsert(model);
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
-    await _localNotifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (response) {
-        debugPrint('=== LOCAL NOTIFICATION TAPPED: ${response.payload} ===');
-        _handleNotificationTap(_tapActionFromPayload(response.payload));
-      },
-    );
-
-    final launchDetails = await _localNotifications
-        .getNotificationAppLaunchDetails();
-    if (launchDetails?.didNotificationLaunchApp == true) {
-      _handleNotificationTap(
-        _tapActionFromPayload(launchDetails?.notificationResponse?.payload),
+    if (_shouldDisplayLocalNotification(message, lifecycle)) {
+      await _setupLocalNotifications(createChannels: false);
+      await _showLocalNotification(model);
+    } else {
+      debugPrint(
+        '=== LOCAL NOTIFICATION SKIPPED: lifecycle=$lifecycle id=${model.id} ===',
       );
     }
 
-    await _createAndroidNotificationChannels();
+    if (lifecycle == NotificationLifecycle.foreground) {
+      _notificationStreamController.add(model);
+    }
 
-    final androidNotifications = _androidNotifications();
-    final androidPermissionGranted = await androidNotifications
-        ?.requestNotificationsPermission();
-    debugPrint(
-      '=== LOCAL NOTIFICATIONS ANDROID PERMISSION: $androidPermissionGranted ===',
-    );
-    _localNotificationsReady = true;
+    return model;
   }
 
-  Future<void> _createAndroidNotificationChannels() async {
-    const highChannel = AndroidNotificationChannel(
+  Future<void> _setupLocalNotifications({required bool createChannels}) async {
+    if (!_localNotificationsReady) {
+      await _localNotifications.initialize(
+        _localNotificationInitializationSettings,
+        onDidReceiveNotificationResponse: (response) {
+          debugPrint('=== LOCAL NOTIFICATION TAPPED: ${response.payload} ===');
+          _handleNotificationTap(_tapActionFromPayload(response.payload));
+        },
+      );
+
+      final launchDetails = await _localNotifications
+          .getNotificationAppLaunchDetails();
+      if (launchDetails?.didNotificationLaunchApp == true) {
+        _handleNotificationTap(
+          _tapActionFromPayload(launchDetails?.notificationResponse?.payload),
+        );
+      }
+
+      _localNotificationsReady = true;
+    }
+
+    if (createChannels) {
+      await _createAndroidNotificationChannel();
+      final androidPermissionGranted = await _androidNotifications()
+          ?.requestNotificationsPermission();
+      debugPrint(
+        '=== LOCAL NOTIFICATIONS ANDROID PERMISSION: $androidPermissionGranted ===',
+      );
+    }
+  }
+
+  Future<void> _createAndroidNotificationChannel() async {
+    const channel = AndroidNotificationChannel(
       _notificationChannelId,
       _notificationChannelName,
       description: _notificationChannelDescription,
@@ -321,39 +231,8 @@ class PushNotificationService {
       enableVibration: true,
       showBadge: true,
     );
-    const legacyChannel = AndroidNotificationChannel(
-      _legacyNotificationChannelId,
-      _legacyNotificationChannelName,
-      description: _notificationChannelDescription,
-      importance: Importance.max,
-      playSound: true,
-      enableVibration: true,
-      showBadge: true,
-    );
-    const defaultChannel = AndroidNotificationChannel(
-      _defaultNotificationChannelId,
-      _notificationChannelName,
-      description: _notificationChannelDescription,
-      importance: Importance.max,
-      playSound: true,
-      enableVibration: true,
-      showBadge: true,
-    );
-    const highImportanceChannel = AndroidNotificationChannel(
-      _highImportanceChannelId,
-      _notificationChannelName,
-      description: _notificationChannelDescription,
-      importance: Importance.max,
-      playSound: true,
-      enableVibration: true,
-      showBadge: true,
-    );
 
-    final androidNotifications = _androidNotifications();
-    await androidNotifications?.createNotificationChannel(highChannel);
-    await androidNotifications?.createNotificationChannel(legacyChannel);
-    await androidNotifications?.createNotificationChannel(defaultChannel);
-    await androidNotifications?.createNotificationChannel(highImportanceChannel);
+    await _androidNotifications()?.createNotificationChannel(channel);
   }
 
   AndroidFlutterLocalNotificationsPlugin? _androidNotifications() {
@@ -370,58 +249,51 @@ class PushNotificationService {
       sound: true,
     );
     await _firebaseMessaging.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
+      alert: false,
+      badge: false,
+      sound: false,
     );
     debugPrint('=== FCM PERMISSION: ${settings.authorizationStatus} ===');
   }
 
-  void _listenToForegroundMessages() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  Future<void> _registerHandlers() async {
+    if (_handlersRegistered) return;
+    _handlersRegistered = true;
+
+    _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen((
+      message,
+    ) {
       _debugLogMessage(label: 'FOREGROUND', message: message);
-
-      final model = _notificationFromMessage(message);
-      if (model == null) {
-        debugPrint(
-          '=== FCM: MESSAGE WITHOUT TITLE/BODY — skipping local notification ===',
-        );
-        return;
-      }
-
-      unawaited(_showLocalNotification(model));
-      unawaited(_safeUpsert(model));
-      _notificationStreamController.add(model);
+      unawaited(
+        showLocalNotification(
+          message,
+          lifecycle: NotificationLifecycle.foreground,
+        ),
+      );
     });
+
+    _messageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen((
+      message,
+    ) {
+      unawaited(_handleRemoteMessageTap(message, NotificationLifecycle.openedApp));
+    });
+
+    final initialMessage = await _firebaseMessaging.getInitialMessage();
+    if (initialMessage != null) {
+      await _handleRemoteMessageTap(
+        initialMessage,
+        NotificationLifecycle.initialMessage,
+      );
+    }
   }
 
-  void _listenToNotificationTaps() {
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      _debugLogMessage(
-        label: 'TAPPED (opened from background)',
-        message: message,
-      );
-      final model = _notificationFromMessage(message);
-      if (model != null) {
-        unawaited(_localStore.upsert(model));
-      }
-      _handleNotificationTap(_tapActionFromNotification(model));
-    });
-
-    unawaited(
-      _firebaseMessaging.getInitialMessage().then((message) {
-        if (message == null) return;
-        _debugLogMessage(
-          label: 'TAPPED (opened from terminated)',
-          message: message,
-        );
-        final model = _notificationFromMessage(message);
-        if (model != null) {
-          unawaited(_localStore.upsert(model));
-        }
-        _handleNotificationTap(_tapActionFromNotification(model));
-      }),
-    );
+  Future<void> _handleRemoteMessageTap(
+    RemoteMessage message,
+    NotificationLifecycle lifecycle,
+  ) async {
+    _debugLogMessage(label: lifecycle.name, message: message);
+    final model = await showLocalNotification(message, lifecycle: lifecycle);
+    _handleNotificationTap(_tapActionFromNotification(model));
   }
 
   void _handleNotificationTap(NotificationTapAction? action) {
@@ -432,32 +304,13 @@ class PushNotificationService {
   }
 
   Future<void> _showLocalNotification(NotificationModel model) async {
-    const androidDetails = AndroidNotificationDetails(
-      _notificationChannelId,
-      _notificationChannelName,
-      channelDescription: _notificationChannelDescription,
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: true,
-      icon: _notificationIcon,
-    );
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
     try {
       await _localNotifications.show(
-        model.id.hashCode,
+        model.id,
         model.title,
         model.body,
-        details,
-        payload: _notificationPayload(model),
+        _localNotificationDetails,
+        payload: notificationPayload(model),
       );
       debugPrint('=== LOCAL NOTIFICATION SHOWN: ${model.id} ===');
     } catch (e) {
@@ -495,7 +348,7 @@ class PushNotificationService {
         );
       }
     } catch (_) {
-      // Older cached local notifications used the id as a plain payload.
+      // Older local notifications used the id as a plain payload.
     }
 
     return NotificationTapAction(
@@ -503,6 +356,33 @@ class PushNotificationService {
     );
   }
 }
+
+const InitializationSettings _localNotificationInitializationSettings =
+    InitializationSettings(
+      android: AndroidInitializationSettings(_notificationIcon),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
+    );
+
+const NotificationDetails _localNotificationDetails = NotificationDetails(
+  android: AndroidNotificationDetails(
+    _notificationChannelId,
+    _notificationChannelName,
+    channelDescription: _notificationChannelDescription,
+    importance: Importance.max,
+    priority: Priority.high,
+    showWhen: true,
+    icon: _notificationIcon,
+  ),
+  iOS: DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+  ),
+);
 
 NotificationTapAction? _tapActionFromNotification(NotificationModel? model) {
   if (model == null) return null;
@@ -513,7 +393,7 @@ NotificationTapAction? _tapActionFromNotification(NotificationModel? model) {
   );
 }
 
-String _notificationPayload(NotificationModel model) {
+String notificationPayload(NotificationModel model) {
   return jsonEncode({
     'id': model.id,
     'actionUrl': model.actionUrl,
@@ -521,46 +401,104 @@ String _notificationPayload(NotificationModel model) {
   });
 }
 
-NotificationModel? _notificationFromMessage(RemoteMessage message) {
+@visibleForTesting
+bool shouldDisplayLocalNotificationForLifecycle(
+  RemoteMessage message,
+  NotificationLifecycle lifecycle,
+) {
+  return _shouldDisplayLocalNotification(message, lifecycle);
+}
+
+bool _shouldDisplayLocalNotification(
+  RemoteMessage message,
+  NotificationLifecycle lifecycle,
+) {
+  if (lifecycle == NotificationLifecycle.foreground) return true;
+  if (lifecycle == NotificationLifecycle.background) {
+    return message.notification == null;
+  }
+  return false;
+}
+
+@visibleForTesting
+NotificationModel? notificationFromRemoteMessage(RemoteMessage message) {
   final notification = message.notification;
   final data = message.data;
 
-  final title =
-      notification?.title ??
-      data['title']?.toString() ??
-      data['notification_title']?.toString() ??
-      data['notificationTitle']?.toString() ??
-      data['NotificationTitle']?.toString();
-  final body =
-      notification?.body ??
-      data['body']?.toString() ??
-      data['message']?.toString() ??
-      data['notification_body']?.toString() ??
-      data['notificationBody']?.toString() ??
-      data['NotificationBody']?.toString();
+  final title = _firstNonEmpty([
+    notification?.title,
+    data['title'],
+    data['notification_title'],
+    data['notificationTitle'],
+    data['NotificationTitle'],
+  ]);
+  final body = _firstNonEmpty([
+    notification?.body,
+    data['body'],
+    data['message'],
+    data['notification_body'],
+    data['notificationBody'],
+    data['NotificationBody'],
+  ]);
 
   if (title == null && body == null) return null;
 
   return NotificationModel.fromFcm(
-    id: _parseRemoteOptionalInt(data['id']) ?? message.messageId?.hashCode,
+    id: _parseRemoteOptionalInt(data['id']) ?? _stableMessageId(message),
     notificationId: _parseRemoteOptionalInt(data['notificationId']),
     title: title ?? 'New notification',
     body: body ?? '',
-    type: data['type']?.toString(),
-    actionUrl:
-        data['actionUrl']?.toString() ??
-        data['action_url']?.toString() ??
-        data['url']?.toString(),
+    type: _firstNonEmpty([data['type'], data['notificationType']]),
+    actionUrl: _firstNonEmpty([
+      data['actionUrl'],
+      data['action_url'],
+      data['url'],
+    ]),
     imageUrl:
         notification?.android?.imageUrl ??
         notification?.apple?.imageUrl ??
-        data['imageUrl']?.toString() ??
-        data['image']?.toString(),
+        _firstNonEmpty([data['imageUrl'], data['image'], data['image_url']]),
   );
+}
+
+String? _firstNonEmpty(Iterable<dynamic> values) {
+  for (final value in values) {
+    final text = value?.toString().trim();
+    if (text != null && text.isNotEmpty) return text;
+  }
+  return null;
 }
 
 int? _parseRemoteOptionalInt(dynamic value) {
   if (value == null) return null;
   if (value is int) return value;
   return int.tryParse(value.toString());
+}
+
+int _stableMessageId(RemoteMessage message) {
+  final source = [
+    message.messageId,
+    message.sentTime?.toIso8601String(),
+    message.from,
+    message.notification?.title,
+    message.notification?.body,
+    _stableDataString(message.data),
+  ].whereType<String>().join('|');
+  return _stablePositiveId(source.isEmpty ? DateTime.now().toIso8601String() : source);
+}
+
+String _stableDataString(Map<String, dynamic> data) {
+  final sorted = Map<String, dynamic>.fromEntries(
+    data.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+  );
+  return jsonEncode(sorted);
+}
+
+int _stablePositiveId(String source) {
+  var hash = 0x811c9dc5;
+  for (var i = 0; i < source.length; i++) {
+    hash ^= source.codeUnitAt(i);
+    hash = (hash * 0x01000193) & 0x7fffffff;
+  }
+  return hash == 0 ? 1 : hash;
 }

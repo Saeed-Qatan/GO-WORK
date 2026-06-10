@@ -49,7 +49,23 @@ class NotificationsLocalStore {
 
   Future<void> upsert(NotificationModel notification) async {
     final notifications = await load();
-    await save([notification, ...notifications]);
+    final existingIndex = notifications.indexWhere(
+      (item) => item.id == notification.id,
+    );
+    if (existingIndex == -1) {
+      await save([notification, ...notifications]);
+      return;
+    }
+
+    final existing = notifications[existingIndex];
+    final merged = notification.copyWith(
+      isRead: existing.isRead || notification.isRead,
+      actionUrl: notification.actionUrl ?? existing.actionUrl,
+      imageUrl: notification.imageUrl ?? existing.imageUrl,
+    );
+    final updated = List<NotificationModel>.from(notifications)
+      ..[existingIndex] = merged;
+    await save(updated);
   }
 
   List<NotificationModel> _dedupe(List<NotificationModel> notifications) {
