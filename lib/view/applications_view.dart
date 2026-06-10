@@ -218,20 +218,8 @@ class _ApplicationsViewState extends State<ApplicationsView> {
                       child: Column(
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: AppColors.border),
-                                ),
-                                child: const Icon(
-                                  Icons.tune,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
                               Text(
                                 '${viewModel.applications.length} ${AppConstants.applicationsCount}',
                                 style: const TextStyle(

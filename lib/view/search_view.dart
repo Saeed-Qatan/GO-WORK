@@ -250,7 +250,6 @@ class _SearchViewState extends State<SearchView> {
                                   return SearchJobCard(
                                     job: resolvedJob,
                                     isUrgent: index == 0,
-                                    showBookmark: true,
                                     onTap: () {
                                       context.push(
                                         AppRoutes.jobDetails,

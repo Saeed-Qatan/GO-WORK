@@ -72,8 +72,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
-        child: Container(
-          height: 66,
+          child: Container(
+          height: 76,
           decoration: BoxDecoration(
             // Slightly more transparent for a deeper glass effect
             color: Colors.white.withValues(alpha: 0.82),
@@ -114,7 +114,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                         (itemWidth * currentIndex) +
                         (itemWidth / 2) -
                         20, // Center 40px circle
-                    top: 6, // Centered perfectly behind the icon (not the text)
+                    top: 8,
                     width: 40,
                     height: 40,
                     child: Container(
@@ -251,45 +251,65 @@ class _NavTabItemState extends State<_NavTabItem>
       onTap: widget.onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        height: 66,
+        height: 76,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Elastic icon pop
-            AnimatedBuilder(
-              animation: _scaleAnim,
-              builder: (context, child) {
-                return Transform.scale(scale: _scaleAnim.value, child: child);
-              },
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                transitionBuilder: (child, anim) =>
-                    FadeTransition(opacity: anim, child: child),
-                child: Icon(
-                  widget.isSelected ? widget.item.activeIcon : widget.item.icon,
-                  key: ValueKey<bool>(widget.isSelected),
-                  size: 22,
-                  color: iconColor,
+            SizedBox(
+              height: 42,
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _scaleAnim,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _scaleAnim.value,
+                      child: child,
+                    );
+                  },
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    transitionBuilder: (child, anim) =>
+                        FadeTransition(opacity: anim, child: child),
+                    child: Icon(
+                      widget.isSelected
+                          ? widget.item.activeIcon
+                          : widget.item.icon,
+                      key: ValueKey<bool>(widget.isSelected),
+                      size: 22,
+                      color: iconColor,
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 5),
             // Animated label color
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                fontSize: 10,
-                fontWeight: widget.isSelected
-                    ? FontWeight.w700
-                    : FontWeight.w400,
-                color: textColor,
-                letterSpacing: 0.1,
-              ),
-              child: Text(
-                widget.item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            SizedBox(
+              height: 17,
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                      fontSize: 11,
+                      fontWeight: widget.isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w400,
+                      color: textColor,
+                      letterSpacing: 0,
+                    ),
+                    child: Text(
+                      widget.item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../model/home/home_model.dart';
 import '../theme/app_colors.dart';
@@ -19,8 +18,6 @@ class JobDetailsView extends StatefulWidget {
 }
 
 class _JobDetailsViewState extends State<JobDetailsView> {
-  /// Local UI state for the bookmark/save toggle.
-  bool _isSaved = false;
   @override
   void initState() {
     super.initState();
@@ -499,50 +496,6 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                                       const Icon(Icons.send, size: 20),
                                     ],
                                   ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            // Animated bookmark button with bounce + haptic + toggle
-                            GestureDetector(
-                              onTap: () {
-                                HapticFeedback.mediumImpact();
-                                setState(() => _isSaved = !_isSaved);
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                width: 64,
-                                height: 64,
-                                decoration: BoxDecoration(
-                                  color: _isSaved
-                                      ? AppColors.primary.withValues(alpha: 0.1)
-                                      : Colors.transparent,
-                                  border: Border.all(
-                                    color: _isSaved
-                                        ? AppColors.primary.withValues(
-                                            alpha: 0.4,
-                                          )
-                                        : outlineVariant.withValues(alpha: 0.2),
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(32),
-                                ),
-                                child: Center(
-                                  child:
-                                      Icon(
-                                        _isSaved
-                                            ? Icons.bookmark
-                                            : Icons.bookmark_outline,
-                                        key: ValueKey(_isSaved),
-                                        color: _isSaved
-                                            ? AppColors.primary
-                                            : onSurfaceVariant,
-                                      ).animate().scale(
-                                        begin: const Offset(0.6, 0.6),
-                                        end: const Offset(1.0, 1.0),
-                                        duration: 350.ms,
-                                        curve: Curves.elasticOut,
-                                      ),
                                 ),
                               ),
                             ),

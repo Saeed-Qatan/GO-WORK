@@ -5,14 +5,12 @@ import '../../model/home/home_model.dart';
 class SearchJobCard extends StatelessWidget {
   final JobModel job;
   final bool isUrgent;
-  final bool showBookmark;
   final VoidCallback? onTap;
 
   const SearchJobCard({
     super.key,
     required this.job,
     this.isUrgent = false,
-    this.showBookmark = true,
     this.onTap,
   });
 
@@ -83,21 +81,16 @@ class SearchJobCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                end: 30,
-                              ),
-                              child: Text(
-                                job.title,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                      fontSize: 16,
-                                    ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            Text(
+                              job.title,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                    fontSize: 16,
+                                  ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -165,16 +158,6 @@ class SearchJobCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (showBookmark)
-              const PositionedDirectional(
-                top: 12,
-                end: 12,
-                child: Icon(
-                  Icons.bookmark_border,
-                  color: AppColors.textSecondary,
-                  size: 24,
-                ),
-              ),
             if (isUrgent)
               PositionedDirectional(
                 top: 0,

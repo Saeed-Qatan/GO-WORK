@@ -16,6 +16,17 @@ class FakeTopicMessaging implements TopicMessaging {
   }
 }
 
+class FakeCategoryResolver extends NotificationCategoryResolver {
+  final Map<String, NotificationCategory> categories;
+
+  FakeCategoryResolver(this.categories);
+
+  @override
+  Future<NotificationCategory?> resolveById(String categoryId) async {
+    return categories[categoryId.trim()];
+  }
+}
+
 void main() {
   group('NotificationTopicService', () {
     test('subscribeUserTopics ignores empty category topics', () async {
@@ -45,16 +56,60 @@ void main() {
       'syncUserTopics subscribes new category and unsubscribes old',
       () async {
         final messaging = FakeTopicMessaging();
-        final service = NotificationTopicService(topicMessaging: messaging);
+        final service = NotificationTopicService(
+          topicMessaging: messaging,
+          categoryResolver: FakeCategoryResolver({
+            '205': const NotificationCategory(
+              id: '205',
+              name: 'Backend Development',
+            ),
+            '101': const NotificationCategory(
+              id: '101',
+              name: 'Mobile Development',
+            ),
+          }),
+        );
 
         await service.syncUserTopics(
           previousCategoryId: '101',
           categoryId: '205',
         );
 
-        expect(messaging.subscribedTopics, ['all', 'category_205']);
-        expect(messaging.unsubscribedTopics, ['category_101']);
+        expect(messaging.subscribedTopics, [
+          'all',
+          'category_205',
+          'Backend Development_205',
+          'Backend_Development_205',
+        ]);
+        expect(messaging.unsubscribedTopics, [
+          'category_101',
+          'Mobile Development_101',
+          'Mobile_Development_101',
+        ]);
       },
     );
+
+    test('subscribeUserTopics includes backend topic when category name exists', () async {
+      final messaging = FakeTopicMessaging();
+      final service = NotificationTopicService(
+        topicMessaging: messaging,
+        categoryResolver: FakeCategoryResolver({
+          '3': const NotificationCategory(
+            id: '3',
+            name: 'Backend Development',
+          ),
+        }),
+      );
+
+      await service.subscribeUserTopics(categoryId: '3');
+
+      expect(messaging.subscribedTopics, [
+        'all',
+        'category_3',
+        'Backend Development_3',
+        'Backend_Development_3',
+      ]);
+      expect(messaging.unsubscribedTopics, isEmpty);
+    });
   });
 }
