@@ -24,7 +24,10 @@ class ProfileModel {
   });
 
   /// Computed full name for display
-  String get name => '$firstName $middleName $lastName'.trim();
+  String get name =>
+      [firstName, middleName, lastName]
+          .where((s) => s.trim().isNotEmpty)
+          .join(' ');
 
   /// Computed role (alias for jobTitle for backward compat)
   String get role => jobTitle;

@@ -5,6 +5,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../viewmodel/home_view_model.dart';
 import '../viewmodel/job_application_state_view_model.dart';
+import '../viewmodel/notifications_view_model.dart';
 import '../model/home/home_model.dart';
 import '../widget/home/home_header.dart';
 import '../widget/home/stat_card.dart';
@@ -53,6 +54,7 @@ class _HomeViewState extends State<HomeView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<HomeViewModel>(context, listen: false).fetchHomeData();
+        Provider.of<NotificationsViewModel>(context, listen: false).fetchUnreadCount();
       }
     });
   }
@@ -77,10 +79,16 @@ class _HomeViewState extends State<HomeView> {
                 CupertinoSliverRefreshControl(
                   onRefresh: () async {
                     if (!isLoading) {
-                      await Provider.of<HomeViewModel>(
-                        context,
-                        listen: false,
-                      ).fetchHomeData(forceRefresh: true);
+                      await Future.wait([
+                        Provider.of<HomeViewModel>(
+                          context,
+                          listen: false,
+                        ).fetchHomeData(forceRefresh: true),
+                        Provider.of<NotificationsViewModel>(
+                          context,
+                          listen: false,
+                        ).fetchUnreadCount(),
+                      ]);
                     }
                   },
                 ),

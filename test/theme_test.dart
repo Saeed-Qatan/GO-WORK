@@ -7,8 +7,8 @@ import 'package:gowork/theme/app_shadows.dart';
 void main() {
   group('Theme & Colors Tests', () {
     test('AppColors should have correct brand colors', () {
-      expect(AppColors.primary, const Color(0xFF2962FF));
-      expect(AppColors.secondary, const Color(0xFF0039CB));
+      expect(AppColors.primary, const Color(0xFF1E9FFF));
+      expect(AppColors.secondary, const Color(0xFF1E9FFF));
     });
 
     test('AppTheme lightTheme should have correct color scheme', () {

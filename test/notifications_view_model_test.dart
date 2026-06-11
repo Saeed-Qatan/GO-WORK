@@ -452,7 +452,7 @@ void main() {
 
       expect(viewModel.notifications.single.id, 9);
       expect(viewModel.viewState, NotificationsViewState.loaded);
-      expect(viewModel.unreadCount, 4);
+      expect(viewModel.unreadCount, 5);
     });
 
     test('uses cached notifications when remote fetch fails', () async {

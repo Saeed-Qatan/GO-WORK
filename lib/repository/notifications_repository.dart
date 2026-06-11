@@ -29,37 +29,83 @@ class NotificationsRepository {
     }
   }
 
+  /// Fetches the count of unread and visible notifications for the authenticated user.
+  ///
+  /// Since backend environments might differ, this method employs a dynamic fallback system.
+  /// It attempts multiple combinations of HTTP methods and endpoints:
+  /// 1. GET `notifications/unread-count` (Documented API)
+  /// 2. GET `notifications/unread` (Alternate path)
+  /// 3. POST `notifications/unread-count` (Alternate method)
+  /// 4. POST `notifications/unread` (Alternate path & method)
+  ///
+  /// If a 401 error is encountered, it is immediately rethrown to trigger session expiration logic.
   Future<int> getUnreadCount() async {
-    try {
-      final response = await _apiClient.get(
-        ApiConstants.notificationsUnreadCount,
-      );
-      final data = response['data'];
-      if (data is int) return data;
-      if (data is String) return _readInt(data);
-      if (data is Map<String, dynamic>) {
+    final List<Map<String, String>> candidates = [
+      {'method': 'GET', 'path': ApiConstants.notificationsUnreadCount},
+      {'method': 'GET', 'path': 'notifications/unread'},
+      {'method': 'POST', 'path': ApiConstants.notificationsUnreadCount},
+      {'method': 'POST', 'path': 'notifications/unread'},
+    ];
+
+    AppApiException? lastException;
+
+    for (final candidate in candidates) {
+      final method = candidate['method']!;
+      final path = candidate['path']!;
+      debugPrint('=== UNREADCOUNT TRYING: method=$method path="$path" fullUrl="${ApiConstants.baseUrl}$path" ===');
+      try {
+        final Map<String, dynamic> response;
+        if (method == 'GET') {
+          response = await _apiClient.get(path);
+        } else {
+          response = await _apiClient.post(path, {});
+        }
+        debugPrint('=== UNREADCOUNT SUCCESS: method=$method path="$path" response=$response ===');
+        final data = response['data'];
+        if (data is int) return data;
+        if (data is String) return _readInt(data);
+        if (data is Map<String, dynamic>) {
+          return _readInt(
+            data['count'] ?? data['unreadCount'] ?? data['totalCount'],
+          );
+        }
         return _readInt(
-          data['count'] ?? data['unreadCount'] ?? data['totalCount'],
+          response['count'] ?? response['unreadCount'] ?? response['totalCount'],
         );
+      } catch (e) {
+        debugPrint('=== UNREADCOUNT FAILED: method=$method path="$path" error=$e ===');
+        if (e is AppApiException) {
+          lastException = e;
+          if (e.statusCode == 401) {
+            rethrow;
+          }
+        }
       }
-      return _readInt(
-        response['count'] ?? response['unreadCount'] ?? response['totalCount'],
-      );
-    } catch (e) {
-      if (e is AppApiException) {
-        debugPrint('=== NOTIFICATIONS UNREADCOUNT ERROR DETAILS: status=${e.statusCode} data=${e.data} ===');
-      }
-      rethrow;
     }
+
+    if (lastException != null) {
+      debugPrint('=== NOTIFICATIONS UNREADCOUNT ALL FALLBACKS FAILED. Last error: status=${lastException.statusCode} data=${lastException.data} ===');
+      throw lastException;
+    }
+    throw Exception('Failed to fetch unread count through all endpoints and methods');
   }
 
   Future<void> markAsRead(int notificationId) async {
+    final endpoint = ApiConstants.markNotificationRead(notificationId);
+    debugPrint('=== MARKREAD DEBUG: endpoint="$endpoint" method=PUT ===');
     try {
-      await _apiClient.put(
-        ApiConstants.markNotificationRead(notificationId),
-        {},
-      );
+      await _apiClient.put(endpoint, {});
     } catch (e) {
+      if (e is AppApiException && e.statusCode == 405) {
+        debugPrint('=== MARKREAD: PUT returned 405, trying POST... ===');
+        try {
+          await _apiClient.post(endpoint, {});
+          debugPrint('=== MARKREAD: POST succeeded! ===');
+          return;
+        } catch (e2) {
+          debugPrint('=== MARKREAD: POST also failed: $e2 ===');
+        }
+      }
       if (e is AppApiException) {
         debugPrint('=== NOTIFICATIONS MARKREAD ERROR DETAILS: status=${e.statusCode} data=${e.data} ===');
       }

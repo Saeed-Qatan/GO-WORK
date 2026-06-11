@@ -1,20 +1,37 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import '../model/home/home_model.dart';
+import '../model/notification_model.dart';
 import '../repository/home_repository.dart';
 import '../repository/profile_repository.dart';
+import '../services/push_notification_service.dart';
 import '../utils/app_error_parser.dart';
 import 'session_resettable.dart';
 
 class HomeViewModel extends ChangeNotifier implements SessionResettable {
   final HomeRepository _repository;
   final ProfileRepository _profileRepository;
+  final PushNotificationService? _pushNotificationService;
+  StreamSubscription<NotificationModel>? _pushSubscription;
   int _sessionVersion = 0;
 
   HomeViewModel({
     HomeRepository? repository,
     ProfileRepository? profileRepository,
+    PushNotificationService? pushNotificationService,
   }) : _repository = repository ?? HomeRepository(),
-       _profileRepository = profileRepository ?? ProfileRepository();
+       _profileRepository = profileRepository ?? ProfileRepository(),
+       _pushNotificationService = pushNotificationService {
+    _subscribeToLiveNotifications();
+  }
+
+  void _subscribeToLiveNotifications() {
+    _pushSubscription = _pushNotificationService?.onNotificationReceived.listen((notification) {
+      debugPrint('=== HOME VM: Push notification received, refreshing home data automatically ===');
+      unawaited(fetchHomeData(forceRefresh: true));
+    });
+  }
 
   List<StatModel> _stats = [];
   List<StatModel> get stats => _stats;
@@ -134,5 +151,11 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
     _errorMessage = null;
     _selectedIndex = 0;
     if (notify) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _pushSubscription?.cancel();
+    super.dispose();
   }
 }

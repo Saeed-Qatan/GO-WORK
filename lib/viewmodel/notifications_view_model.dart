@@ -14,7 +14,9 @@ import 'session_resettable.dart';
 
 enum NotificationsViewState { initial, loading, loaded, empty, error }
 
-class NotificationsViewModel extends ChangeNotifier implements SessionResettable {
+class NotificationsViewModel extends ChangeNotifier
+    with WidgetsBindingObserver
+    implements SessionResettable {
   static const int _defaultPageSize = 20;
 
   final NotificationsRepository _repository;
@@ -67,6 +69,10 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
     if (_autoFetchUnreadCount) {
       unawaited(fetchUnreadCount());
     }
+    // Register lifecycle observer so we sync the badge when the app resumes
+    // from background (e.g. after a push notification was received while the
+    // app was not in the foreground and the stream never fired).
+    WidgetsBinding.instance.addObserver(this);
   }
 
   Future<void> fetchNotifications({bool refresh = false}) async {
@@ -267,6 +273,9 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
       final alreadyExists = _notifications.any((n) => n.id == notification.id);
       if (!alreadyExists) {
         _notifications = _dedupeAndSort([notification, ..._notifications]);
+        // [FIX] Increment locally and immediately. Do NOT call fetchUnreadCount()
+        // here — the server hasn't persisted the notification yet, so an API
+        // fetch would return the old count and silently undo this +1.
         _unreadCount += notification.isRead ? 0 : 1;
       } else {
         _notifications = _notifications
@@ -280,9 +289,8 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
       _setLoadedState();
       unawaited(_localStore.save(_notifications));
       notifyListeners();
-      unawaited(fetchUnreadCount());
       debugPrint(
-        '=== VM: New live notification received: ${notification.title} ===',
+        '=== VM: Live notification received — local count now: $_unreadCount title: ${notification.title} ===',
       );
     });
   }
@@ -341,8 +349,23 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
+  /// Called by the Flutter framework when the app lifecycle state changes.
+  ///
+  /// On [AppLifecycleState.resumed]: the app has returned from background.
+  /// A push notification may have arrived while the app was suspended, and
+  /// the FCM stream never fired for that message. Fetching the server count
+  /// here guarantees the badge reflects the true unread total immediately.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      debugPrint('=== VM: App resumed — syncing unread count from server ===');
+      unawaited(fetchUnreadCount());
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pushSubscription?.cancel();
     super.dispose();
   }

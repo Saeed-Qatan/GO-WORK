@@ -170,14 +170,21 @@ void main() {
     });
 
     test('rethrows unread count failures so view model can fallback', () async {
-      final apiClient = _FakeApiClient()..failGet = true;
+      final apiClient = _FakeApiClient()
+        ..failGet = true
+        ..failPost = true;
       final repository = NotificationsRepository(apiClient: apiClient);
 
-      expect(
+      await expectLater(
         repository.getUnreadCount(),
         throwsA(isA<Exception>()),
       );
-      expect(apiClient.calls, ['GET notifications/unread-count']);
+      expect(apiClient.calls, [
+        'GET notifications/unread-count',
+        'GET notifications/unread',
+        'POST notifications/unread-count',
+        'POST notifications/unread',
+      ]);
     });
 
     test('rethrows documented mark-read failures without legacy fallback', () async {

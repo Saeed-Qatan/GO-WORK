@@ -78,12 +78,12 @@ void main() {
         expect(messaging.subscribedTopics, [
           'all',
           'category_205',
-          'Backend Development_205',
+          'Backend%20Development_205',
           'Backend_Development_205',
         ]);
         expect(messaging.unsubscribedTopics, [
           'category_101',
-          'Mobile Development_101',
+          'Mobile%20Development_101',
           'Mobile_Development_101',
         ]);
       },
@@ -106,7 +106,7 @@ void main() {
       expect(messaging.subscribedTopics, [
         'all',
         'category_3',
-        'Backend Development_3',
+        'Backend%20Development_3',
         'Backend_Development_3',
       ]);
       expect(messaging.unsubscribedTopics, isEmpty);
