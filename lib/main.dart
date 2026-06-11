@@ -12,8 +12,8 @@ import 'routing/app_router.dart';
 import 'utils/snackbar_service.dart';
 import 'utils/local_storage.dart';
 import 'services/notification_topic_service.dart';
-import 'services/notification_navigation_service.dart';
 import 'services/push_notification_service.dart';
+import 'services/job_service.dart';
 import 'repository/profile_repository.dart';
 
 import 'viewmodel/auth/login_view_model.dart';
@@ -33,6 +33,16 @@ final PushNotificationService pushNotificationService =
 final NotificationTopicService notificationTopicService =
     NotificationTopicService();
 
+const Set<String> _knownInternalRoutes = {
+  AppRoutes.home,
+  AppRoutes.profile,
+  AppRoutes.settings,
+  AppRoutes.feedback,
+  AppRoutes.notifications,
+  AppRoutes.changePassword,
+  AppRoutes.deletedInterviews,
+};
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -41,7 +51,7 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   await Firebase.initializeApp();
-  await _initializeNotifications();
+  unawaited(_initializeNotifications());
 
   runApp(const MyApp());
 }
@@ -59,7 +69,10 @@ Future<void> _initializeNotifications() async {
 Future<void> _subscribeToCurrentUserTopics() async {
   final token = await LocalStorage().getString('token');
   if (token == null || token.isEmpty) {
-    await notificationTopicService.subscribeUserTopics(categoryId: null);
+    final cachedCategoryId = await LocalStorage().getString('categoryId');
+    await notificationTopicService.subscribeUserTopics(
+      categoryId: cachedCategoryId,
+    );
     return;
   }
 
@@ -85,8 +98,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final NotificationNavigationService _notificationNavigationService =
-      NotificationNavigationService();
+  final JobService _jobService = JobService();
   StreamSubscription<NotificationTapAction>? _notificationTapSubscription;
 
   @override
@@ -109,48 +121,58 @@ class _MyAppState extends State<MyApp> {
   Future<void> _openNotificationsFromSystemTap(
     NotificationTapAction action,
   ) async {
-    await _syncCachedNotifications();
-    await _markTappedNotificationRead(action.notificationId);
+    _markTappedNotificationRead(action.notificationId);
 
-    try {
-      if (await _notificationNavigationService.openActionUrl(
-        action.actionUrl,
-      )) {
-        return;
-      }
-    } catch (e) {
-      debugPrint('=== NOTIFICATION TAP ACTION ERROR: $e ===');
-    }
-
-    _notificationNavigationService.openFallbackNotifications();
+    if (await _openActionUrl(action.actionUrl)) return;
+    appRouter.go(AppRoutes.notifications);
   }
 
-  Future<void> _syncCachedNotifications() async {
-    final navigatorContext = rootNavigatorKey.currentContext;
-    if (navigatorContext == null) return;
-
-    try {
-      await navigatorContext
-          .read<NotificationsViewModel>()
-          .syncCachedNotifications();
-    } catch (e) {
-      debugPrint('=== NOTIFICATION TAP CACHE SYNC ERROR: $e ===');
-    }
-  }
-
-  Future<void> _markTappedNotificationRead(int? notificationId) async {
+  void _markTappedNotificationRead(int? notificationId) {
     if (notificationId == null) return;
 
     final navigatorContext = rootNavigatorKey.currentContext;
     if (navigatorContext == null) return;
 
     try {
-      await navigatorContext.read<NotificationsViewModel>().markAsRead(
-        notificationId,
+      unawaited(
+        navigatorContext.read<NotificationsViewModel>().markAsRead(
+          notificationId,
+        ),
       );
     } catch (e) {
       debugPrint('=== NOTIFICATION TAP MARK READ ERROR: $e ===');
     }
+  }
+
+  Future<bool> _openActionUrl(String? actionUrl) async {
+    final target = actionUrl?.trim();
+    if (target == null || target.isEmpty) return false;
+
+    final uri = Uri.tryParse(target);
+    final path = uri?.path.isNotEmpty == true ? uri!.path : target;
+    final internalPath = path.startsWith('/') ? path : '/$path';
+    final pathUri = Uri.tryParse(internalPath);
+    if (pathUri == null) return false;
+    final segments = pathUri.pathSegments;
+
+    if (segments.length == 2 && segments.first.toLowerCase() == 'jobs') {
+      try {
+        final job = await _jobService.getJobById(segments[1]);
+        if (job == null) return false;
+        appRouter.go(AppRoutes.jobDetails, extra: job);
+        return true;
+      } catch (e) {
+        debugPrint('=== NOTIFICATION TAP JOB ACTION ERROR: $e ===');
+        return false;
+      }
+    }
+
+    if (_knownInternalRoutes.contains(internalPath)) {
+      appRouter.go(internalPath);
+      return true;
+    }
+
+    return false;
   }
 
   @override
@@ -169,11 +191,7 @@ class _MyAppState extends State<MyApp> {
             notificationTopicService: notificationTopicService,
           ),
         ),
-        ChangeNotifierProvider(
-          create: (_) => HomeViewModel(
-            pushNotificationService: pushNotificationService,
-          ),
-        ),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => JobApplicationStateViewModel()),
         ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
         ChangeNotifierProvider(

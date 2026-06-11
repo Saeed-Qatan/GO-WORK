@@ -1,3 +1,5 @@
+import '../utils/timezone_utils.dart';
+
 enum InterviewStatus {
   confirmed,
   scheduled,
@@ -46,7 +48,8 @@ class InterviewModel {
 
     if (json['interviewDate'] != null) {
       try {
-        scheduledAt = DateTime.parse(json['interviewDate']);
+        scheduledAt = TimezoneUtils.tryParseUtcToLocal(json['interviewDate']);
+        if (scheduledAt == null) throw const FormatException();
         parsedDate =
             "${scheduledAt.year}-${scheduledAt.month.toString().padLeft(2, '0')}-${scheduledAt.day.toString().padLeft(2, '0')}";
         parsedTime =
@@ -86,7 +89,7 @@ class InterviewModel {
       'companyLogo': companyLogo,
       'date': date,
       'time': time,
-      'interviewDate': scheduledAt?.toIso8601String(),
+      'interviewDate': scheduledAt?.toUtc().toIso8601String(),
       'location': location,
       'interviewerName': interviewerName,
       'interviewerRole': interviewerRole,
