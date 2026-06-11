@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../core/constants/api_constants.dart';
 import '../model/notification_model.dart';
 import '../utils/api_storage.dart';
+import '../utils/app_error_parser.dart';
 
 class NotificationsRepository {
   final ApiClient _apiClient;
@@ -20,6 +21,9 @@ class NotificationsRepository {
       final response = await _apiClient.get(endpoint);
       return NotificationsPage.fromJson(response);
     } catch (e) {
+      if (e is AppApiException) {
+        debugPrint('=== NOTIFICATIONS FETCH ERROR DETAILS: status=${e.statusCode} data=${e.data} ===');
+      }
       debugPrint('=== NOTIFICATIONS: fetch error: $e ===');
       rethrow;
     }
@@ -42,6 +46,9 @@ class NotificationsRepository {
         response['count'] ?? response['unreadCount'] ?? response['totalCount'],
       );
     } catch (e) {
+      if (e is AppApiException) {
+        debugPrint('=== NOTIFICATIONS UNREADCOUNT ERROR DETAILS: status=${e.statusCode} data=${e.data} ===');
+      }
       rethrow;
     }
   }
@@ -53,15 +60,41 @@ class NotificationsRepository {
         {},
       );
     } catch (e) {
+      if (e is AppApiException) {
+        debugPrint('=== NOTIFICATIONS MARKREAD ERROR DETAILS: status=${e.statusCode} data=${e.data} ===');
+      }
       debugPrint('=== NOTIFICATIONS: markAsRead error: $e ===');
       rethrow;
     }
   }
 
   Future<void> markAllAsRead() async {
+    final endpoint = ApiConstants.markAllNotificationsRead;
+    debugPrint('=== MARKALLREAD DEBUG: endpoint="$endpoint" fullUrl="${ApiConstants.baseUrl}$endpoint" method=PUT ===');
     try {
-      await _apiClient.put(ApiConstants.markAllNotificationsRead, {});
+      await _apiClient.put(endpoint, {});
     } catch (e) {
+      if (e is AppApiException && e.statusCode == 405) {
+        debugPrint('=== MARKALLREAD: PUT returned 405, trying POST... ===');
+        try {
+          await _apiClient.post(endpoint, {});
+          debugPrint('=== MARKALLREAD: POST succeeded! ===');
+          return;
+        } catch (e2) {
+          debugPrint('=== MARKALLREAD: POST also failed: $e2 ===');
+        }
+        debugPrint('=== MARKALLREAD: Trying PATCH... ===');
+        try {
+          await _apiClient.patch(endpoint, {});
+          debugPrint('=== MARKALLREAD: PATCH succeeded! ===');
+          return;
+        } catch (e3) {
+          debugPrint('=== MARKALLREAD: PATCH also failed: $e3 ===');
+        }
+      }
+      if (e is AppApiException) {
+        debugPrint('=== NOTIFICATIONS MARKALLREAD ERROR DETAILS: status=${e.statusCode} data=${e.data} ===');
+      }
       debugPrint('=== NOTIFICATIONS: markAllAsRead error: $e ===');
       rethrow;
     }
@@ -71,6 +104,9 @@ class NotificationsRepository {
     try {
       await _apiClient.delete(ApiConstants.hideNotification(notificationId));
     } catch (e) {
+      if (e is AppApiException) {
+        debugPrint('=== NOTIFICATIONS HIDENOTIFICATION ERROR DETAILS: status=${e.statusCode} data=${e.data} ===');
+      }
       debugPrint('=== NOTIFICATIONS: hideNotification error: $e ===');
       rethrow;
     }

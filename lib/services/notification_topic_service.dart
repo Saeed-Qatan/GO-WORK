@@ -222,21 +222,42 @@ class NotificationTopicService {
     return trimmedCategoryId;
   }
 
+  bool _isValidFirebaseTopic(String topic) {
+    return RegExp(r'^[a-zA-Z0-9-_.~%]+$').hasMatch(topic);
+  }
+
   Future<List<String>> _categoryTopics(String categoryId) async {
     final trimmedCategoryId = categoryId.trim();
     if (trimmedCategoryId.isEmpty) return const [];
 
-    final topics = <String>{'$_categoryPrefix$trimmedCategoryId'};
+    final topics = <String>{};
+
+    // 1. Standard Category ID Topic (e.g. category_193)
+    final standardTopic = '$_categoryPrefix$trimmedCategoryId';
+    if (_isValidFirebaseTopic(standardTopic)) {
+      topics.add(standardTopic);
+    }
 
     try {
       final category = await _categoryResolver.resolveById(trimmedCategoryId);
       if (category != null) {
-        final backendTopic = '${category.name}_${category.id}';
-        topics.add(backendTopic);
+        // 2. URL-encoded Category Name Topic (preserves non-ASCII names safely)
+        final encodedCategoryName = Uri.encodeComponent(category.name.trim());
+        final encodedTopic = '${encodedCategoryName}_${category.id}';
+        if (_isValidFirebaseTopic(encodedTopic)) {
+          topics.add(encodedTopic);
+        }
 
-        final sanitizedBackendTopic = _sanitizeFirebaseTopic(backendTopic);
-        if (sanitizedBackendTopic != null) {
-          topics.add(sanitizedBackendTopic);
+        // 3. Raw category name topic (only if it is valid, e.g. English names)
+        final rawTopic = '${category.name.trim()}_${category.id}';
+        if (_isValidFirebaseTopic(rawTopic)) {
+          topics.add(rawTopic);
+        }
+
+        // 4. Sanitized category name topic (fallback, replacing non-ASCII with underscores)
+        final sanitizedTopic = _sanitizeFirebaseTopic(rawTopic);
+        if (sanitizedTopic != null && _isValidFirebaseTopic(sanitizedTopic)) {
+          topics.add(sanitizedTopic);
         }
       } else {
         debugPrint(

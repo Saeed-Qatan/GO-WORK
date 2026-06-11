@@ -110,8 +110,8 @@ class PushNotificationService {
     _firebaseMessaging = FirebaseMessaging.instance;
     await _requestPermissions();
     await _setupLocalNotifications(createChannels: true);
-    await registerCurrentToken();
     await _registerHandlers();
+    unawaited(registerCurrentToken());
   }
 
   Future<void> ensureDeviceNotificationSetup() async {
@@ -175,7 +175,10 @@ class PushNotificationService {
     await _safeUpsert(model);
 
     if (_shouldDisplayLocalNotification(message, lifecycle)) {
-      await _setupLocalNotifications(createChannels: false);
+      // [FIX-2] في الـ background isolate يعمل الكود في Dart VM منفصلة.
+      // الـ channel لم يُنشأ بعد في تلك البيئة — يجب إنشاؤه دائماً.
+      final isBackgroundIsolate = lifecycle == NotificationLifecycle.background;
+      await _setupLocalNotifications(createChannels: isBackgroundIsolate);
       await _showLocalNotification(model);
     } else {
       debugPrint(
@@ -248,10 +251,12 @@ class PushNotificationService {
       badge: true,
       sound: true,
     );
+    // [FIX-1] alert:false = نتحكم يدوياً عبر flutter_local_notifications لتجنب التكرار.
+    // badge+sound يجب أن يبقيا true حتى يعمل الصوت والـ badge على iOS.
     await _firebaseMessaging.setForegroundNotificationPresentationOptions(
       alert: false,
-      badge: false,
-      sound: false,
+      badge: true,
+      sound: true,
     );
     debugPrint('=== FCM PERMISSION: ${settings.authorizationStatus} ===');
   }
@@ -373,9 +378,12 @@ const NotificationDetails _localNotificationDetails = NotificationDetails(
     _notificationChannelName,
     channelDescription: _notificationChannelDescription,
     importance: Importance.max,
-    priority: Priority.high,
+    priority: Priority.max,
     showWhen: true,
     icon: _notificationIcon,
+    playSound: true,
+    enableVibration: true,
+    channelShowBadge: true,
   ),
   iOS: DarwinNotificationDetails(
     presentAlert: true,
@@ -413,11 +421,20 @@ bool _shouldDisplayLocalNotification(
   RemoteMessage message,
   NotificationLifecycle lifecycle,
 ) {
-  if (lifecycle == NotificationLifecycle.foreground) return true;
-  if (lifecycle == NotificationLifecycle.background) {
-    return message.notification == null;
+  switch (lifecycle) {
+    case NotificationLifecycle.foreground:
+      // دائماً نعرض في الـ foreground عبر flutter_local_notifications.
+      return true;
+    case NotificationLifecycle.background:
+      // [FIX-3] إذا جاءت رسالة مع notification object، FCM يعرضها تلقائياً
+      // في شريط الإشعارات. نعرض يدوياً فقط رسائل data-only.
+      // إذا أرسل الباكند data-only (بدون notification)، هذا يُعيد true.
+      return message.notification == null;
+    case NotificationLifecycle.openedApp:
+    case NotificationLifecycle.initialMessage:
+      // المستخدم بدأ التفاعل بالفعل — لا داعي لإشعار مرئي إضافي.
+      return false;
   }
-  return false;
 }
 
 @visibleForTesting
@@ -428,6 +445,7 @@ NotificationModel? notificationFromRemoteMessage(RemoteMessage message) {
   final title = _firstNonEmpty([
     notification?.title,
     data['title'],
+    data['Title'],
     data['notification_title'],
     data['notificationTitle'],
     data['NotificationTitle'],
@@ -435,7 +453,9 @@ NotificationModel? notificationFromRemoteMessage(RemoteMessage message) {
   final body = _firstNonEmpty([
     notification?.body,
     data['body'],
+    data['Body'],
     data['message'],
+    data['Message'],
     data['notification_body'],
     data['notificationBody'],
     data['NotificationBody'],

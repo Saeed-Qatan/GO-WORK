@@ -230,6 +230,7 @@ class NotificationsViewModel extends ChangeNotifier implements SessionResettable
     NotificationModel notification,
   ) async {
     await markAsRead(notification.id);
+    if (!context.mounted) return;
 
     final actionUrl = notification.actionUrl?.trim();
     if (actionUrl == null || actionUrl.isEmpty) return;

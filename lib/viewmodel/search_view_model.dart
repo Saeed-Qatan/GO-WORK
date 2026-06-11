@@ -213,9 +213,11 @@ class SearchViewModel extends ChangeNotifier {
       );
       _jobs = [];
     } finally {
-      if (_isDisposed || requestId != _searchRequestId) return;
-      _isLoading = false;
-      if (!_isDisposed) notifyListeners();
+      // Avoid updating UI for stale / superseded requests.
+      if (!_isDisposed && requestId == _searchRequestId) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -240,8 +242,21 @@ class SearchViewModel extends ChangeNotifier {
     final selectedCountry = _selectedCountry;
     final selectedLocation = _selectedLocation;
     final selectedType = _selectedType;
+    // Client-side text fallback: ensures visible results change when typing,
+    // even when the backend ignores the `query` parameter or lags behind.
+    final query = _searchQuery.trim().toLowerCase();
 
     return jobs.where((job) {
+      // ── Text search (client-side fallback) ──────────────────────────────
+      if (query.isNotEmpty) {
+        final matchesText = job.title.toLowerCase().contains(query) ||
+            job.company.toLowerCase().contains(query) ||
+            job.category.toLowerCase().contains(query) ||
+            job.location.toLowerCase().contains(query);
+        if (!matchesText) return false;
+      }
+
+      // ── Dropdown filters ─────────────────────────────────────────────────
       if (selectedCategory != null &&
           !_matchesText(job.category, selectedCategory.rawValue)) {
         return false;
