@@ -47,12 +47,7 @@ class EditProfileView extends StatelessWidget {
               ),
             ),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.arrow_forward, color: AppColors.primary),
-              onPressed: () => context.pop(),
-            ),
-          ],
+
         ),
         body: Consumer<EditProfileViewModel>(
           builder: (context, viewModel, child) {
