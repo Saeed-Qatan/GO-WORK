@@ -1,4 +1,10 @@
-enum InterviewStatus { confirmed, scheduled, declined, waiting }
+enum InterviewStatus {
+  confirmed,
+  scheduled,
+  declined,
+  missedInterview,
+  waiting,
+}
 
 class InterviewModel {
   final String id;
@@ -93,16 +99,19 @@ class InterviewModel {
 
   static InterviewStatus _parseStatus(String? statusString) {
     if (statusString == null) return InterviewStatus.waiting;
-    final s = statusString.toLowerCase();
+    final s = statusString.trim().toLowerCase();
     if (s == 'confirmed') return InterviewStatus.confirmed;
     if (s == 'scheduled') return InterviewStatus.scheduled;
+    if (s == 'missinterview' ||
+        s == 'missinginterview' ||
+        s == 'missedinterview' ||
+        s == 'no_show') {
+      return InterviewStatus.missedInterview;
+    }
     if (s == 'declined' ||
         s == 'rejected' ||
         s == 'cancelled' ||
-        s == 'missinterview' ||
-        s == 'missinginterview' ||
-        s == 'not_attending' ||
-        s == 'no_show') {
+        s == 'not_attending') {
       return InterviewStatus.declined;
     }
     if (s == 'waiting' || s == 'pending') return InterviewStatus.waiting;
@@ -112,6 +121,12 @@ class InterviewModel {
   bool get isPast {
     if (scheduledAt == null) return false;
     return scheduledAt!.isBefore(DateTime.now());
+  }
+
+  bool get shouldMarkAsMissed {
+    return isPast &&
+        (status == InterviewStatus.scheduled ||
+            status == InterviewStatus.waiting);
   }
 
   InterviewModel copyWith({InterviewStatus? status}) {

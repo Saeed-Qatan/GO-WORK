@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../model/interview_model.dart';
@@ -65,6 +65,13 @@ class InterviewStatusMapper {
         return const InterviewStatusMeta(
           label: 'مرفوضة',
           icon: Icons.cancel_rounded,
+          color: AppColors.error,
+          background: AppColors.errorBackground,
+        );
+      case InterviewStatus.missedInterview:
+        return const InterviewStatusMeta(
+          label: 'فائتة',
+          icon: Icons.event_busy_rounded,
           color: AppColors.error,
           background: AppColors.errorBackground,
         );

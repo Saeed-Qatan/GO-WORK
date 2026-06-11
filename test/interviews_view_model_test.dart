@@ -3,12 +3,17 @@ import 'package:gowork/model/interview_model.dart';
 import 'package:gowork/repository/interviews_repository.dart';
 import 'package:gowork/utils/local_storage.dart';
 import 'package:gowork/viewmodel/interviews_view_model.dart';
+import 'package:gowork/widget/interviews/interview_status_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeInterviewsRepository implements IInterviewsRepository {
   final List<InterviewModel> interviews;
   int submitCount = 0;
-  String? submittedAction;
+  final List<String> submittedActions = [];
+  final List<String> submittedIds = [];
+
+  String? get submittedAction =>
+      submittedActions.isEmpty ? null : submittedActions.last;
 
   _FakeInterviewsRepository(this.interviews);
 
@@ -24,7 +29,8 @@ class _FakeInterviewsRepository implements IInterviewsRepository {
     String? notes,
   }) async {
     submitCount++;
-    submittedAction = action;
+    submittedActions.add(action);
+    submittedIds.add(id);
     return {
       'success': true,
       'data': {'message': 'ok'},
@@ -76,6 +82,52 @@ void main() {
       );
     },
   );
+
+  test(
+    'past unconfirmed interviews are marked missed and synced to backend',
+    () async {
+      final pastInterview = _interview(
+        status: InterviewStatus.scheduled,
+        scheduledAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      );
+      final repository = _FakeInterviewsRepository([pastInterview]);
+      final viewModel = InterviewsViewModel(repository: repository);
+
+      await viewModel.fetchInterviews();
+
+      expect(
+        viewModel.interviews.single.status,
+        InterviewStatus.missedInterview,
+      );
+      expect(repository.submitCount, 1);
+      expect(repository.submittedIds, ['interview-1']);
+      expect(repository.submittedActions, ['MissedInterview']);
+    },
+  );
+
+  test('past confirmed interviews are not marked missed', () async {
+    final confirmedPastInterview = _interview(
+      status: InterviewStatus.confirmed,
+      scheduledAt: DateTime.now().subtract(const Duration(minutes: 5)),
+    );
+    final repository = _FakeInterviewsRepository([confirmedPastInterview]);
+    final viewModel = InterviewsViewModel(repository: repository);
+
+    await viewModel.fetchInterviews();
+
+    expect(viewModel.interviews.single.status, InterviewStatus.confirmed);
+    expect(repository.submitCount, 0);
+  });
+
+  test('missed interview status parses and displays as Arabic label', () {
+    final interview = InterviewModel.fromJson({
+      'id': 'interview-1',
+      'status': 'MissedInterview',
+    });
+
+    expect(interview.status, InterviewStatus.missedInterview);
+    expect(InterviewStatusMapper.forStatus(interview.status).label, 'فائتة');
+  });
 
   test(
     'archived interviews stay archived across view model recreation',
@@ -181,40 +233,43 @@ void main() {
     );
   });
 
-  test('session reset clears memory without deleting scoped local state', () async {
-    final storage = LocalStorage();
-    final interview = _interview(id: 'interview-to-archive');
+  test(
+    'session reset clears memory without deleting scoped local state',
+    () async {
+      final storage = LocalStorage();
+      final interview = _interview(id: 'interview-to-archive');
 
-    await storage.saveString('userId', 'user-a');
-    final viewModel = InterviewsViewModel(
-      repository: _FakeInterviewsRepository([interview]),
-    );
+      await storage.saveString('userId', 'user-a');
+      final viewModel = InterviewsViewModel(
+        repository: _FakeInterviewsRepository([interview]),
+      );
 
-    await viewModel.fetchInterviews();
-    await viewModel.dismissInterview('interview-to-archive');
+      await viewModel.fetchInterviews();
+      await viewModel.dismissInterview('interview-to-archive');
 
-    expect(viewModel.interviews, isEmpty);
-    expect(viewModel.deletedInterviews.single.id, 'interview-to-archive');
+      expect(viewModel.interviews, isEmpty);
+      expect(viewModel.deletedInterviews.single.id, 'interview-to-archive');
 
-    viewModel.resetSessionState();
+      viewModel.resetSessionState();
 
-    expect(viewModel.interviews, isEmpty);
-    expect(viewModel.deletedInterviews, isEmpty);
-    expect(
-      await storage.getString('deleted_interview_ids_user-a'),
-      isNotNull,
-    );
+      expect(viewModel.interviews, isEmpty);
+      expect(viewModel.deletedInterviews, isEmpty);
+      expect(
+        await storage.getString('deleted_interview_ids_user-a'),
+        isNotNull,
+      );
 
-    final reopenedViewModel = InterviewsViewModel(
-      repository: _FakeInterviewsRepository(<InterviewModel>[]),
-    );
-    await reopenedViewModel.fetchInterviews();
+      final reopenedViewModel = InterviewsViewModel(
+        repository: _FakeInterviewsRepository(<InterviewModel>[]),
+      );
+      await reopenedViewModel.fetchInterviews();
 
-    expect(
-      reopenedViewModel.deletedInterviews.single.id,
-      'interview-to-archive',
-    );
-  });
+      expect(
+        reopenedViewModel.deletedInterviews.single.id,
+        'interview-to-archive',
+      );
+    },
+  );
 
   test(
     'restored interviews stay restored across view model recreation',
@@ -250,15 +305,22 @@ void main() {
 InterviewModel _interview({
   String id = 'interview-1',
   InterviewStatus status = InterviewStatus.scheduled,
+  DateTime? scheduledAt,
 }) {
+  final interviewDate = scheduledAt ?? DateTime(2099);
+
   return InterviewModel(
     id: id,
     role: 'Flutter Developer',
     company: 'Masarak',
-    date: '2099-01-01',
-    time: '10:00',
-    scheduledAt: DateTime(2099),
+    date:
+        '${interviewDate.year}-${_twoDigits(interviewDate.month)}-${_twoDigits(interviewDate.day)}',
+    time:
+        '${_twoDigits(interviewDate.hour)}:${_twoDigits(interviewDate.minute)}',
+    scheduledAt: interviewDate,
     location: 'Online',
     status: status,
   );
 }
+
+String _twoDigits(int value) => value.toString().padLeft(2, '0');
