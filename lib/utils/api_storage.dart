@@ -4,6 +4,7 @@ import 'package:gowork/core/constants/api_constants.dart';
 import 'dart:io';
 import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/utils/local_storage.dart';
+import 'package:gowork/utils/timezone_utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 
@@ -23,6 +24,14 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          final timezoneHeaders = TimezoneUtils.requestHeaders();
+          options.headers.addAll(timezoneHeaders);
+          debugPrint(
+            '--- TIMEZONE HEADERS SENT: '
+            'Time-Zone=${timezoneHeaders['Time-Zone']} '
+            'X-Timezone-Offset=${timezoneHeaders['X-Timezone-Offset']} ---',
+          );
+
           // Skip auth for public endpoints (e.g. registration)
           if (options.extra['skipAuth'] == true) {
             debugPrint('--- SKIP AUTH (public endpoint) ---');

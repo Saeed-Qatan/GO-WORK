@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../model/home/home_model.dart';
 import '../theme/app_colors.dart';
+import '../utils/timezone_utils.dart';
 import '../viewmodel/job_details_view_model.dart';
 import '../viewmodel/job_application_state_view_model.dart';
 import '../widget/common/pressable_button.dart';
@@ -723,7 +724,8 @@ class _JobDetailsViewState extends State<JobDetailsView> {
   String _getTimeAgo(String? dateString) {
     if (dateString == null) return 'غير محدد';
     try {
-      final date = DateTime.parse(dateString);
+      final date = TimezoneUtils.tryParseUtcToLocal(dateString);
+      if (date == null) throw const FormatException();
       final now = DateTime.now();
       final difference = now.difference(date);
 

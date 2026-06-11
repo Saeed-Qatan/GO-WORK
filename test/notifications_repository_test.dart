@@ -152,10 +152,14 @@ void main() {
         'POST notifications/device-tokens',
         'DELETE notifications/device-tokens/abc%20token',
       ]);
-      expect(apiClient.lastPostBody, {
-        'token': 'abc token',
-        'deviceType': 'android',
-      });
+      expect(apiClient.lastPostBody, containsPair('token', 'abc token'));
+      expect(apiClient.lastPostBody, containsPair('deviceType', 'android'));
+      expect(apiClient.lastPostBody, contains('timeZone'));
+      expect(apiClient.lastPostBody, contains('timezoneOffset'));
+      expect(
+        apiClient.lastPostBody?['timezoneOffset'],
+        matches(RegExp(r'^[+-]\d{2}:\d{2}$')),
+      );
     });
 
     test('rethrows get notifications failures', () async {

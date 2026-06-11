@@ -1,3 +1,5 @@
+import '../utils/timezone_utils.dart';
+
 enum NotificationType {
   general,
   jobCreated,
@@ -69,7 +71,7 @@ class NotificationModel {
       'body': body,
       'type': typeRaw,
       'deliveryType': deliveryTypeRaw,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': createdAt.toUtc().toIso8601String(),
       'isRead': isRead,
       'actionUrl': actionUrl,
       'imageUrl': imageUrl,
@@ -175,7 +177,7 @@ class NotificationModel {
 
   static DateTime _parseDate(dynamic value) {
     if (value == null) return DateTime.now();
-    return DateTime.tryParse(value.toString()) ?? DateTime.now();
+    return TimezoneUtils.tryParseUtcToLocal(value) ?? DateTime.now();
   }
 
   static bool _parseBool(dynamic value) {

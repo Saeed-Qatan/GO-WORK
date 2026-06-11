@@ -4,6 +4,7 @@ import '../core/constants/api_constants.dart';
 import '../model/notification_model.dart';
 import '../utils/api_storage.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/timezone_utils.dart';
 
 class NotificationsRepository {
   final ApiClient _apiClient;
@@ -166,6 +167,8 @@ class NotificationsRepository {
       await _apiClient.post(ApiConstants.notificationDeviceTokens, {
         'token': token,
         'deviceType': deviceType,
+        'timeZone': TimezoneUtils.currentTimeZoneName,
+        'timezoneOffset': TimezoneUtils.currentTimezoneOffset,
       });
       debugPrint('=== FCM TOKEN REGISTERED: ${_maskToken(token)} ===');
     } catch (e) {

@@ -3,6 +3,7 @@ import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../model/applications/application_model.dart';
 import '../../model/home/home_model.dart';
+import '../../utils/timezone_utils.dart';
 import '../../view/job_details_view.dart';
 
 class ApplicationCard extends StatelessWidget {
@@ -303,7 +304,8 @@ class ApplicationCard extends StatelessWidget {
   String _formatDate(String isoDate) {
     if (isoDate.isEmpty) return 'غير محدد';
     try {
-      final date = DateTime.parse(isoDate);
+      final date = TimezoneUtils.tryParseUtcToLocal(isoDate);
+      if (date == null) throw const FormatException();
       return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
     } catch (e) {
       return isoDate.split('T').first;
