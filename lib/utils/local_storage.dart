@@ -5,6 +5,11 @@ class LocalStorage {
   factory LocalStorage() => _instance;
   LocalStorage._internal();
 
+  static const String _pendingRegistrationEmailKey =
+      'pendingRegistrationEmail';
+  static const String _pendingRegistrationCategoryIdKey =
+      'pendingRegistrationCategoryId';
+
   Future<void> saveString(String key, String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(key, value);
@@ -61,6 +66,43 @@ class LocalStorage {
 
   Future<void> removeScoped(String key) async {
     await remove(await scopedKey(key));
+  }
+
+  Future<void> savePendingRegistrationCategoryId({
+    required String email,
+    required String categoryId,
+  }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    final normalizedCategoryId = categoryId.trim();
+    if (normalizedEmail.isEmpty || normalizedCategoryId.isEmpty) return;
+
+    await saveString(_pendingRegistrationEmailKey, normalizedEmail);
+    await saveString(
+      _pendingRegistrationCategoryIdKey,
+      normalizedCategoryId,
+    );
+  }
+
+  Future<String?> consumePendingRegistrationCategoryId(String email) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail.isEmpty) return null;
+
+    final pendingEmail = await getString(_pendingRegistrationEmailKey);
+    final pendingCategoryId =
+        await getString(_pendingRegistrationCategoryIdKey);
+    final normalizedPendingEmail = pendingEmail?.trim().toLowerCase();
+    final normalizedPendingCategoryId = pendingCategoryId?.trim();
+
+    if (normalizedPendingEmail != normalizedEmail ||
+        normalizedPendingCategoryId == null ||
+        normalizedPendingCategoryId.isEmpty) {
+      return null;
+    }
+
+    await saveScopedString('categoryId', normalizedPendingCategoryId);
+    await remove(_pendingRegistrationEmailKey);
+    await remove(_pendingRegistrationCategoryIdKey);
+    return normalizedPendingCategoryId;
   }
 
   Future<void> clearAuth() async {

@@ -4,6 +4,7 @@ import 'package:gowork/main.dart';
 import 'package:gowork/model/auth/email_verification_args.dart';
 import 'package:gowork/repository/login_repository.dart';
 import 'package:gowork/repository/profile_repository.dart';
+import 'package:gowork/services/registration_category_sync_service.dart';
 import 'package:gowork/services/auth/email_verification_service.dart';
 import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/utils/app_error_parser.dart';
@@ -25,6 +26,8 @@ class EmailVerificationViewModel extends ChangeNotifier {
   Timer? _timer;
   final LoginRepository _loginRepository = LoginRepository();
   final ProfileRepository _profileRepository = ProfileRepository();
+  final RegistrationCategorySyncService _categorySyncService =
+      RegistrationCategorySyncService();
 
   EmailVerificationViewModel() {
     _startTimer();
@@ -101,14 +104,26 @@ class EmailVerificationViewModel extends ChangeNotifier {
 
     try {
       await _loginRepository.login(emailValue, passwordValue);
+      final pendingCategoryId =
+          await _categorySyncService.consumePendingCategory(emailValue);
       await pushNotificationService.registerCurrentToken();
       try {
         final profile = await _profileRepository.getUserProfile();
+        final categoryId =
+            pendingCategoryId?.trim().isNotEmpty == true
+                ? pendingCategoryId
+                : profile.categoryId;
+        await _categorySyncService.syncProfileCategory(
+          profile: profile,
+          categoryId: categoryId,
+        );
         await notificationTopicService.subscribeUserTopics(
-          categoryId: profile.categoryId,
+          categoryId: categoryId,
         );
       } catch (_) {
-        await notificationTopicService.subscribeUserTopics(categoryId: null);
+        await notificationTopicService.subscribeUserTopics(
+          categoryId: pendingCategoryId,
+        );
       }
 
       if (context.mounted) {

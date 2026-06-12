@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:gowork/core/constants/api_constants.dart';
 import 'package:gowork/model/auth/email_verification_args.dart';
 import 'package:gowork/model/auth/register_data_model.dart';
+import 'package:gowork/services/registration_category_sync_service.dart';
 import 'package:gowork/services/auth/register_service.dart';
 import 'package:gowork/utils/api_storage.dart';
 import 'package:gowork/routing/app_router.dart';
@@ -197,6 +198,10 @@ class RegisterCVViewModel extends ChangeNotifier {
       );
 
       await RegisterService().register(data);
+      await RegistrationCategorySyncService().savePendingCategory(
+        email: data.email,
+        categoryId: categoryId,
+      );
 
       await notificationTopicService.syncUserTopics(
         previousCategoryId: null,
