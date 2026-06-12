@@ -28,14 +28,19 @@ class ApiClient {
         onRequest: (options, handler) async {
           final timezoneHeaders = TimezoneUtils.requestHeaders();
           options.headers.addAll(timezoneHeaders);
+          final skipAuth = options.extra['skipAuth'] == true;
           debugPrint(
             '--- TIMEZONE HEADERS SENT: '
             'Time-Zone=${timezoneHeaders['Time-Zone']} '
             'X-Timezone-Offset=${timezoneHeaders['X-Timezone-Offset']} ---',
           );
+          debugPrint(
+            '--- API REQUEST: method=${options.method} '
+            'path=${_debugPath(options.path)} skipAuth=$skipAuth ---',
+          );
 
           // Skip auth for public endpoints (e.g. registration)
-          if (options.extra['skipAuth'] == true) {
+          if (skipAuth) {
             debugPrint('--- SKIP AUTH (public endpoint) ---');
             return handler.next(options);
           }
@@ -49,6 +54,15 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
+          debugPrint(
+            '--- API ERROR: method=${e.requestOptions.method} '
+            'path=${_debugPath(e.requestOptions.path)} '
+            'status=${e.response?.statusCode ?? 'NO_STATUS'} '
+            'skipAuth=${e.requestOptions.extra['skipAuth'] == true} '
+            'hasAuthorization=${e.requestOptions.headers.containsKey('Authorization')} '
+            'type=${e.type.name} ---',
+          );
+
           if (e.response?.statusCode == 401) {
             final currentRoute = appRouter
                 .routerDelegate
@@ -403,5 +417,18 @@ class ApiClient {
     }
 
     return AppApiException(AppErrorParser.parse(e), data: e.message);
+  }
+
+  String _debugPath(String path) {
+    const deviceTokenPrefix = 'notifications/device-tokens/';
+    if (!path.startsWith(deviceTokenPrefix)) return path;
+
+    final encodedToken = path.substring(deviceTokenPrefix.length);
+    return '$deviceTokenPrefix${_maskSensitiveSegment(encodedToken)}';
+  }
+
+  String _maskSensitiveSegment(String value) {
+    if (value.length <= 12) return '***';
+    return '${value.substring(0, 6)}...${value.substring(value.length - 6)}';
   }
 }

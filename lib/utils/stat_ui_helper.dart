@@ -27,7 +27,7 @@ class StatUiHelper {
       case StatType.review:
         return const Color(0xFFFFC107); // Amber
       case StatType.sent:
-        return const Color(0xFF2962FF); // Blue
+        return AppColors.primary;
       case StatType.unknown:
         return AppColors.textSecondary;
     }

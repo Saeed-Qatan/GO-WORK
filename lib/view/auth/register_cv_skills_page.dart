@@ -71,7 +71,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         height: 90,
                         width: 90,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
@@ -96,7 +96,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
+                              color: AppColors.primary,
                             ),
                       ),
                       const SizedBox(height: 5),
@@ -147,7 +147,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                       Text(
                                         cvViewModel.cvFileName!,
                                         style: TextStyle(
-                                          color: Theme.of(context).primaryColor,
+                                          color: AppColors.primary,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -156,10 +156,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                 ElevatedButton(
                                   onPressed: () => viewModel.pickCV(),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xffF6F9FF),
-                                    foregroundColor: Theme.of(
-                                      context,
-                                    ).primaryColor,
+                                    backgroundColor: AppColors.primary
+                                        .withValues(alpha: 0.08),
+                                    foregroundColor: AppColors.primary,
                                     elevation: 0,
                                   ),
                                   child: const Text("اختر ملف السيرة الذاتية"),
@@ -191,7 +190,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
+                              color: AppColors.primary,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: IconButton(
@@ -356,7 +355,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   ),
                                   text: 'إنهاء التسجيل',
                                   color: isFormComplete
-                                      ? Theme.of(context).primaryColor
+                                      ? AppColors.primary
                                       : AppColors.textHint,
                                   textColor: Colors.white,
                                   onPressed: isFormComplete
@@ -396,7 +395,7 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
+                              color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),
                           ),

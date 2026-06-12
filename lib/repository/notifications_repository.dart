@@ -4,6 +4,7 @@ import '../core/constants/api_constants.dart';
 import '../model/notification_model.dart';
 import '../utils/api_storage.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/local_storage.dart';
 import '../utils/timezone_utils.dart';
 
 class NotificationsRepository {
@@ -178,13 +179,43 @@ class NotificationsRepository {
   }
 
   Future<void> removeDeviceToken(String token) async {
+    final endpoint = ApiConstants.removeNotificationDeviceToken(token);
+    final debugEndpoint =
+        'notifications/device-tokens/${_maskToken(Uri.encodeComponent(token))}';
+    final authToken = await LocalStorage().getString('token');
+    final hasAuthToken = authToken != null && authToken.trim().isNotEmpty;
+
+    debugPrint(
+      '=== FCM REMOVE START: endpoint="$debugEndpoint" '
+      'fcmTokenLength=${token.length} fcmToken=${_maskToken(token)} '
+      'hasAuthToken=$hasAuthToken ===',
+    );
+
     try {
-      await _apiClient.delete(
-        ApiConstants.removeNotificationDeviceToken(token),
+      await _apiClient.delete(endpoint);
+      debugPrint(
+        '=== FCM REMOVE SUCCESS: endpoint="$debugEndpoint" '
+        'fcmToken=${_maskToken(token)} ===',
       );
-      debugPrint('=== FCM TOKEN REMOVED: ${_maskToken(token)} ===');
     } catch (e) {
-      debugPrint('=== NOTIFICATIONS: removeDeviceToken error: $e ===');
+      if (e is AppApiException) {
+        debugPrint(
+          '=== FCM REMOVE FAILED: reason=${_classifyRemoveFailure(e)} '
+          'status=${e.statusCode ?? 'NO_STATUS'} endpoint="$debugEndpoint" '
+          'hasAuthToken=$hasAuthToken fcmTokenLength=${token.length} '
+          'fcmToken=${_maskToken(token)} '
+          'data=${_sanitizeToken(e.data, token)} '
+          'message=${_sanitizeToken(e.message, token)} ===',
+        );
+        return;
+      }
+
+      debugPrint(
+        '=== FCM REMOVE FAILED: reason=unexpected_error '
+        'status=NO_STATUS endpoint="$debugEndpoint" hasAuthToken=$hasAuthToken '
+        'fcmTokenLength=${token.length} fcmToken=${_maskToken(token)} '
+        'errorType=${e.runtimeType} error=${_sanitizeToken(e, token)} ===',
+      );
     }
   }
 
@@ -200,6 +231,31 @@ class NotificationsRepository {
   String _maskToken(String token) {
     if (token.length <= 12) return '***';
     return '${token.substring(0, 6)}...${token.substring(token.length - 6)}';
+  }
+
+  String _sanitizeToken(Object? value, String token) {
+    final raw = value?.toString() ?? 'null';
+    final encodedToken = Uri.encodeComponent(token);
+    return raw
+        .replaceAll(token, _maskToken(token))
+        .replaceAll(encodedToken, _maskToken(encodedToken));
+  }
+
+  String _classifyRemoveFailure(AppApiException error) {
+    switch (error.statusCode) {
+      case 400:
+        return 'bad_request_token_shape_or_contract';
+      case 401:
+        return 'unauthorized_auth_token_missing_or_invalid';
+      case 404:
+        return 'not_found_token_or_endpoint';
+      case 405:
+        return 'method_not_allowed_endpoint_contract';
+      case null:
+        return 'network_or_client_error';
+      default:
+        return 'http_${error.statusCode}';
+    }
   }
 
   String _deviceType() {

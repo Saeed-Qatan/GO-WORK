@@ -31,7 +31,7 @@ class DisplayBoxWidget extends StatelessWidget {
             height: 90,
             width: 90,
             decoration: BoxDecoration(
-              color: const Color(0xff1F59DF),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(

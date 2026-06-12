@@ -108,7 +108,7 @@ class ApplicationCard extends StatelessWidget {
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color: const Color(0xFF0D47A1),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
             ),

@@ -41,7 +41,7 @@ class RegisterPhotoPage extends StatelessWidget {
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
+                              color: AppColors.primary,
                             ),
                       ),
                       const SizedBox(height: 10),
@@ -79,7 +79,7 @@ class RegisterPhotoPage extends StatelessWidget {
                                 ? Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.camera_alt_outlined,
                                         size: 50,
                                         color: AppColors.primary,
@@ -87,7 +87,7 @@ class RegisterPhotoPage extends StatelessWidget {
                                       const SizedBox(height: 8),
                                       Text(
                                         "اختر صورة",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.bold,
                                         ),
