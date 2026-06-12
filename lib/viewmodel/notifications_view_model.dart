@@ -9,6 +9,7 @@ import '../services/notification_navigation_service.dart';
 import '../services/notifications_local_store.dart';
 import '../services/push_notification_service.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/session_guard.dart';
 import '../utils/snackbar_service.dart';
 import 'session_resettable.dart';
 
@@ -23,6 +24,7 @@ class NotificationsViewModel extends ChangeNotifier
   final PushNotificationService _pushService;
   final NotificationNavigationService _navigationService;
   final NotificationsLocalStore _localStore;
+  final SessionGuard _sessionGuard;
   final bool _autoFetchUnreadCount;
 
   StreamSubscription<NotificationModel>? _pushSubscription;
@@ -56,6 +58,7 @@ class NotificationsViewModel extends ChangeNotifier
     JobService? jobService,
     NotificationNavigationService? navigationService,
     NotificationsLocalStore? localStore,
+    SessionGuard? sessionGuard,
     bool autoFetchUnreadCount = true,
   }) : _repository = repository ?? NotificationsRepository(),
        _pushService = pushService ?? PushNotificationService(),
@@ -63,6 +66,7 @@ class NotificationsViewModel extends ChangeNotifier
            navigationService ??
            NotificationNavigationService(jobService: jobService),
        _localStore = localStore ?? NotificationsLocalStore(),
+       _sessionGuard = sessionGuard ?? SessionGuard(),
        _autoFetchUnreadCount = autoFetchUnreadCount {
     _subscribeToLiveNotifications();
     unawaited(_loadCachedNotifications());
@@ -128,6 +132,15 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   Future<void> fetchUnreadCount({bool notify = true}) async {
+    if (!await _sessionGuard.hasActiveToken()) {
+      _unreadCount = _notifications.where((n) => !n.isRead).length;
+      if (notify) notifyListeners();
+      debugPrint(
+        '=== VM: Skipped unread-count sync because no auth token exists ===',
+      );
+      return;
+    }
+
     try {
       _unreadCount = await _repository.getUnreadCount();
       if (notify) notifyListeners();

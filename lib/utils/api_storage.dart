@@ -4,12 +4,14 @@ import 'package:gowork/core/constants/api_constants.dart';
 import 'dart:io';
 import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/utils/local_storage.dart';
+import 'package:gowork/utils/session_guard.dart';
 import 'package:gowork/utils/timezone_utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 
 class ApiClient {
   late final Dio _dio;
+  final SessionGuard _sessionGuard = SessionGuard();
 
   ApiClient() {
     _dio = Dio(
@@ -48,17 +50,31 @@ class ApiClient {
         },
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            // Token expired or invalid, clear local storage
-            await LocalStorage().clearAuth();
-            
-            // Navigate to Session Expired globally
-            rootNavigatorKey.currentContext?.go(AppRoutes.sessionExpired);
-            
-            // We return a specialized exception so UI can route to login if needed
-            return handler.next(
-              e.copyWith(
-                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.',
-              ),
+            final currentRoute = appRouter
+                .routerDelegate
+                .currentConfiguration
+                .uri
+                .path;
+            final decision = await _sessionGuard
+                .sessionDecisionForUnauthorized(currentRoute: currentRoute);
+
+            if (decision.shouldShowSessionExpired) {
+              await LocalStorage().clearAuth();
+              if (currentRoute != AppRoutes.sessionExpired) {
+                rootNavigatorKey.currentContext?.go(AppRoutes.sessionExpired);
+              }
+
+              return handler.next(
+                e.copyWith(
+                  error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.',
+                ),
+              );
+            }
+
+            debugPrint(
+              '--- 401 RECEIVED WITHOUT SESSION-EXPIRED NAVIGATION: '
+              'route=$currentRoute hasToken=${decision.hasToken} '
+              'tokenExpired=${decision.isTokenExpired} ---',
             );
           }
 

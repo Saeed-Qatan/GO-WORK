@@ -6,6 +6,7 @@ import 'package:gowork/repository/notifications_repository.dart';
 import 'package:gowork/services/notifications_local_store.dart';
 import 'package:gowork/services/push_notification_service.dart';
 import 'package:gowork/utils/local_storage.dart';
+import 'package:gowork/utils/session_guard.dart';
 import 'package:gowork/viewmodel/notifications_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,6 +18,7 @@ class _FakeNotificationsRepository extends NotificationsRepository {
   bool failHide = false;
   bool failGetNotifications = false;
   bool failUnreadCount = false;
+  int unreadFetchCount = 0;
   int markReadCount = 0;
   int markAllCount = 0;
   int hideCount = 0;
@@ -42,6 +44,7 @@ class _FakeNotificationsRepository extends NotificationsRepository {
 
   @override
   Future<int> getUnreadCount() async {
+    unreadFetchCount++;
     if (failUnreadCount) throw Exception('unread count failed');
     return unreadCount;
   }
@@ -100,6 +103,15 @@ class _FakeNotificationsLocalStore extends NotificationsLocalStore {
   Future<void> upsert(NotificationModel notification) async {
     await save([notification, ...stored]);
   }
+}
+
+class _FakeSessionGuard extends SessionGuard {
+  final bool hasToken;
+
+  _FakeSessionGuard({required this.hasToken});
+
+  @override
+  Future<bool> hasActiveToken() async => hasToken;
 }
 
 void main() {
@@ -271,6 +283,62 @@ void main() {
       await viewModel.fetchUnreadCount();
 
       expect(viewModel.unreadCount, 1);
+    });
+
+    test('skips unread count API when no token exists', () async {
+      final repository = _FakeNotificationsRepository(
+        pages: {
+          1: NotificationsPage(
+            items: [_notification(id: 1, isRead: false)],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 1,
+            totalPages: 1,
+          ),
+        },
+        unreadCount: 9,
+      );
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
+        sessionGuard: _FakeSessionGuard(hasToken: false),
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      await viewModel.fetchUnreadCount();
+
+      expect(repository.unreadFetchCount, 0);
+      expect(viewModel.unreadCount, 1);
+    });
+
+    test('fetches unread count API when token exists', () async {
+      final repository = _FakeNotificationsRepository(
+        pages: {
+          1: NotificationsPage(
+            items: [_notification(id: 1, isRead: false)],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 1,
+            totalPages: 1,
+          ),
+        },
+        unreadCount: 7,
+      );
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: _FakeNotificationsLocalStore(),
+        sessionGuard: _FakeSessionGuard(hasToken: true),
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      await viewModel.fetchUnreadCount();
+
+      expect(repository.unreadFetchCount, 2);
+      expect(viewModel.unreadCount, 7);
     });
 
     test('marks as read locally without rollback when API fails', () async {

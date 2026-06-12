@@ -39,7 +39,8 @@ class NotificationsRepository {
   /// 3. POST `notifications/unread-count` (Alternate method)
   /// 4. POST `notifications/unread` (Alternate path & method)
   ///
-  /// If a 401 error is encountered, it is immediately rethrown to trigger session expiration logic.
+  /// If a 401 error is encountered, it is rethrown so the API client can decide
+  /// whether the current authenticated context should show session expiration.
   Future<int> getUnreadCount() async {
     final List<Map<String, String>> candidates = [
       {'method': 'GET', 'path': ApiConstants.notificationsUnreadCount},
