@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../model/home/home_model.dart';
+import '../routing/app_router.dart';
 import '../theme/app_colors.dart';
 import '../utils/timezone_utils.dart';
 import '../viewmodel/job_details_view_model.dart';
@@ -65,7 +67,13 @@ class _JobDetailsViewState extends State<JobDetailsView> {
               leading: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(AppRoutes.home);
+                    }
+                  },
                   icon: const Icon(
                     Icons
                         .arrow_forward, // Usually arrow forward implies back in RTL, but flutter handles auto-flipping if we use back, however let's follow the icon they chose in design for RTL

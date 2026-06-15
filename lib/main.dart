@@ -13,7 +13,7 @@ import 'utils/snackbar_service.dart';
 import 'utils/local_storage.dart';
 import 'services/notification_topic_service.dart';
 import 'services/push_notification_service.dart';
-import 'services/job_service.dart';
+import 'services/notification_navigation_service.dart';
 import 'repository/profile_repository.dart';
 
 import 'viewmodel/auth/login_view_model.dart';
@@ -32,16 +32,6 @@ final PushNotificationService pushNotificationService =
     PushNotificationService();
 final NotificationTopicService notificationTopicService =
     NotificationTopicService();
-
-const Set<String> _knownInternalRoutes = {
-  AppRoutes.home,
-  AppRoutes.profile,
-  AppRoutes.settings,
-  AppRoutes.feedback,
-  AppRoutes.notifications,
-  AppRoutes.changePassword,
-  AppRoutes.deletedInterviews,
-};
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -98,8 +88,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final JobService _jobService = JobService();
+  final NotificationNavigationService _notificationNavigationService =
+      NotificationNavigationService();
   StreamSubscription<NotificationTapAction>? _notificationTapSubscription;
+  String? _lastHandledNotificationTapKey;
+  DateTime? _lastHandledNotificationTapAt;
 
   @override
   void initState() {
@@ -121,10 +114,42 @@ class _MyAppState extends State<MyApp> {
   Future<void> _openNotificationsFromSystemTap(
     NotificationTapAction action,
   ) async {
+    if (_isDuplicateNotificationTap(action)) return;
+
     _markTappedNotificationRead(action.notificationId);
 
-    if (await _openActionUrl(action.actionUrl)) return;
-    appRouter.go(AppRoutes.notifications);
+    if (await _notificationNavigationService.openFromSystemTap(
+      action.actionUrl,
+    )) {
+      return;
+    }
+
+    await _notificationNavigationService.openFallbackNotificationsFromSystemTap();
+  }
+
+  bool _isDuplicateNotificationTap(NotificationTapAction action) {
+    final key = _notificationTapKey(action);
+    final now = DateTime.now();
+    final lastAt = _lastHandledNotificationTapAt;
+
+    if (_lastHandledNotificationTapKey == key &&
+        lastAt != null &&
+        now.difference(lastAt) < const Duration(seconds: 2)) {
+      return true;
+    }
+
+    _lastHandledNotificationTapKey = key;
+    _lastHandledNotificationTapAt = now;
+    return false;
+  }
+
+  String _notificationTapKey(NotificationTapAction action) {
+    final actionUrl = action.actionUrl?.trim();
+    return [
+      action.notificationId?.toString() ?? '',
+      actionUrl ?? '',
+      action.notification?.id.toString() ?? '',
+    ].join('|');
   }
 
   void _markTappedNotificationRead(int? notificationId) {
@@ -142,37 +167,6 @@ class _MyAppState extends State<MyApp> {
     } catch (e) {
       debugPrint('=== NOTIFICATION TAP MARK READ ERROR: $e ===');
     }
-  }
-
-  Future<bool> _openActionUrl(String? actionUrl) async {
-    final target = actionUrl?.trim();
-    if (target == null || target.isEmpty) return false;
-
-    final uri = Uri.tryParse(target);
-    final path = uri?.path.isNotEmpty == true ? uri!.path : target;
-    final internalPath = path.startsWith('/') ? path : '/$path';
-    final pathUri = Uri.tryParse(internalPath);
-    if (pathUri == null) return false;
-    final segments = pathUri.pathSegments;
-
-    if (segments.length == 2 && segments.first.toLowerCase() == 'jobs') {
-      try {
-        final job = await _jobService.getJobById(segments[1]);
-        if (job == null) return false;
-        appRouter.go(AppRoutes.jobDetails, extra: job);
-        return true;
-      } catch (e) {
-        debugPrint('=== NOTIFICATION TAP JOB ACTION ERROR: $e ===');
-        return false;
-      }
-    }
-
-    if (_knownInternalRoutes.contains(internalPath)) {
-      appRouter.go(internalPath);
-      return true;
-    }
-
-    return false;
   }
 
   @override

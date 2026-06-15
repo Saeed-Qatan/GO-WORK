@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../model/notification_model.dart';
+import '../routing/app_router.dart';
 import '../theme/app_colors.dart';
 import '../viewmodel/notifications_view_model.dart';
 import '../widget/common/animated_empty_state.dart';
@@ -68,7 +69,13 @@ class _NotificationsViewState extends State<NotificationsView> {
       centerTitle: true,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => context.pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(AppRoutes.home);
+          }
+        },
       ),
       title: const Text(
         'الإشعارات',

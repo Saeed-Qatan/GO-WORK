@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../model/interview_model.dart';
+import '../routing/app_router.dart';
 import '../theme/app_colors.dart';
 import '../widget/interviews/interview_status_mapper.dart';
 import '../widget/interviews/interview_status_chip.dart';
@@ -49,7 +51,13 @@ class InterviewDetailsView extends StatelessWidget {
               leading: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(AppRoutes.home);
+                    }
+                  },
                   icon: const Icon(
                     Icons.arrow_forward, // Egyptian RTL back arrow standard
                     color: AppColors.primary,
