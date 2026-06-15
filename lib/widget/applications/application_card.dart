@@ -118,6 +118,8 @@ class ApplicationCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     child: Image.network(
                       application.companyLogo,
+                      cacheWidth: 162,
+                      cacheHeight: 162,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return const Icon(

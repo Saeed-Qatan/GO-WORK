@@ -162,6 +162,8 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                                       borderRadius: BorderRadius.circular(12),
                                       child: Image.network(
                                         job.companyLogoUrl,
+                                        cacheWidth: 144,
+                                        cacheHeight: 144,
                                         fit: BoxFit.cover,
                                         errorBuilder: (_, __, ___) =>
                                             const Icon(
@@ -495,7 +497,9 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        job.canApply == false ? 'تم التقديم' : 'قدم الآن',
+                                        job.canApply == false
+                                            ? 'تم التقديم'
+                                            : 'قدم الآن',
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w800,

@@ -54,7 +54,10 @@ class _HomeViewState extends State<HomeView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<HomeViewModel>(context, listen: false).fetchHomeData();
-        Provider.of<NotificationsViewModel>(context, listen: false).fetchUnreadCount();
+        Provider.of<NotificationsViewModel>(
+          context,
+          listen: false,
+        ).fetchUnreadCount();
       }
     });
   }
@@ -161,41 +164,51 @@ class _HomeViewState extends State<HomeView> {
                             subtitle:
                                 'يرجى استكمال ملفك الشخصي أو العودة لاحقاً لرؤية الوظائف المناسبة لك',
                           ),
-                        )
-                      else
-                        Consumer<JobApplicationStateViewModel>(
-                          builder: (context, appState, child) {
-                            return ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: jobs.length,
-                              itemBuilder: (context, index) {
-                                final job = jobs[index];
-                                final resolvedJob = appState.resolveJob(job);
-                                return JobCard(
-                                      job: resolvedJob,
-                                      applyButtonText: resolvedJob.canApply == false
-                                          ? 'تم التقديم'
-                                          : AppConstants.applyNow,
-                                    )
-                                    .animate(
-                                      key: ValueKey('job_${isLoading}_${job.id}'),
-                                    )
-                                    .fade(duration: 500.ms, delay: (index * 100).ms)
-                                    .slideY(
-                                      begin: 0.1,
-                                      duration: 500.ms,
-                                      curve: Curves.easeOutQuart,
-                                    );
-                              },
-                            );
-                          },
                         ),
-                      const SizedBox(height: 24),
+                      if (!isLoading &&
+                          (viewModel.errorMessage != null || jobs.isEmpty))
+                        const SizedBox(height: 24),
                     ],
                   ),
                 ),
+                if (isLoading ||
+                    (viewModel.errorMessage == null && jobs.isNotEmpty))
+                  Consumer<JobApplicationStateViewModel>(
+                    builder: (context, appState, child) {
+                      return SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        sliver: SliverList.builder(
+                          itemCount: jobs.length,
+                          itemBuilder: (context, index) {
+                            final job = jobs[index];
+                            final resolvedJob = appState.resolveJob(job);
+                            return JobCard(
+                                  job: resolvedJob,
+                                  applyButtonText:
+                                      resolvedJob.canApply == false
+                                      ? 'تم التقديم'
+                                      : AppConstants.applyNow,
+                                )
+                                .animate(
+                                  key: ValueKey('job_${isLoading}_${job.id}'),
+                                )
+                                .fade(
+                                  duration: 500.ms,
+                                  delay: (index * 100).ms,
+                                )
+                                .slideY(
+                                  begin: 0.1,
+                                  duration: 500.ms,
+                                  curve: Curves.easeOutQuart,
+                                );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                if (isLoading ||
+                    (viewModel.errorMessage == null && jobs.isNotEmpty))
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
           );

@@ -86,11 +86,13 @@ class _NotificationsViewState extends State<NotificationsView> {
         ),
       ),
       actions: [
-        Consumer<NotificationsViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.unreadCount == 0) return const SizedBox.shrink();
+        Selector<NotificationsViewModel, int>(
+          selector: (_, viewModel) => viewModel.unreadCount,
+          builder: (context, unreadCount, child) {
+            if (unreadCount == 0) return const SizedBox.shrink();
             return TextButton(
-              onPressed: () => viewModel.markAllAsRead(),
+              onPressed: () =>
+                  context.read<NotificationsViewModel>().markAllAsRead(),
               child: const Text(
                 'قراءة الكل',
                 style: TextStyle(color: Colors.white70, fontSize: 13),

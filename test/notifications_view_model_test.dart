@@ -257,33 +257,36 @@ void main() {
       expect(localStore.stored.single.isRead, isTrue);
     });
 
-    test('falls back to local unread count when unread-count API fails', () async {
-      final repository = _FakeNotificationsRepository(
-        pages: {
-          1: NotificationsPage(
-            items: [
-              _notification(id: 1, isRead: false),
-              _notification(id: 2, isRead: true),
-            ],
-            currentPage: 1,
-            pageSize: 20,
-            totalCount: 2,
-            totalPages: 1,
-          ),
-        },
-      )..failUnreadCount = true;
-      final viewModel = NotificationsViewModel(
-        repository: repository,
-        pushService: _FakePushNotificationService(),
-        localStore: _FakeNotificationsLocalStore(),
-        autoFetchUnreadCount: false,
-      );
+    test(
+      'falls back to local unread count when unread-count API fails',
+      () async {
+        final repository = _FakeNotificationsRepository(
+          pages: {
+            1: NotificationsPage(
+              items: [
+                _notification(id: 1, isRead: false),
+                _notification(id: 2, isRead: true),
+              ],
+              currentPage: 1,
+              pageSize: 20,
+              totalCount: 2,
+              totalPages: 1,
+            ),
+          },
+        )..failUnreadCount = true;
+        final viewModel = NotificationsViewModel(
+          repository: repository,
+          pushService: _FakePushNotificationService(),
+          localStore: _FakeNotificationsLocalStore(),
+          autoFetchUnreadCount: false,
+        );
 
-      await viewModel.fetchNotifications();
-      await viewModel.fetchUnreadCount();
+        await viewModel.fetchNotifications();
+        await viewModel.fetchUnreadCount();
 
-      expect(viewModel.unreadCount, 1);
-    });
+        expect(viewModel.unreadCount, 1);
+      },
+    );
 
     test('skips unread count API when no token exists', () async {
       final repository = _FakeNotificationsRepository(
@@ -523,50 +526,53 @@ void main() {
       expect(viewModel.unreadCount, 5);
     });
 
-    test('merges cached FCM notification with matching API notification', () async {
-      final localStore = _FakeNotificationsLocalStore([
-        _notification(
-          id: 9001,
-          notificationId: 501,
-          deliveryType: NotificationDeliveryType.unknown,
-          deliveryTypeRaw: null,
-          actionUrl: '/jobs/42',
-          title: 'Job 42',
-          body: 'New job is available',
-        ),
-      ]);
-      final repository = _FakeNotificationsRepository(
-        pages: {
-          1: NotificationsPage(
-            items: [
-              _notification(
-                id: 12,
-                notificationId: 501,
-                actionUrl: '/jobs/42',
-                title: 'Job 42',
-                body: 'New job is available',
-              ),
-            ],
-            currentPage: 1,
-            pageSize: 20,
-            totalCount: 1,
-            totalPages: 1,
+    test(
+      'merges cached FCM notification with matching API notification',
+      () async {
+        final localStore = _FakeNotificationsLocalStore([
+          _notification(
+            id: 9001,
+            notificationId: 501,
+            deliveryType: NotificationDeliveryType.unknown,
+            deliveryTypeRaw: null,
+            actionUrl: '/jobs/42',
+            title: 'Job 42',
+            body: 'New job is available',
           ),
-        },
-      );
-      final viewModel = NotificationsViewModel(
-        repository: repository,
-        pushService: _FakePushNotificationService(),
-        localStore: localStore,
-        autoFetchUnreadCount: false,
-      );
+        ]);
+        final repository = _FakeNotificationsRepository(
+          pages: {
+            1: NotificationsPage(
+              items: [
+                _notification(
+                  id: 12,
+                  notificationId: 501,
+                  actionUrl: '/jobs/42',
+                  title: 'Job 42',
+                  body: 'New job is available',
+                ),
+              ],
+              currentPage: 1,
+              pageSize: 20,
+              totalCount: 1,
+              totalPages: 1,
+            ),
+          },
+        );
+        final viewModel = NotificationsViewModel(
+          repository: repository,
+          pushService: _FakePushNotificationService(),
+          localStore: localStore,
+          autoFetchUnreadCount: false,
+        );
 
-      await viewModel.fetchNotifications();
+        await viewModel.fetchNotifications();
 
-      expect(viewModel.notifications, hasLength(1));
-      expect(viewModel.notifications.single.id, 12);
-      expect(localStore.stored.single.id, 12);
-    });
+        expect(viewModel.notifications, hasLength(1));
+        expect(viewModel.notifications.single.id, 12);
+        expect(localStore.stored.single.id, 12);
+      },
+    );
 
     test('hides all matching local and API notification copies', () async {
       final localStore = _FakeNotificationsLocalStore([
@@ -712,24 +718,27 @@ void main() {
       expect(repository.hideCount, 1);
     });
 
-    test('syncs cached notifications into current list after background push', () async {
-      final localStore = _FakeNotificationsLocalStore([
-        _notification(id: 2, isRead: false),
-        _notification(id: 1, isRead: true),
-      ]);
-      final viewModel = NotificationsViewModel(
-        repository: _FakeNotificationsRepository(pages: {}),
-        pushService: _FakePushNotificationService(),
-        localStore: localStore,
-        autoFetchUnreadCount: false,
-      );
+    test(
+      'syncs cached notifications into current list after background push',
+      () async {
+        final localStore = _FakeNotificationsLocalStore([
+          _notification(id: 2, isRead: false),
+          _notification(id: 1, isRead: true),
+        ]);
+        final viewModel = NotificationsViewModel(
+          repository: _FakeNotificationsRepository(pages: {}),
+          pushService: _FakePushNotificationService(),
+          localStore: localStore,
+          autoFetchUnreadCount: false,
+        );
 
-      await viewModel.syncCachedNotifications();
+        await viewModel.syncCachedNotifications();
 
-      expect(viewModel.notifications.map((item) => item.id), [1, 2]);
-      expect(viewModel.unreadCount, 1);
-      expect(viewModel.viewState, NotificationsViewState.loaded);
-    });
+        expect(viewModel.notifications.map((item) => item.id), [1, 2]);
+        expect(viewModel.unreadCount, 1);
+        expect(viewModel.viewState, NotificationsViewState.loaded);
+      },
+    );
 
     test('local store upsert dedupes and preserves read state', () async {
       final storage = LocalStorage();
@@ -771,14 +780,8 @@ void main() {
       await storage.saveString('userId', 'user-a');
 
       expect((await store.load()).single.id, 1);
-      expect(
-        await storage.getString('cached_notifications_user-a'),
-        isNotNull,
-      );
-      expect(
-        await storage.getString('cached_notifications_user-b'),
-        isNotNull,
-      );
+      expect(await storage.getString('cached_notifications_user-a'), isNotNull);
+      expect(await storage.getString('cached_notifications_user-b'), isNotNull);
     });
   });
 }

@@ -27,8 +27,12 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   }
 
   void _subscribeToLiveNotifications() {
-    _pushSubscription = _pushNotificationService?.onNotificationReceived.listen((notification) {
-      debugPrint('=== HOME VM: Push notification received, refreshing home data automatically ===');
+    _pushSubscription = _pushNotificationService?.onNotificationReceived.listen((
+      notification,
+    ) {
+      debugPrint(
+        '=== HOME VM: Push notification received, refreshing home data automatically ===',
+      );
       unawaited(fetchHomeData(forceRefresh: true));
     });
   }

@@ -65,6 +65,8 @@ class NotificationCard extends StatelessWidget {
           imageUrl,
           width: 46,
           height: 46,
+          cacheWidth: 138,
+          cacheHeight: 138,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => _buildIcon(color, unread),
         ),

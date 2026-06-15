@@ -62,9 +62,7 @@ class _ChangePasswordBodyState extends State<_ChangePasswordBody> {
       );
       Navigator.pop(context);
     } else {
-      SnackbarService.showError(
-        viewModel.errorMessage ?? 'حدث خطأ غير متوقع',
-      );
+      SnackbarService.showError(viewModel.errorMessage ?? 'حدث خطأ غير متوقع');
     }
   }
 

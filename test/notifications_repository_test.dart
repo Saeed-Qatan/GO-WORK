@@ -166,10 +166,7 @@ void main() {
       final apiClient = _FakeApiClient()..failGet = true;
       final repository = NotificationsRepository(apiClient: apiClient);
 
-      expect(
-        repository.getNotifications(),
-        throwsA(isA<Exception>()),
-      );
+      expect(repository.getNotifications(), throwsA(isA<Exception>()));
       expect(apiClient.calls, ['GET notifications?pageNumber=1&pageSize=20']);
     });
 
@@ -179,10 +176,7 @@ void main() {
         ..failPost = true;
       final repository = NotificationsRepository(apiClient: apiClient);
 
-      await expectLater(
-        repository.getUnreadCount(),
-        throwsA(isA<Exception>()),
-      );
+      await expectLater(repository.getUnreadCount(), throwsA(isA<Exception>()));
       expect(apiClient.calls, [
         'GET notifications/unread-count',
         'GET notifications/unread',
@@ -191,17 +185,17 @@ void main() {
       ]);
     });
 
-    test('rethrows documented mark-read failures without legacy fallback', () async {
-      final apiClient = _FakeApiClient()..failPut = true;
-      final repository = NotificationsRepository(apiClient: apiClient);
+    test(
+      'rethrows documented mark-read failures without legacy fallback',
+      () async {
+        final apiClient = _FakeApiClient()..failPut = true;
+        final repository = NotificationsRepository(apiClient: apiClient);
 
-      expect(
-        repository.markAsRead(12),
-        throwsA(isA<Exception>()),
-      );
+        expect(repository.markAsRead(12), throwsA(isA<Exception>()));
 
-      expect(apiClient.calls, ['PUT notifications/12/read']);
-    });
+        expect(apiClient.calls, ['PUT notifications/12/read']);
+      },
+    );
 
     test('rethrows mark-all and hide failures', () async {
       final markAllClient = _FakeApiClient()..failPut = true;

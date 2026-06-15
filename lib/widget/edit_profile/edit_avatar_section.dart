@@ -42,6 +42,8 @@ class EditAvatarSection extends StatelessWidget {
                       : (viewModel.formData.avatarUrl?.isNotEmpty == true
                             ? Image.network(
                                 viewModel.formData.avatarUrl!,
+                                cacheWidth: 300,
+                                cacheHeight: 300,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => const Icon(
                                   Icons.person,

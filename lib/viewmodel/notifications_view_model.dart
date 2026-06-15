@@ -218,9 +218,7 @@ class NotificationsViewModel extends ChangeNotifier
         updated[index] = updated[index].copyWithRead();
       }
       _notifications = _dedupeAndSort(updated);
-      _unreadCount = (_unreadCount - unreadMatches)
-          .clamp(0, 1 << 31)
-          .toInt();
+      _unreadCount = (_unreadCount - unreadMatches).clamp(0, 1 << 31).toInt();
       await _localStore.save(_notifications);
       notifyListeners();
     }

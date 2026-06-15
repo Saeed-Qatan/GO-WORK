@@ -59,213 +59,67 @@ class _SearchViewState extends State<SearchView> {
                 Expanded(
                   child: Consumer<SearchViewModel>(
                     builder: (context, viewModel, child) {
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 24),
-
-                            // Filters Row — Category
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: FilterDropdown(
-                                    label: 'المجال',
-                                    hint: 'جميع المجالات',
-                                    value: viewModel.selectedCategory,
-                                    items: viewModel.isCategoriesLoading
-                                        ? [
-                                            FilterOption(
-                                              label: 'جاري التحميل...',
-                                              rawValue: '',
-                                            ),
-                                          ]
-                                        : viewModel.categoryOptions,
-                                    onChanged: viewModel.setCategory,
-                                  ),
-                                ),
-                              ],
+                      return CustomScrollView(
+                        slivers: [
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
                             ),
-                            const SizedBox(height: 16),
-
-                            // Filters Row — Location type & Country
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: FilterDropdown(
-                                    label: 'مكان العمل',
-                                    hint: 'الكل',
-                                    value: viewModel.selectedLocation,
-                                    items: viewModel.isLocationTypesLoading
-                                        ? [
-                                            FilterOption(
-                                              label: 'جاري التحميل...',
-                                              rawValue: '',
-                                            ),
-                                          ]
-                                        : viewModel.locationOptions,
-                                    onChanged: viewModel.setLocation,
-                                    showSearch: false,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: FilterDropdown(
-                                    label: 'الدولة',
-                                    hint: 'الكل',
-                                    value: viewModel.selectedCountry,
-                                    items: viewModel.isCountriesLoading
-                                        ? [
-                                            FilterOption(
-                                              label: 'جاري التحميل...',
-                                              rawValue: '',
-                                            ),
-                                          ]
-                                        : viewModel.countryOptions,
-                                    onChanged: viewModel.setCountry,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Filters Row — Job type
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: FilterDropdown(
-                                    label: 'نوع الوظيفة',
-                                    hint: 'الكل',
-                                    value: viewModel.selectedType,
-                                    items: viewModel.isJobTypesLoading
-                                        ? [
-                                            FilterOption(
-                                              label: 'جاري التحميل...',
-                                              rawValue: '',
-                                            ),
-                                          ]
-                                        : viewModel.jobTypeOptions,
-                                    onChanged: viewModel.setType,
-                                    showSearch: false,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Sort & Result Count Row
-                            Row(
-                              children: [
-                                PopupMenuButton<String>(
-                                  onSelected: viewModel.setSortBy,
-                                  offset: const Offset(0, 40),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'date',
-                                      child: Text(
-                                        'حسب التاريخ (الأحدث)',
-                                        style: TextStyle(
-                                          color: viewModel.sortBy == 'date'
-                                              ? AppColors.primary
-                                              : AppColors.textPrimary,
-                                          fontWeight:
-                                              viewModel.sortBy == 'date'
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                        ),
+                            sliver: SliverToBoxAdapter(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 24),
+                                  _buildFilters(viewModel),
+                                  const SizedBox(height: 24),
+                                  _buildSortAndCount(context, viewModel),
+                                  const SizedBox(height: 16),
+                                  if (viewModel.isLoading)
+                                    const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(32.0),
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    )
+                                  else if (viewModel.errorMessage != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 64.0),
+                                      child: AnimatedEmptyState(
+                                        icon: Icons.error_outline_rounded,
+                                        title: 'حدث خطأ',
+                                        subtitle: viewModel.errorMessage!,
+                                      ),
+                                    )
+                                  else if (viewModel.jobs.isEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 64.0),
+                                      child: AnimatedEmptyState(
+                                        icon: Icons.search_off_rounded,
+                                        title: 'لا توجد نتائج',
+                                        subtitle:
+                                            'لم نعثر على وظائف تطابق معايير البحث الخاصة بك.\nجرب تغيير الفلاتر أو كلمات البحث.',
                                       ),
                                     ),
-                                    PopupMenuItem(
-                                      value: 'salary',
-                                      child: Text(
-                                        'حسب الراتب (الأعلى)',
-                                        style: TextStyle(
-                                          color: viewModel.sortBy == 'salary'
-                                              ? AppColors.primary
-                                              : AppColors.textPrimary,
-                                          fontWeight:
-                                              viewModel.sortBy == 'salary'
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border:
-                                          Border.all(color: AppColors.border),
-                                    ),
-                                    child: const Icon(
-                                      Icons.sort,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  'تم العثور على ${viewModel.jobs.length} وظيفة',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-
-                            const SizedBox(height: 16),
-
-                            // Results List
-                            if (viewModel.isLoading)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(32.0),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                            else if (viewModel.errorMessage != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 64.0),
-                                child: AnimatedEmptyState(
-                                  icon: Icons.error_outline_rounded,
-                                  title: 'حدث خطأ',
-                                  subtitle: viewModel.errorMessage!,
-                                ),
-                              )
-                            else if (viewModel.jobs.isEmpty)
-                              const Padding(
-                                padding: EdgeInsets.only(top: 64.0),
-                                child: AnimatedEmptyState(
-                                  icon: Icons.search_off_rounded,
-                                  title: 'لا توجد نتائج',
-                                  subtitle:
-                                      'لم نعثر على وظائف تطابق معايير البحث الخاصة بك.\nجرب تغيير الفلاتر أو كلمات البحث.',
-                                ),
-                              )
-                            else
-                              Consumer<JobApplicationStateViewModel>(
-                                builder: (context, appState, child) {
-                                  return ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
+                          ),
+                          if (!viewModel.isLoading &&
+                              viewModel.errorMessage == null &&
+                              viewModel.jobs.isNotEmpty)
+                            Consumer<JobApplicationStateViewModel>(
+                              builder: (context, appState, child) {
+                                return SliverPadding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  sliver: SliverList.builder(
                                     itemCount: viewModel.jobs.length,
                                     itemBuilder: (context, index) {
                                       final jobItem = viewModel.jobs[index];
-                                      final resolvedJob =
-                                          appState.resolveJob(jobItem);
+                                      final resolvedJob = appState.resolveJob(
+                                        jobItem,
+                                      );
                                       return SearchJobCard(
                                         job: resolvedJob,
                                         isUrgent: index == 0,
@@ -277,13 +131,12 @@ class _SearchViewState extends State<SearchView> {
                                         },
                                       );
                                     },
-                                  );
-                                },
-                              ),
-
-                            const SizedBox(height: 24),
-                          ],
-                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                        ],
                       );
                     },
                   ),
@@ -293,6 +146,155 @@ class _SearchViewState extends State<SearchView> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFilters(SearchViewModel viewModel) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: FilterDropdown(
+                label: 'المجال',
+                hint: 'جميع المجالات',
+                value: viewModel.selectedCategory,
+                items: viewModel.isCategoriesLoading
+                    ? [
+                        FilterOption(
+                          label: 'جاري التحميل...',
+                          rawValue: '',
+                        ),
+                      ]
+                    : viewModel.categoryOptions,
+                onChanged: viewModel.setCategory,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: FilterDropdown(
+                label: 'مكان العمل',
+                hint: 'الكل',
+                value: viewModel.selectedLocation,
+                items: viewModel.isLocationTypesLoading
+                    ? [
+                        FilterOption(
+                          label: 'جاري التحميل...',
+                          rawValue: '',
+                        ),
+                      ]
+                    : viewModel.locationOptions,
+                onChanged: viewModel.setLocation,
+                showSearch: false,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: FilterDropdown(
+                label: 'الدولة',
+                hint: 'الكل',
+                value: viewModel.selectedCountry,
+                items: viewModel.isCountriesLoading
+                    ? [
+                        FilterOption(
+                          label: 'جاري التحميل...',
+                          rawValue: '',
+                        ),
+                      ]
+                    : viewModel.countryOptions,
+                onChanged: viewModel.setCountry,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: FilterDropdown(
+                label: 'نوع الوظيفة',
+                hint: 'الكل',
+                value: viewModel.selectedType,
+                items: viewModel.isJobTypesLoading
+                    ? [
+                        FilterOption(
+                          label: 'جاري التحميل...',
+                          rawValue: '',
+                        ),
+                      ]
+                    : viewModel.jobTypeOptions,
+                onChanged: viewModel.setType,
+                showSearch: false,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSortAndCount(BuildContext context, SearchViewModel viewModel) {
+    return Row(
+      children: [
+        PopupMenuButton<String>(
+          onSelected: viewModel.setSortBy,
+          offset: const Offset(0, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'date',
+              child: Text(
+                'حسب التاريخ (الأحدث)',
+                style: TextStyle(
+                  color: viewModel.sortBy == 'date'
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
+                  fontWeight: viewModel.sortBy == 'date'
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+            PopupMenuItem(
+              value: 'salary',
+              child: Text(
+                'حسب الراتب (الأعلى)',
+                style: TextStyle(
+                  color: viewModel.sortBy == 'salary'
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
+                  fontWeight: viewModel.sortBy == 'salary'
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+          ],
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(Icons.sort, color: AppColors.textSecondary),
+          ),
+        ),
+        const Spacer(),
+        Text(
+          'تم العثور على ${viewModel.jobs.length} وظيفة',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

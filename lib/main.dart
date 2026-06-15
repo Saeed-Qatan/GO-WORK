@@ -187,7 +187,9 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => JobApplicationStateViewModel()),
-        ChangeNotifierProvider(create: (_) => ApplicationsViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => ApplicationsViewModel(autoFetch: false),
+        ),
         ChangeNotifierProvider(
           create: (_) =>
               InterviewsViewModel(repository: InterviewsRepository()),

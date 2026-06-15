@@ -57,6 +57,8 @@ class ProfileHeaderCard extends StatelessWidget {
                 child: profile.avatarUrl.isNotEmpty
                     ? Image.network(
                         profile.avatarUrl,
+                        cacheWidth: 270,
+                        cacheHeight: 270,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Center(
                           child: Text(

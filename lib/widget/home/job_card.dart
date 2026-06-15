@@ -53,6 +53,8 @@ class JobCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(
                                 job.companyLogoUrl,
+                                cacheWidth: 144,
+                                cacheHeight: 144,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(

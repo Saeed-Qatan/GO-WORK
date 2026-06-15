@@ -114,7 +114,11 @@ class HomeHeader extends StatelessWidget {
                               radius: 24,
                               backgroundColor: Colors.white,
                               backgroundImage: profileImage.isNotEmpty
-                                  ? NetworkImage(profileImage)
+                                  ? ResizeImage.resizeIfNeeded(
+                                      144,
+                                      144,
+                                      NetworkImage(profileImage),
+                                    )
                                   : null,
                               child: profileImage.isEmpty
                                   ? const Icon(

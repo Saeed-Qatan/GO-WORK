@@ -125,6 +125,8 @@ class InterviewDetailsView extends StatelessWidget {
                                 interview.companyLogo!.isNotEmpty
                             ? Image.network(
                                 interview.companyLogo!,
+                                cacheWidth: 144,
+                                cacheHeight: 144,
                                 fit: BoxFit.contain,
                                 errorBuilder: (_, __, ___) => const Icon(
                                   Icons.business_rounded,
