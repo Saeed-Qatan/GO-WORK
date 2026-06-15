@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../model/notification_model.dart';
 import '../repository/notifications_repository.dart';
+import 'notification_identity.dart';
 import 'notifications_local_store.dart';
 
 const String _notificationChannelId = 'gowork_notifications_high_channel';
@@ -171,6 +172,10 @@ class PushNotificationService {
       debugPrint('=== FCM: MESSAGE WITHOUT TITLE/BODY - skipping ===');
       return null;
     }
+    debugPrint(
+      '=== FCM: MAPPED NOTIFICATION ${notificationDebugIdentity(model)} '
+      'messageId=${message.messageId ?? "-"} from=${message.from ?? "-"} ===',
+    );
 
     await _safeUpsert(model);
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../model/notification_model.dart';
 import '../repository/notifications_repository.dart';
 import '../services/job_service.dart';
+import '../services/notification_identity.dart';
 import '../services/notification_navigation_service.dart';
 import '../services/notifications_local_store.dart';
 import '../services/push_notification_service.dart';
@@ -29,6 +30,7 @@ class NotificationsViewModel extends ChangeNotifier
 
   StreamSubscription<NotificationModel>? _pushSubscription;
   int _sessionVersion = 0;
+  final Set<int> _apiNotificationIds = <int>{};
 
   List<NotificationModel> _notifications = [];
   List<NotificationModel> get notifications => _notifications;
@@ -106,6 +108,10 @@ class NotificationsViewModel extends ChangeNotifier
       );
       final cached = await _localStore.load();
       if (requestVersion != _sessionVersion) return;
+      _apiNotificationIds
+        ..clear()
+        ..addAll(page.items.map((notification) => notification.id));
+      _logMergeInputs(remote: page.items, local: cached);
       _notifications = _mergeNotifications(remote: page.items, local: cached);
       _currentPage = page.currentPage;
       _totalPages = page.totalPages;
@@ -163,6 +169,9 @@ class NotificationsViewModel extends ChangeNotifier
         pageSize: _defaultPageSize,
       );
       if (requestVersion != _sessionVersion) return;
+      _apiNotificationIds.addAll(
+        page.items.map((notification) => notification.id),
+      );
       _notifications = [..._notifications, ...page.items];
       _notifications = _dedupeAndSort(_notifications);
       _currentPage = page.currentPage;
@@ -181,26 +190,53 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   Future<bool> markAsRead(int notificationId) async {
-    final index = _notifications.indexWhere((n) => n.id == notificationId);
-    if (index != -1 && _notifications[index].isRead) return true;
+    final target = _findNotification(notificationId);
+    if (target == null) {
+      try {
+        await _repository.markAsRead(notificationId);
+        await fetchUnreadCount(notify: false);
+        notifyListeners();
+      } catch (e) {
+        debugPrint('=== MARK AS READ ERROR: $e ===');
+      }
+      return true;
+    }
+
+    final matchingIndexes = _matchingIndexes(target);
+    if (matchingIndexes.isNotEmpty &&
+        matchingIndexes.every((index) => _notifications[index].isRead)) {
+      return true;
+    }
 
     final previousUnreadCount = _unreadCount;
-    if (index != -1) {
-      _notifications[index] = _notifications[index].copyWithRead();
-      _unreadCount = (_unreadCount - 1).clamp(0, 1 << 31).toInt();
+    final unreadMatches = matchingIndexes
+        .where((index) => !_notifications[index].isRead)
+        .length;
+    if (matchingIndexes.isNotEmpty) {
+      final updated = List<NotificationModel>.from(_notifications);
+      for (final index in matchingIndexes) {
+        updated[index] = updated[index].copyWithRead();
+      }
+      _notifications = _dedupeAndSort(updated);
+      _unreadCount = (_unreadCount - unreadMatches)
+          .clamp(0, 1 << 31)
+          .toInt();
       await _localStore.save(_notifications);
       notifyListeners();
     }
 
+    final apiNotification = _apiBackedMatchFor(target);
+    if (apiNotification == null) {
+      return true;
+    }
+
     try {
-      await _repository.markAsRead(notificationId);
+      await _repository.markAsRead(apiNotification.id);
       await fetchUnreadCount(notify: false);
       notifyListeners();
       return true;
     } catch (e) {
-      if (index == -1) {
-        _unreadCount = previousUnreadCount;
-      }
+      _unreadCount = previousUnreadCount;
       debugPrint('=== MARK AS READ ERROR: $e ===');
       return true;
     }
@@ -225,16 +261,31 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   Future<bool> hideNotification(int notificationId) async {
-    final index = _notifications.indexWhere((n) => n.id == notificationId);
-    if (index == -1) return false;
+    final target = _findNotification(notificationId);
+    if (target == null) return false;
+
+    final apiNotification = _apiBackedMatchFor(target);
+    final apiNotificationId = apiNotification?.id ?? notificationId;
 
     try {
-      await _repository.hideNotification(notificationId);
-      _notifications = List<NotificationModel>.from(_notifications)
-        ..removeAt(index);
+      if (apiNotification != null) {
+        await _repository.hideNotification(apiNotificationId);
+      } else {
+        debugPrint(
+          '=== HIDE NOTIFICATION: local-only notification removed without API call '
+          '${notificationDebugIdentity(target)} ===',
+        );
+      }
+      _notifications = _notifications
+          .where((item) => !notificationsRepresentSameEvent(item, target))
+          .toList();
       _setLoadedState();
       await _localStore.save(_notifications);
-      await fetchUnreadCount(notify: false);
+      if (apiNotification != null) {
+        await fetchUnreadCount(notify: false);
+      } else {
+        _unreadCount = _notifications.where((n) => !n.isRead).length;
+      }
       notifyListeners();
       return true;
     } catch (e) {
@@ -283,7 +334,12 @@ class NotificationsViewModel extends ChangeNotifier
     _pushSubscription = _pushService.onNotificationReceived.listen((
       notification,
     ) {
-      final alreadyExists = _notifications.any((n) => n.id == notification.id);
+      debugPrint(
+        '=== VM: Live notification received ${notificationDebugIdentity(notification)} ===',
+      );
+      final alreadyExists = _notifications.any(
+        (n) => notificationsRepresentSameEvent(n, notification),
+      );
       if (!alreadyExists) {
         _notifications = _dedupeAndSort([notification, ..._notifications]);
         // [FIX] Increment locally and immediately. Do NOT call fetchUnreadCount()
@@ -293,11 +349,15 @@ class NotificationsViewModel extends ChangeNotifier
       } else {
         _notifications = _notifications
             .map(
-              (item) => item.id == notification.id
-                  ? _mergeNotification(existing: item, incoming: notification)
+              (item) => notificationsRepresentSameEvent(item, notification)
+                  ? mergeNotificationModels(
+                      existing: item,
+                      incoming: notification,
+                    )
                   : item,
             )
             .toList();
+        _notifications = _dedupeAndSort(_notifications);
       }
       _setLoadedState();
       unawaited(_localStore.save(_notifications));
@@ -329,37 +389,59 @@ class NotificationsViewModel extends ChangeNotifier
     required List<NotificationModel> remote,
     required List<NotificationModel> local,
   }) {
-    final byId = <int, NotificationModel>{};
-    for (final notification in local) {
-      byId[notification.id] = notification;
-    }
-    for (final notification in remote) {
-      final existing = byId[notification.id];
-      byId[notification.id] = existing == null
-          ? notification
-          : _mergeNotification(existing: existing, incoming: notification);
-    }
-    return _dedupeAndSort(byId.values);
-  }
-
-  NotificationModel _mergeNotification({
-    required NotificationModel existing,
-    required NotificationModel incoming,
-  }) {
-    return incoming.copyWith(
-      isRead: existing.isRead || incoming.isRead,
-      actionUrl: incoming.actionUrl ?? existing.actionUrl,
-      imageUrl: incoming.imageUrl ?? existing.imageUrl,
-    );
+    return _dedupeAndSort([...local, ...remote]);
   }
 
   List<NotificationModel> _dedupeAndSort(Iterable<NotificationModel> items) {
-    final byId = <int, NotificationModel>{};
-    for (final item in items) {
-      byId[item.id] = item;
+    return dedupeNotifications(items);
+  }
+
+  NotificationModel? _findNotification(int notificationId) {
+    for (final notification in _notifications) {
+      if (notification.id == notificationId) return notification;
     }
-    return byId.values.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return null;
+  }
+
+  List<int> _matchingIndexes(NotificationModel target) {
+    final indexes = <int>[];
+    for (var i = 0; i < _notifications.length; i++) {
+      if (notificationsRepresentSameEvent(_notifications[i], target)) {
+        indexes.add(i);
+      }
+    }
+    return indexes;
+  }
+
+  NotificationModel? _apiBackedMatchFor(NotificationModel target) {
+    for (final notification in _notifications) {
+      if (notificationsRepresentSameEvent(notification, target) &&
+          _isApiBackedNotification(notification)) {
+        return notification;
+      }
+    }
+    return _isApiBackedNotification(target) ? target : null;
+  }
+
+  bool _isApiBackedNotification(NotificationModel notification) {
+    return _apiNotificationIds.contains(notification.id) ||
+        isApiBackedNotification(notification);
+  }
+
+  void _logMergeInputs({
+    required List<NotificationModel> remote,
+    required List<NotificationModel> local,
+  }) {
+    for (final notification in local) {
+      debugPrint(
+        '=== NOTIFICATIONS MERGE LOCAL ${notificationDebugIdentity(notification)} ===',
+      );
+    }
+    for (final notification in remote) {
+      debugPrint(
+        '=== NOTIFICATIONS MERGE API ${notificationDebugIdentity(notification)} ===',
+      );
+    }
   }
 
   /// Called by the Flutter framework when the app lifecycle state changes.
@@ -387,6 +469,7 @@ class NotificationsViewModel extends ChangeNotifier
   void resetSessionState({bool notify = true}) {
     _sessionVersion++;
     _notifications = [];
+    _apiNotificationIds.clear();
     _unreadCount = 0;
     _viewState = NotificationsViewState.initial;
     _errorMessage = null;

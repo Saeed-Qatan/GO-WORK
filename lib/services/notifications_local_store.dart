@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/notification_model.dart';
+import 'notification_identity.dart';
 import '../utils/local_storage.dart';
 
 class NotificationsLocalStore {
@@ -23,11 +24,11 @@ class NotificationsLocalStore {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return const [];
 
-      return decoded
-          .whereType<Map<String, dynamic>>()
-          .map(NotificationModel.fromJson)
-          .toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return dedupeNotifications(
+        decoded.whereType<Map<String, dynamic>>().map(
+          NotificationModel.fromJson,
+        ),
+      );
     } catch (e) {
       debugPrint('=== NOTIFICATIONS CACHE LOAD ERROR: $e ===');
       return const [];
@@ -36,7 +37,9 @@ class NotificationsLocalStore {
 
   Future<void> save(List<NotificationModel> notifications) async {
     try {
-      final deduped = _dedupe(notifications).take(_maxCachedNotifications);
+      final deduped = dedupeNotifications(
+        notifications,
+      ).take(_maxCachedNotifications);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         await _storage.scopedKey(_storageKey),
@@ -50,30 +53,19 @@ class NotificationsLocalStore {
   Future<void> upsert(NotificationModel notification) async {
     final notifications = await load();
     final existingIndex = notifications.indexWhere(
-      (item) => item.id == notification.id,
+      (item) => notificationsRepresentSameEvent(item, notification),
     );
     if (existingIndex == -1) {
       await save([notification, ...notifications]);
       return;
     }
 
-    final existing = notifications[existingIndex];
-    final merged = notification.copyWith(
-      isRead: existing.isRead || notification.isRead,
-      actionUrl: notification.actionUrl ?? existing.actionUrl,
-      imageUrl: notification.imageUrl ?? existing.imageUrl,
+    final merged = mergeNotificationModels(
+      existing: notifications[existingIndex],
+      incoming: notification,
     );
     final updated = List<NotificationModel>.from(notifications)
       ..[existingIndex] = merged;
     await save(updated);
-  }
-
-  List<NotificationModel> _dedupe(List<NotificationModel> notifications) {
-    final byId = <int, NotificationModel>{};
-    for (final notification in notifications) {
-      byId[notification.id] = notification;
-    }
-    return byId.values.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 }

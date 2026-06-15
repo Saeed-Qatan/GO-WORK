@@ -523,6 +523,147 @@ void main() {
       expect(viewModel.unreadCount, 5);
     });
 
+    test('merges cached FCM notification with matching API notification', () async {
+      final localStore = _FakeNotificationsLocalStore([
+        _notification(
+          id: 9001,
+          notificationId: 501,
+          deliveryType: NotificationDeliveryType.unknown,
+          deliveryTypeRaw: null,
+          actionUrl: '/jobs/42',
+          title: 'Job 42',
+          body: 'New job is available',
+        ),
+      ]);
+      final repository = _FakeNotificationsRepository(
+        pages: {
+          1: NotificationsPage(
+            items: [
+              _notification(
+                id: 12,
+                notificationId: 501,
+                actionUrl: '/jobs/42',
+                title: 'Job 42',
+                body: 'New job is available',
+              ),
+            ],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 1,
+            totalPages: 1,
+          ),
+        },
+      );
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+
+      expect(viewModel.notifications, hasLength(1));
+      expect(viewModel.notifications.single.id, 12);
+      expect(localStore.stored.single.id, 12);
+    });
+
+    test('hides all matching local and API notification copies', () async {
+      final localStore = _FakeNotificationsLocalStore([
+        _notification(
+          id: 9001,
+          notificationId: 501,
+          deliveryType: NotificationDeliveryType.unknown,
+          deliveryTypeRaw: null,
+          actionUrl: '/jobs/42',
+          title: 'Job 42',
+          body: 'New job is available',
+        ),
+      ]);
+      final repository = _FakeNotificationsRepository(
+        pages: {
+          1: NotificationsPage(
+            items: [
+              _notification(
+                id: 12,
+                notificationId: 501,
+                actionUrl: '/jobs/42',
+                title: 'Job 42',
+                body: 'New job is available',
+              ),
+            ],
+            currentPage: 1,
+            pageSize: 20,
+            totalCount: 1,
+            totalPages: 1,
+          ),
+        },
+      );
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.fetchNotifications();
+      final result = await viewModel.hideNotification(12);
+
+      expect(result, isTrue);
+      expect(viewModel.notifications, isEmpty);
+      expect(repository.hideCount, 1);
+      expect(localStore.stored, isEmpty);
+    });
+
+    test('hides local-only push notification without API delete', () async {
+      final localStore = _FakeNotificationsLocalStore([
+        _notification(
+          id: 9001,
+          deliveryType: NotificationDeliveryType.unknown,
+          deliveryTypeRaw: null,
+        ),
+      ]);
+      final repository = _FakeNotificationsRepository(pages: {});
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.syncCachedNotifications();
+      final result = await viewModel.hideNotification(9001);
+
+      expect(result, isTrue);
+      expect(viewModel.notifications, isEmpty);
+      expect(repository.hideCount, 0);
+    });
+
+    test('marks local-only push notification read without API call', () async {
+      final localStore = _FakeNotificationsLocalStore([
+        _notification(
+          id: 9001,
+          isRead: false,
+          deliveryType: NotificationDeliveryType.unknown,
+          deliveryTypeRaw: null,
+        ),
+      ]);
+      final repository = _FakeNotificationsRepository(pages: {});
+      final viewModel = NotificationsViewModel(
+        repository: repository,
+        pushService: _FakePushNotificationService(),
+        localStore: localStore,
+        autoFetchUnreadCount: false,
+      );
+
+      await viewModel.syncCachedNotifications();
+      final result = await viewModel.markAsRead(9001);
+
+      expect(result, isTrue);
+      expect(viewModel.notifications.single.isRead, isTrue);
+      expect(repository.markReadCount, 0);
+    });
+
     test('uses cached notifications when remote fetch fails', () async {
       final repository = _FakeNotificationsRepository(pages: {})
         ..failGetNotifications = true;
@@ -642,18 +783,29 @@ void main() {
   });
 }
 
-NotificationModel _notification({required int id, bool isRead = false}) {
+NotificationModel _notification({
+  required int id,
+  bool isRead = false,
+  int? notificationId,
+  String? title,
+  String? body,
+  NotificationType type = NotificationType.general,
+  String typeRaw = 'General',
+  NotificationDeliveryType deliveryType = NotificationDeliveryType.user,
+  String? deliveryTypeRaw = 'User',
+  String? actionUrl,
+}) {
   return NotificationModel(
     id: id,
-    notificationId: id + 100,
-    title: 'Title $id',
-    body: 'Body $id',
-    type: NotificationType.general,
-    typeRaw: 'General',
-    deliveryType: NotificationDeliveryType.user,
-    deliveryTypeRaw: 'User',
+    notificationId: notificationId ?? id + 100,
+    title: title ?? 'Title $id',
+    body: body ?? 'Body $id',
+    type: type,
+    typeRaw: typeRaw,
+    deliveryType: deliveryType,
+    deliveryTypeRaw: deliveryTypeRaw,
     createdAt: DateTime.utc(2026, 6, 2, 16, 30, 0, 100 - id),
     isRead: isRead,
-    actionUrl: '/jobs/$id',
+    actionUrl: actionUrl ?? '/jobs/$id',
   );
 }
