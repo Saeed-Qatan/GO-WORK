@@ -235,6 +235,7 @@ class _NotificationsViewState extends State<NotificationsView> {
   ) {
     return ListView.separated(
       controller: _scrollController,
+      cacheExtent: 650,
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),

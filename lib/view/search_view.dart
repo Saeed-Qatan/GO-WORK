@@ -60,6 +60,7 @@ class _SearchViewState extends State<SearchView> {
                   child: Consumer<SearchViewModel>(
                     builder: (context, viewModel, child) {
                       return CustomScrollView(
+                        cacheExtent: 800,
                         slivers: [
                           SliverPadding(
                             padding: const EdgeInsets.symmetric(
@@ -121,6 +122,7 @@ class _SearchViewState extends State<SearchView> {
                                         jobItem,
                                       );
                                       return SearchJobCard(
+                                        key: ValueKey(resolvedJob.id),
                                         job: resolvedJob,
                                         isUrgent: index == 0,
                                         onTap: () {

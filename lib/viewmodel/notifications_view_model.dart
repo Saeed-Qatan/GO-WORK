@@ -34,10 +34,10 @@ class NotificationsViewModel extends ChangeNotifier
 
   List<NotificationModel> _notifications = [];
   List<NotificationModel> get notifications => _notifications;
-  List<NotificationModel> get unreadNotifications =>
-      _notifications.where((n) => !n.isRead).toList();
-  List<NotificationModel> get readNotifications =>
-      _notifications.where((n) => n.isRead).toList();
+  List<NotificationModel> _unreadNotifications = [];
+  List<NotificationModel> get unreadNotifications => _unreadNotifications;
+  List<NotificationModel> _readNotifications = [];
+  List<NotificationModel> get readNotifications => _readNotifications;
 
   int _unreadCount = 0;
   int get unreadCount => _unreadCount;
@@ -112,7 +112,7 @@ class NotificationsViewModel extends ChangeNotifier
         ..clear()
         ..addAll(page.items.map((notification) => notification.id));
       _logMergeInputs(remote: page.items, local: cached);
-      _notifications = _mergeNotifications(remote: page.items, local: cached);
+      _setNotifications(_mergeNotifications(remote: page.items, local: cached));
       _currentPage = page.currentPage;
       _totalPages = page.totalPages;
       _setLoadedState();
@@ -122,8 +122,8 @@ class NotificationsViewModel extends ChangeNotifier
       final cached = await _localStore.load();
       if (requestVersion != _sessionVersion) return;
       if (cached.isNotEmpty) {
-        _notifications = cached;
-        _unreadCount = cached.where((n) => !n.isRead).length;
+        _setNotifications(cached);
+        _unreadCount = _unreadNotifications.length;
         _setLoadedState();
       } else {
         _errorMessage = AppErrorParser.parse(e);
@@ -139,7 +139,7 @@ class NotificationsViewModel extends ChangeNotifier
 
   Future<void> fetchUnreadCount({bool notify = true}) async {
     if (!await _sessionGuard.hasActiveToken()) {
-      _unreadCount = _notifications.where((n) => !n.isRead).length;
+      _unreadCount = _unreadNotifications.length;
       if (notify) notifyListeners();
       debugPrint(
         '=== VM: Skipped unread-count sync because no auth token exists ===',
@@ -151,7 +151,7 @@ class NotificationsViewModel extends ChangeNotifier
       _unreadCount = await _repository.getUnreadCount();
       if (notify) notifyListeners();
     } catch (e) {
-      _unreadCount = _notifications.where((n) => !n.isRead).length;
+      _unreadCount = _unreadNotifications.length;
       if (notify) notifyListeners();
     }
   }
@@ -172,8 +172,7 @@ class NotificationsViewModel extends ChangeNotifier
       _apiNotificationIds.addAll(
         page.items.map((notification) => notification.id),
       );
-      _notifications = [..._notifications, ...page.items];
-      _notifications = _dedupeAndSort(_notifications);
+      _setNotifications(_dedupeAndSort([..._notifications, ...page.items]));
       _currentPage = page.currentPage;
       _totalPages = page.totalPages;
       _setLoadedState();
@@ -217,7 +216,7 @@ class NotificationsViewModel extends ChangeNotifier
       for (final index in matchingIndexes) {
         updated[index] = updated[index].copyWithRead();
       }
-      _notifications = _dedupeAndSort(updated);
+      _setNotifications(_dedupeAndSort(updated));
       _unreadCount = (_unreadCount - unreadMatches).clamp(0, 1 << 31).toInt();
       await _localStore.save(_notifications);
       notifyListeners();
@@ -241,12 +240,11 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   Future<bool> markAllAsRead() async {
-    final unread = _notifications.where((n) => !n.isRead).toList();
-    if (unread.isEmpty && _unreadCount == 0) return true;
+    if (_unreadNotifications.isEmpty && _unreadCount == 0) return true;
 
     try {
       await _repository.markAllAsRead();
-      _notifications = _notifications.map((n) => n.copyWithRead()).toList();
+      _setNotifications(_notifications.map((n) => n.copyWithRead()).toList());
       await _localStore.save(_notifications);
       await fetchUnreadCount(notify: false);
       notifyListeners();
@@ -274,15 +272,17 @@ class NotificationsViewModel extends ChangeNotifier
           '${notificationDebugIdentity(target)} ===',
         );
       }
-      _notifications = _notifications
-          .where((item) => !notificationsRepresentSameEvent(item, target))
-          .toList();
+      _setNotifications(
+        _notifications
+            .where((item) => !notificationsRepresentSameEvent(item, target))
+            .toList(),
+      );
       _setLoadedState();
       await _localStore.save(_notifications);
       if (apiNotification != null) {
         await fetchUnreadCount(notify: false);
       } else {
-        _unreadCount = _notifications.where((n) => !n.isRead).length;
+        _unreadCount = _unreadNotifications.length;
       }
       notifyListeners();
       return true;
@@ -322,8 +322,10 @@ class NotificationsViewModel extends ChangeNotifier
     final cached = await _localStore.load();
     if (cached.isEmpty) return;
 
-    _notifications = _mergeNotifications(remote: _notifications, local: cached);
-    _unreadCount = _notifications.where((n) => !n.isRead).length;
+    _setNotifications(
+      _mergeNotifications(remote: _notifications, local: cached),
+    );
+    _unreadCount = _unreadNotifications.length;
     _setLoadedState();
     if (notify) notifyListeners();
   }
@@ -339,23 +341,24 @@ class NotificationsViewModel extends ChangeNotifier
         (n) => notificationsRepresentSameEvent(n, notification),
       );
       if (!alreadyExists) {
-        _notifications = _dedupeAndSort([notification, ..._notifications]);
+        _setNotifications(_dedupeAndSort([notification, ..._notifications]));
         // [FIX] Increment locally and immediately. Do NOT call fetchUnreadCount()
         // here — the server hasn't persisted the notification yet, so an API
         // fetch would return the old count and silently undo this +1.
         _unreadCount += notification.isRead ? 0 : 1;
       } else {
-        _notifications = _notifications
-            .map(
+        _setNotifications(
+          _dedupeAndSort(
+            _notifications.map(
               (item) => notificationsRepresentSameEvent(item, notification)
                   ? mergeNotificationModels(
                       existing: item,
                       incoming: notification,
                     )
                   : item,
-            )
-            .toList();
-        _notifications = _dedupeAndSort(_notifications);
+            ),
+          ),
+        );
       }
       _setLoadedState();
       unawaited(_localStore.save(_notifications));
@@ -377,8 +380,8 @@ class NotificationsViewModel extends ChangeNotifier
     if (requestVersion != null && requestVersion != _sessionVersion) return;
     if (cached.isEmpty || _notifications.isNotEmpty) return;
 
-    _notifications = cached;
-    _unreadCount = cached.where((n) => !n.isRead).length;
+    _setNotifications(cached);
+    _unreadCount = _unreadNotifications.length;
     _setLoadedState();
     notifyListeners();
   }
@@ -392,6 +395,12 @@ class NotificationsViewModel extends ChangeNotifier
 
   List<NotificationModel> _dedupeAndSort(Iterable<NotificationModel> items) {
     return dedupeNotifications(items);
+  }
+
+  void _setNotifications(List<NotificationModel> notifications) {
+    _notifications = notifications;
+    _unreadNotifications = notifications.where((n) => !n.isRead).toList();
+    _readNotifications = notifications.where((n) => n.isRead).toList();
   }
 
   NotificationModel? _findNotification(int notificationId) {
@@ -466,7 +475,7 @@ class NotificationsViewModel extends ChangeNotifier
   @override
   void resetSessionState({bool notify = true}) {
     _sessionVersion++;
-    _notifications = [];
+    _setNotifications([]);
     _apiNotificationIds.clear();
     _unreadCount = 0;
     _viewState = NotificationsViewState.initial;

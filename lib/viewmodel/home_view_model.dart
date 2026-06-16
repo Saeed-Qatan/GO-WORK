@@ -8,6 +8,7 @@ import '../repository/home_repository.dart';
 import '../repository/profile_repository.dart';
 import '../services/push_notification_service.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/search_text_normalizer.dart';
 import 'session_resettable.dart';
 
 class HomeViewModel extends ChangeNotifier implements SessionResettable {
@@ -49,14 +50,14 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
 
   /// Returns jobs filtered by the current search query (client-side).
   List<JobModel> get filteredJobs {
-    if (_searchQuery.trim().isEmpty) return _jobs;
-    final q = _searchQuery.trim().toLowerCase();
-    return _jobs.where((job) {
-      return job.title.toLowerCase().contains(q) ||
-          job.company.toLowerCase().contains(q) ||
-          job.category.toLowerCase().contains(q) ||
-          job.location.toLowerCase().contains(q);
-    }).toList();
+    final query = SearchTextNormalizer.normalize(_searchQuery);
+    if (query.isEmpty) return _jobs;
+
+    return _jobs
+        .where(
+          (job) => SearchTextNormalizer.normalize(job.title).contains(query),
+        )
+        .toList();
   }
 
   String _userName = '';

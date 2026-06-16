@@ -72,6 +72,7 @@ class DeletedInterviewsView extends StatelessWidget {
           }
 
           return ListView.separated(
+            cacheExtent: 650,
             padding: EdgeInsets.only(
               top: MediaQuery.paddingOf(context).top + kToolbarHeight + 24,
               left: 20,
@@ -83,6 +84,7 @@ class DeletedInterviewsView extends StatelessWidget {
             itemBuilder: (context, index) {
               final interview = deletedList[index];
               return Stack(
+                    key: ValueKey(interview.id),
                     children: [
                       InterviewCard(interview: interview),
                       Positioned(

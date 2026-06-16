@@ -149,3 +149,73 @@
 - API endpoints, base URLs, DTOs, backend models, authentication, tokens, session management, Dio configuration, interceptors, API services, and networking repositories were not changed.
 - No new package was added.
 - No `flutter` or `dart` command was run for this implementation pass.
+
+## 9. Search filter options rebuilt on every Consumer build
+
+1. File: `lib/viewmodel/search_view_model.dart` around filter option getters.
+2. Type: Provider / Allocation Optimization.
+3. Cause: `categoryOptions`, `countryOptions`, `locationOptions`, and `jobTypeOptions` called `_mapOptions(...)` every time the Search consumer rebuilt.
+4. Impact: CPU: repeated option mapping; Memory: short-lived `List<FilterOption>` allocations; FPS: minor rebuild pressure while typing/searching; Startup Time: none.
+5. Severity: Low.
+6. Confidence: 100%.
+7. Current code: getters built options directly with `_mapOptions(...)`.
+8. Improved code: private cached option lists updated only when the corresponding filter payload changes.
+9. Why it improves: Keeps getter behavior unchanged while avoiding repeated allocations during UI rebuilds.
+10. Expected impact: Small but steady reduction in Search rebuild allocation churn.
+11. Safe fix: Yes.
+
+## 10. Notification read/unread lists rebuilt repeatedly
+
+1. File: `lib/viewmodel/notifications_view_model.dart` around `unreadNotifications` and `readNotifications`.
+2. Type: Provider / Allocation Optimization.
+3. Cause: getters filtered `_notifications` into new lists on each access, and the notifications view reads them while building filter tabs and filtered lists.
+4. Impact: CPU: repeated filtering; Memory: short-lived lists; FPS: minor pressure on large notification lists; Startup Time: none.
+5. Severity: Low.
+6. Confidence: 100%.
+7. Current code: `get unreadNotifications => _notifications.where(...).toList()`.
+8. Improved code: private cached read/unread lists updated through `_setNotifications(...)`.
+9. Why it improves: Derived lists are recomputed only when notification data changes.
+10. Expected impact: Lower allocation churn in Notifications screen, especially with many notifications.
+11. Safe fix: Yes.
+
+## 11. Lazy lists lacked conservative cache extent / stable keys
+
+1. Files: `lib/view/search_view.dart`, `lib/view/applications_view.dart`, `lib/view/notifications_view.dart`, `lib/view/interviews_view.dart`, `lib/view/deleted_interviews_view.dart`.
+2. Type: Scrolling / Rendering.
+3. Cause: Some long lists used default cache extent and lacked stable item keys despite having clear ids.
+4. Impact: CPU: more work can happen exactly at scroll boundary; Memory: slightly lower prebuild buffer but more visible jank risk; FPS: possible frame spikes during fast scrolling; Startup Time: none.
+5. Severity: Low.
+6. Confidence: 100%.
+7. Current code: `ListView.builder/separated` and `CustomScrollView` without explicit cache extent in selected screens.
+8. Improved code: added conservative `cacheExtent` and stable `ValueKey` where ids were already available.
+9. Why it improves: Gives Flutter a small prebuild buffer and helps preserve element identity without changing visuals.
+10. Expected impact: Smoother fast scrolling in list-heavy screens, with a small memory tradeoff.
+11. Safe fix: Yes.
+
+## 12. Notification badge rebuild scope
+
+1. File: `lib/widget/notifications/notification_badge.dart`.
+2. Type: Rebuild Optimization.
+3. Cause: badge widgets listened to the whole `NotificationsViewModel` while only rendering `unreadCount`.
+4. Impact: CPU: unnecessary badge rebuilds; Memory: negligible; FPS: minor; Startup Time: none.
+5. Severity: Low.
+6. Confidence: 100%.
+7. Current code: `Consumer<NotificationsViewModel>` reads `viewModel.unreadCount`.
+8. Improved code: `Selector<NotificationsViewModel, int>` selects only `unreadCount`.
+9. Why it improves: Badge rebuilds only when the displayed count changes.
+10. Expected impact: Small reduction in global rebuild noise when notifications update.
+11. Safe fix: Yes.
+
+## 13. Manual Verification Required: delayed animations in lazy lists
+
+1. Files: `lib/view/applications_view.dart`, `lib/view/interviews_view.dart`, `lib/view/deleted_interviews_view.dart`.
+2. Type: Scrolling / Rendering.
+3. Cause: item animations use index-based delays inside lazily built lists.
+4. Impact: CPU: animation work during scroll; Memory: animation objects; FPS: possible blank/late item presentation on fast scroll; Startup Time: none.
+5. Severity: Medium.
+6. Confidence: High Confidence.
+7. Current code: `.fade(... delay: (index * n).ms).slide...`.
+8. Improved code: remove delay or limit animation to first visible load only.
+9. Why it improves: Prevents lazy-built items from starting hidden after fast scrolling.
+10. Expected impact: Smoother scrolling in long animated lists.
+11. Safe fix: Manual Verification Required, because animation timing is visible UI behavior.

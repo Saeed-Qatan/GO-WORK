@@ -64,6 +64,7 @@ class _InterviewsViewState extends State<InterviewsView> {
             color: AppColors.primary,
             onRefresh: () => viewModel.fetchInterviews(),
             child: CustomScrollView(
+              cacheExtent: 800,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 _buildAppBar(context, viewModel),

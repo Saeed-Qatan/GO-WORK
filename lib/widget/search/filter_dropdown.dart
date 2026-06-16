@@ -158,13 +158,14 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
   }
 
   void _filterItems(String query) {
+    final normalizedQuery = query.toLowerCase();
     setState(() {
-      if (query.isEmpty) {
+      if (normalizedQuery.isEmpty) {
         _filteredItems = widget.items;
       } else {
         _filteredItems = widget.items
             .where(
-              (item) => item.label.toLowerCase().contains(query.toLowerCase()),
+              (item) => item.label.toLowerCase().contains(normalizedQuery),
             )
             .toList();
       }

@@ -12,9 +12,9 @@ class NotificationBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotificationsViewModel>(
-      builder: (context, viewModel, child) {
-        final count = viewModel.unreadCount;
+    return Selector<NotificationsViewModel, int>(
+      selector: (_, viewModel) => viewModel.unreadCount,
+      builder: (context, count, child) {
         return GestureDetector(
           onTap: onTap,
           child: Stack(
@@ -74,9 +74,9 @@ class NotificationBellDark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotificationsViewModel>(
-      builder: (context, viewModel, child) {
-        final count = viewModel.unreadCount;
+    return Selector<NotificationsViewModel, int>(
+      selector: (_, viewModel) => viewModel.unreadCount,
+      builder: (context, count, child) {
         return GestureDetector(
           onTap: onTap,
           child: Stack(

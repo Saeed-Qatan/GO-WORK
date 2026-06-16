@@ -5,6 +5,7 @@ import '../model/home/home_model.dart';
 import '../repository/search_repository.dart';
 import '../utils/api_storage.dart';
 import '../utils/app_error_parser.dart';
+import '../utils/search_text_normalizer.dart';
 import '../utils/status_translator.dart';
 
 class SearchViewModel extends ChangeNotifier {
@@ -28,6 +29,10 @@ class SearchViewModel extends ChangeNotifier {
   List<Map<String, dynamic>> _countries = [];
   List<Map<String, dynamic>> _locationTypes = [];
   List<Map<String, dynamic>> _jobTypes = [];
+  List<FilterOption> _categoryOptions = [];
+  List<FilterOption> _countryOptions = [];
+  List<FilterOption> _locationOptions = [];
+  List<FilterOption> _jobTypeOptions = [];
 
   bool _isCategoriesLoading = false;
   bool _isCountriesLoading = false;
@@ -39,19 +44,10 @@ class SearchViewModel extends ChangeNotifier {
   bool get isLocationTypesLoading => _isLocationTypesLoading;
   bool get isJobTypesLoading => _isJobTypesLoading;
 
-  List<FilterOption> get categoryOptions =>
-      _mapOptions(_categories, allCategoriesLabel);
-  List<FilterOption> get countryOptions => _mapOptions(_countries, allLabel);
-  List<FilterOption> get locationOptions => _mapOptions(
-    _locationTypes,
-    allLabel,
-    translate: StatusTranslator.workModeLabel,
-  );
-  List<FilterOption> get jobTypeOptions => _mapOptions(
-    _jobTypes,
-    allLabel,
-    translate: StatusTranslator.jobTypeLabel,
-  );
+  List<FilterOption> get categoryOptions => _categoryOptions;
+  List<FilterOption> get countryOptions => _countryOptions;
+  List<FilterOption> get locationOptions => _locationOptions;
+  List<FilterOption> get jobTypeOptions => _jobTypeOptions;
 
   String _searchQuery = '';
   FilterOption? _selectedCategory;
@@ -128,26 +124,46 @@ class SearchViewModel extends ChangeNotifier {
 
   Future<void> _fetchCategories() => _fetchFilterData(
     ApiConstants.jobCategories,
-    (data) => _categories = data,
+    (data) {
+      _categories = data;
+      _categoryOptions = _mapOptions(_categories, allCategoriesLabel);
+    },
     (v) => _isCategoriesLoading = v,
     skipAuth: true,
   );
 
   Future<void> _fetchCountries() => _fetchFilterData(
     ApiConstants.jobCountries,
-    (data) => _countries = data,
+    (data) {
+      _countries = data;
+      _countryOptions = _mapOptions(_countries, allLabel);
+    },
     (v) => _isCountriesLoading = v,
   );
 
   Future<void> _fetchLocationTypes() => _fetchFilterData(
     ApiConstants.locationTypes,
-    (data) => _locationTypes = data,
+    (data) {
+      _locationTypes = data;
+      _locationOptions = _mapOptions(
+        _locationTypes,
+        allLabel,
+        translate: StatusTranslator.workModeLabel,
+      );
+    },
     (v) => _isLocationTypesLoading = v,
   );
 
   Future<void> _fetchJobTypes() => _fetchFilterData(
     ApiConstants.jobTypes,
-    (data) => _jobTypes = data,
+    (data) {
+      _jobTypes = data;
+      _jobTypeOptions = _mapOptions(
+        _jobTypes,
+        allLabel,
+        translate: StatusTranslator.jobTypeLabel,
+      );
+    },
     (v) => _isJobTypesLoading = v,
   );
 
@@ -242,17 +258,16 @@ class SearchViewModel extends ChangeNotifier {
     final selectedCountry = _selectedCountry;
     final selectedLocation = _selectedLocation;
     final selectedType = _selectedType;
-    // Client-side text fallback: ensures visible results change when typing,
-    // even when the backend ignores the `query` parameter or lags behind.
-    final query = _searchQuery.trim().toLowerCase();
+    // Client-side title fallback keeps visible results tied to job names
+    // without changing the backend search request.
+    final query = SearchTextNormalizer.normalize(_searchQuery);
 
     return jobs.where((job) {
       // ── Text search (client-side fallback) ──────────────────────────────
       if (query.isNotEmpty) {
-        final matchesText = job.title.toLowerCase().contains(query) ||
-            job.company.toLowerCase().contains(query) ||
-            job.category.toLowerCase().contains(query) ||
-            job.location.toLowerCase().contains(query);
+        final matchesText = SearchTextNormalizer.normalize(
+          job.title,
+        ).contains(query);
         if (!matchesText) return false;
       }
 

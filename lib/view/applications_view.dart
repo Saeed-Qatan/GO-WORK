@@ -296,9 +296,11 @@ class _ApplicationsViewState extends State<ApplicationsView> {
     }
 
     return ListView.builder(
+      cacheExtent: 650,
       itemCount: apps.length,
       itemBuilder: (context, index) {
         return ApplicationCard(
+              key: ValueKey(apps[index].id),
               application: apps[index],
               onWithdraw: () => _handleWithdraw(viewModel, apps[index].id),
             )
