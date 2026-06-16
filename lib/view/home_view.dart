@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -68,30 +70,35 @@ class _HomeViewState extends State<HomeView> {
       backgroundColor: const Color(0xFFF5F5F5), // Light background for contrast
       body: Consumer<HomeViewModel>(
         builder: (context, viewModel, child) {
-          final isLoading = viewModel.isLoading;
-          final stats = isLoading ? _dummyStats : viewModel.stats;
-          final jobs = isLoading ? _dummyJobs : viewModel.filteredJobs;
+          final isInitialLoading =
+              viewModel.isLoading &&
+              viewModel.stats.isEmpty &&
+              viewModel.jobs.isEmpty;
+          final stats = isInitialLoading ? _dummyStats : viewModel.stats;
+          final jobs = isInitialLoading ? _dummyJobs : viewModel.filteredJobs;
 
           return Skeletonizer(
-            enabled: isLoading,
+            enabled: isInitialLoading,
             child: CustomScrollView(
+              cacheExtent: 900,
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: [
                 CupertinoSliverRefreshControl(
                   onRefresh: () async {
-                    if (!isLoading) {
-                      await Future.wait([
-                        Provider.of<HomeViewModel>(
-                          context,
-                          listen: false,
-                        ).fetchHomeData(forceRefresh: true),
+                    if (!viewModel.isLoading && !viewModel.isRefreshing) {
+                      await Provider.of<HomeViewModel>(
+                        context,
+                        listen: false,
+                      ).fetchHomeData(forceRefresh: true);
+                      if (!context.mounted) return;
+                      unawaited(
                         Provider.of<NotificationsViewModel>(
                           context,
                           listen: false,
                         ).fetchUnreadCount(),
-                      ]);
+                      );
                     }
                   },
                 ),
@@ -126,7 +133,7 @@ class _HomeViewState extends State<HomeView> {
                                         )
                                         .animate(
                                           key: ValueKey(
-                                            'stat_${isLoading}_${stat.label}',
+                                            'stat_${isInitialLoading}_${stat.label}',
                                           ),
                                         )
                                         .fade(
@@ -146,7 +153,9 @@ class _HomeViewState extends State<HomeView> {
                       const RecommendedJobsHeader(),
                       const SizedBox(height: 16),
                       // Jobs List or Error/Empty State
-                      if (viewModel.errorMessage != null && !isLoading)
+                      if (viewModel.errorMessage != null &&
+                          jobs.isEmpty &&
+                          !isInitialLoading)
                         Padding(
                           padding: const EdgeInsets.only(top: 32.0),
                           child: AnimatedEmptyState(
@@ -155,7 +164,7 @@ class _HomeViewState extends State<HomeView> {
                             subtitle: viewModel.errorMessage!,
                           ),
                         )
-                      else if (jobs.isEmpty && !isLoading)
+                      else if (jobs.isEmpty && !isInitialLoading)
                         const Padding(
                           padding: EdgeInsets.only(top: 32.0),
                           child: AnimatedEmptyState(
@@ -165,14 +174,12 @@ class _HomeViewState extends State<HomeView> {
                                 'يرجى استكمال ملفك الشخصي أو العودة لاحقاً لرؤية الوظائف المناسبة لك',
                           ),
                         ),
-                      if (!isLoading &&
-                          (viewModel.errorMessage != null || jobs.isEmpty))
+                      if (!isInitialLoading && jobs.isEmpty)
                         const SizedBox(height: 24),
                     ],
                   ),
                 ),
-                if (isLoading ||
-                    (viewModel.errorMessage == null && jobs.isNotEmpty))
+                if (isInitialLoading || jobs.isNotEmpty)
                   Consumer<JobApplicationStateViewModel>(
                     builder: (context, appState, child) {
                       return SliverPadding(
@@ -188,26 +195,13 @@ class _HomeViewState extends State<HomeView> {
                                       resolvedJob.canApply == false
                                       ? 'تم التقديم'
                                       : AppConstants.applyNow,
-                                )
-                                .animate(
-                                  key: ValueKey('job_${isLoading}_${job.id}'),
-                                )
-                                .fade(
-                                  duration: 500.ms,
-                                  delay: (index * 100).ms,
-                                )
-                                .slideY(
-                                  begin: 0.1,
-                                  duration: 500.ms,
-                                  curve: Curves.easeOutQuart,
                                 );
                           },
                         ),
                       );
                     },
                   ),
-                if (isLoading ||
-                    (viewModel.errorMessage == null && jobs.isNotEmpty))
+                if (isInitialLoading || jobs.isNotEmpty)
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),

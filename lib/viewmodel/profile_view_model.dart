@@ -33,7 +33,10 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
     String? preferredCategoryId,
   }) async {
     final requestVersion = _sessionVersion;
-    _isLoading = true;
+    final showBlockingLoading = _profile == null;
+    if (showBlockingLoading) {
+      _isLoading = true;
+    }
     _errorMessage = null;
     notifyListeners();
 
@@ -67,6 +70,13 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
         notifyListeners();
       }
     }
+  }
+
+  void seedProfile(ProfileModel profile, {bool notify = true}) {
+    _profile = profile;
+    _isLoading = false;
+    _errorMessage = null;
+    if (notify) notifyListeners();
   }
 
   /// PATCH /Account/Candidate/UpdateProfile - form-data with all fields + files.

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../model/profile_model.dart';
 import '../../repository/login_repository.dart';
 import '../../repository/profile_repository.dart';
 import '../../services/notification_topic_service.dart';
@@ -26,6 +27,9 @@ class LoginViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  ProfileModel? _profileSnapshot;
+  ProfileModel? get profileSnapshot => _profileSnapshot;
+
   bool _rememberMe = false;
   bool get rememberMe => _rememberMe;
 
@@ -37,6 +41,7 @@ class LoginViewModel extends ChangeNotifier {
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
+    _profileSnapshot = null;
     notifyListeners();
 
     try {
@@ -63,6 +68,7 @@ class LoginViewModel extends ChangeNotifier {
 
     try {
       final profile = await _profileRepository.getUserProfile();
+      _profileSnapshot = profile;
       final categoryId =
           pendingCategoryId?.trim().isNotEmpty == true
               ? pendingCategoryId

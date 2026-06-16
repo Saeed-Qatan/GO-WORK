@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../model/home/home_model.dart';
 import '../model/notification_model.dart';
+import '../model/profile_model.dart';
 import '../repository/home_repository.dart';
 import '../repository/profile_repository.dart';
 import '../services/push_notification_service.dart';
@@ -67,6 +68,9 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _isRefreshing = false;
+  bool get isRefreshing => _isRefreshing;
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
@@ -75,10 +79,15 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
 
   Future<void> fetchHomeData({bool forceRefresh = false}) async {
     final requestVersion = _sessionVersion;
+    final hasExistingData = _stats.isNotEmpty || _jobs.isNotEmpty;
     if (forceRefresh) {
       _repository.clearCache();
     }
-    _isLoading = true;
+    if (forceRefresh && hasExistingData) {
+      _isRefreshing = true;
+    } else {
+      _isLoading = true;
+    }
     _errorMessage = null;
     notifyListeners();
 
@@ -91,26 +100,14 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
 
       if (requestVersion != _sessionVersion) return;
 
-      var nextUserProfileImage = _userProfileImage;
-      String? nextUserName;
-      try {
-        final profile = await _profileRepository.getUserProfile();
-        nextUserProfileImage = profile.avatarUrl;
-        nextUserName = profile.name;
-      } catch (e) {
-        debugPrint('Failed to load profile for avatar: $e');
-      }
-
-      if (requestVersion != _sessionVersion) return;
-
-      _userProfileImage = nextUserProfileImage;
       _stats = results[0] as List<StatModel>;
       _jobs = results[1] as List<JobModel>;
-      if (nextUserName != null && nextUserName.isNotEmpty) {
-        _userName = nextUserName;
-      } else if (_userName.isEmpty) {
+      if (_userName.isEmpty) {
         _userName = results[2] as String;
       }
+
+      notifyListeners();
+      unawaited(_refreshProfileSummary(requestVersion));
     } catch (e) {
       if (requestVersion != _sessionVersion) return;
       debugPrint('Error fetching home data: $e');
@@ -126,9 +123,37 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
     } finally {
       if (requestVersion == _sessionVersion) {
         _isLoading = false;
+        _isRefreshing = false;
         notifyListeners();
       }
     }
+  }
+
+  Future<void> _refreshProfileSummary(int requestVersion) async {
+    try {
+      final profile = await _profileRepository.getUserProfile();
+      if (requestVersion != _sessionVersion) return;
+      seedProfileSummary(profile);
+    } catch (e) {
+      debugPrint('Failed to load profile for avatar: $e');
+    }
+  }
+
+  void seedProfileSummary(ProfileModel profile, {bool notify = true}) {
+    final nextName = profile.name.trim();
+    final nextImage = profile.avatarUrl.trim();
+    var changed = false;
+
+    if (nextName.isNotEmpty && nextName != _userName) {
+      _userName = nextName;
+      changed = true;
+    }
+    if (nextImage != _userProfileImage) {
+      _userProfileImage = nextImage;
+      changed = true;
+    }
+
+    if (changed && notify) notifyListeners();
   }
 
   void setTabIndex(int index) {
@@ -152,6 +177,7 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
     _userName = '';
     _userProfileImage = '';
     _isLoading = false;
+    _isRefreshing = false;
     _errorMessage = null;
     _selectedIndex = 0;
     if (notify) notifyListeners();

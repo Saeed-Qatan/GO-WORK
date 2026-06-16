@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:gowork/core/constants/app_constants.dart';
 import 'package:gowork/viewmodel/auth/login_view_model.dart';
+import 'package:gowork/viewmodel/home_view_model.dart';
+import 'package:gowork/viewmodel/profile_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 import 'package:gowork/widget/custom_text_field.dart';
 import 'package:go_router/go_router.dart';
@@ -158,7 +162,26 @@ class _LoginViewState extends State<LoginView> {
                           if (success) {
                             if (context.mounted) {
                               SnackbarService.showSuccess('تم تسجيل الدخول بنجاح');
+                              final profileSnapshot =
+                                  viewModel.profileSnapshot;
                               resetSessionState(context);
+                              if (profileSnapshot != null) {
+                                context
+                                    .read<ProfileViewModel>()
+                                    .seedProfile(profileSnapshot, notify: false);
+                                context
+                                    .read<HomeViewModel>()
+                                    .seedProfileSummary(
+                                      profileSnapshot,
+                                      notify: false,
+                                    );
+                              } else {
+                                unawaited(
+                                  context
+                                      .read<ProfileViewModel>()
+                                      .fetchProfile(),
+                                );
+                              }
                               context.go(AppRoutes.home);
                             }
                           } else {
