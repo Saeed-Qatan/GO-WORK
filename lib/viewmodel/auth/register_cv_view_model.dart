@@ -1,0 +1,237 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+
+import 'package:gowork/core/constants/api_constants.dart';
+import 'package:gowork/model/auth/email_verification_args.dart';
+import 'package:gowork/model/auth/register_data_model.dart';
+import 'package:gowork/services/registration_category_sync_service.dart';
+import 'package:gowork/services/auth/register_service.dart';
+import 'package:gowork/utils/api_storage.dart';
+import 'package:gowork/routing/app_router.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/utils/app_error_parser.dart';
+import 'package:gowork/main.dart'; // للوصول إلى notificationTopicService
+
+class RegisterCVViewModel extends ChangeNotifier {
+  final skillController = TextEditingController();
+  final List<String> _skills = [];
+  List<String> get skills => _skills;
+
+  File? cvFile;
+  String? cvFileName;
+
+  bool isLoading = false;
+
+  // --- Categories from API (NO hardcoded data) ---
+  final ApiClient _apiClient = ApiClient();
+  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> get categories => _categories;
+  bool isCategoriesLoading = false;
+  String? categoriesErrorMessage;
+
+  String? selectedCategoryId;
+
+  RegisterCVViewModel() {
+    fetchCategories();
+    fetchSuggestedSkills();
+  }
+
+  Future<void> fetchCategories() async {
+    isCategoriesLoading = true;
+    categoriesErrorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.get(
+        ApiConstants.jobCategories,
+        skipAuth: true,
+      );
+      debugPrint('Categories Response: $response');
+
+      // Parse categories from various possible response structures
+      List<dynamic>? categoriesList;
+      if (response['data'] is List) {
+        categoriesList = response['data'];
+      } else if (response['categories'] is List) {
+        categoriesList = response['categories'];
+      } else if (response['data'] is Map &&
+          response['data']['categories'] is List) {
+        categoriesList = response['data']['categories'];
+      } else if (response.containsKey('success') && response['data'] is List) {
+        categoriesList = response['data'];
+      }
+
+      if (categoriesList != null && categoriesList.isNotEmpty) {
+        _categories = categoriesList
+            .map((cat) {
+              return <String, dynamic>{
+                'id':
+                    (cat['id'] ??
+                            cat['Id'] ??
+                            cat['categoryId'] ??
+                            cat['CategoryId'] ??
+                            '')
+                        .toString(),
+                'name':
+                    (cat['name'] ??
+                            cat['Name'] ??
+                            cat['categoryName'] ??
+                            cat['CategoryName'] ??
+                            '')
+                        .toString(),
+              };
+            })
+            .where(
+              (cat) =>
+                  cat['id'].toString().trim().isNotEmpty &&
+                  cat['name'].toString().trim().isNotEmpty,
+            )
+            .toList();
+        debugPrint('Categories loaded from API: ${_categories.length} items');
+      } else {
+        debugPrint('WARNING: Empty categories from API');
+        _categories = [];
+      }
+
+      if (_categories.isEmpty) {
+        categoriesErrorMessage = 'تعذر تحميل المجالات. يرجى المحاولة مرة أخرى.';
+      }
+    } catch (e) {
+      debugPrint('Error fetching categories: $e');
+      _categories = [];
+      categoriesErrorMessage = AppErrorParser.parse(e);
+    } finally {
+      isCategoriesLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void setCategory(String? id) {
+    selectedCategoryId = id;
+    notifyListeners();
+  }
+
+  List<String> suggestedSkills = [];
+  bool isSkillsLoading = false;
+
+  Future<void> fetchSuggestedSkills() async {
+    isSkillsLoading = true;
+    notifyListeners();
+    try {
+      final response = await _apiClient.get(
+        ApiConstants.jobSkills,
+        skipAuth: true,
+      );
+      List<dynamic>? skillsList;
+      if (response['data'] is List) {
+        skillsList = response['data'];
+      }
+
+      if (skillsList != null) {
+        suggestedSkills = skillsList
+            .map((s) => (s['name'] ?? s['title'] ?? s.toString()).toString())
+            .take(15)
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching suggested skills: $e');
+    } finally {
+      isSkillsLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void addSkill() {
+    final v = skillController.text.trim();
+    if (v.isNotEmpty && !_skills.contains(v)) {
+      _skills.add(v);
+      skillController.clear();
+      notifyListeners();
+    }
+  }
+
+  void removeSkill(String s) {
+    _skills.remove(s);
+    notifyListeners();
+  }
+
+  void addSuggestedSkill(String skill) {
+    if (!_skills.contains(skill)) {
+      _skills.add(skill);
+      notifyListeners();
+    }
+  }
+
+  Future<void> pickCV() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
+
+    if (result?.files.single.path != null) {
+      cvFile = File(result!.files.single.path!);
+      cvFileName = result.files.single.name;
+      notifyListeners();
+    }
+  }
+
+  Future<void> finishRegistration(
+    BuildContext context,
+    RegisterDataModel base,
+  ) async {
+    final categoryId = selectedCategoryId?.trim();
+    if (categoryId == null || categoryId.isEmpty) {
+      SnackbarService.showWarning('يرجى اختيار المجال المناسب');
+      return;
+    }
+
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final data = base.copyWith(
+        skills: _skills,
+        cvFile: cvFile,
+        categoryId: categoryId,
+      );
+
+      await RegisterService().register(data);
+      await RegistrationCategorySyncService().savePendingCategory(
+        email: data.email,
+        categoryId: categoryId,
+      );
+
+      await notificationTopicService.syncUserTopics(
+        previousCategoryId: null,
+        categoryId: data.categoryId,
+      );
+
+      SnackbarService.showSuccess(
+        'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',
+      );
+
+      if (context.mounted) {
+        context.go(
+          AppRoutes.verifyEmail,
+          extra: EmailVerificationArgs(
+            email: data.email,
+            password: data.password,
+          ),
+        );
+      }
+    } catch (e) {
+      SnackbarService.showError(AppErrorParser.parse(e));
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    skillController.dispose();
+    super.dispose();
+  }
+}

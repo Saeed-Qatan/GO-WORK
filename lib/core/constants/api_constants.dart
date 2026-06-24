@@ -1,0 +1,57 @@
+class ApiConstants {
+  // رابط السيرفر الأساسي
+  static const String baseUrl = 'https://api.masarak.app/api/';
+
+  // ================= Auth Endpoints =================
+  static const String register = 'Account/Candidate/Register';
+  static const String verifyEmail = 'Account/Candidate/VerifyEmail';
+  static const String login = 'Account/Candidate/Login';
+  static const String forgetPassword = 'Account/ForgetPassword';
+  static const String resetPassword = 'Account/ResetPassword';
+  static const String changePassword = 'Account/ChangePassword';
+  static const String resendOtp = 'Account/ResendOtp';
+  static const String resendLink = 'Account/ResendLink';
+
+  // ================= Profile Endpoints =================
+  static const String getProfile = 'Account/Me';
+  static const String updateProfile = 'Account/Candidate/UpdateProfile';
+  static const String getResume = 'Account/candidate/me/resume';
+  static const String updateProfilePicture =
+      'Account/candidate/me/profilepicture';
+  static const String uploadFile = 'Account/candidate/uploadfile';
+
+  // ================= Jobs & Other Endpoints =================
+  static const String jobCategories = 'Jobs/categories';
+  static const String recommendedJobs = 'Jobs/recommendations';
+  static const String searchJobs = 'Jobs/search';
+  static const String jobCountries = 'Jobs/countries';
+  static const String jobTypes = 'Jobs/job-types';
+  static const String locationTypes = 'Jobs/location-types';
+  static const String governates =
+      'Jobs/governates/156'; // Ensure 156 is the base governate ID
+  static const String jobSkills = 'Jobs/skills'; // Appended with ?search=query
+  static const String jobCurrencies = 'Jobs/currencies';
+  static const String jobDetails = 'Jobs'; // Will append /{id}
+  static const String applications = 'Applications';
+  static const String applicationStatuses = 'Applications/statuses';
+  static const String withdrawApplication = 'Applications/withdraw';
+  static const String interviews = 'Account/interviews';
+  static const String candidateInterviews = 'Interviews/CandidateInterviews';
+  static String interviewAction(String id) => 'Interviews/$id/action';
+  static const String fetchOrders = 'Account/orders';
+  static const String createOrder = 'Account/orders/create';
+  static const String feedbacks = 'Feedbacks';
+
+  // ================= Notifications Endpoints =================
+  static const String notifications = 'notifications';
+  static const String notificationsUnreadCount = 'notifications/unread-count';
+  static String markNotificationRead(int id) => 'notifications/$id/read';
+  static const String markAllNotificationsRead = 'notifications/read-all';
+  static String hideNotification(int id) => 'notifications/$id';
+  static const String notificationDeviceTokens = 'notifications/device-tokens';
+  static String removeNotificationDeviceToken(String token) =>
+      'notifications/device-tokens/${Uri.encodeComponent(token)}';
+
+  // Headers عامة
+  static const Map<String, String> headers = {'Accept': 'application/json'};
+}
