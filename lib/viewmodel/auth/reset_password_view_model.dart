@@ -79,7 +79,11 @@ class ResetPasswordViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (context.mounted) {
+<<<<<<< HEAD
         SnackbarService.showSuccess('تم تغيير كلمة المرور بنجاح');
+=======
+        SnackbarService.showPasswordResetSuccess('تم تغيير كلمة المرور بنجاح');
+>>>>>>> e-all
         context.go(AppRoutes.login);
       }
     } catch (e) {

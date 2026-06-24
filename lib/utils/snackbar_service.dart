@@ -42,6 +42,18 @@ class SnackbarService {
     );
   }
 
+<<<<<<< HEAD
+=======
+  static void showPasswordResetSuccess(String message) {
+    _showPremiumSnackBar(
+      message,
+      AppColors.primary,
+      Icons.lock_reset_rounded,
+      const Duration(seconds: 3),
+    );
+  }
+
+>>>>>>> e-all
   static void _showPremiumSnackBar(
     String message,
     Color backgroundColor,

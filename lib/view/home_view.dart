@@ -25,6 +25,11 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+<<<<<<< HEAD
+=======
+  final TextEditingController _searchController = TextEditingController();
+
+>>>>>>> e-all
   // Dummy data for skeletonizer
   final List<StatModel> _dummyStats = List.generate(
     3,
@@ -49,6 +54,11 @@ class _HomeViewState extends State<HomeView> {
     ),
   );
 
+<<<<<<< HEAD
+=======
+  Future<void>? _activeRefresh;
+
+>>>>>>> e-all
   @override
   void initState() {
     super.initState();
@@ -65,6 +75,15 @@ class _HomeViewState extends State<HomeView> {
   }
 
   @override
+<<<<<<< HEAD
+=======
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+>>>>>>> e-all
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // Light background for contrast
@@ -76,6 +95,17 @@ class _HomeViewState extends State<HomeView> {
               viewModel.jobs.isEmpty;
           final stats = isInitialLoading ? _dummyStats : viewModel.stats;
           final jobs = isInitialLoading ? _dummyJobs : viewModel.filteredJobs;
+<<<<<<< HEAD
+=======
+          if (_searchController.text != viewModel.searchQuery) {
+            _searchController.value = TextEditingValue(
+              text: viewModel.searchQuery,
+              selection: TextSelection.collapsed(
+                offset: viewModel.searchQuery.length,
+              ),
+            );
+          }
+>>>>>>> e-all
 
           return Skeletonizer(
             enabled: isInitialLoading,
@@ -86,6 +116,7 @@ class _HomeViewState extends State<HomeView> {
               ),
               slivers: [
                 CupertinoSliverRefreshControl(
+<<<<<<< HEAD
                   onRefresh: () async {
                     if (!viewModel.isLoading && !viewModel.isRefreshing) {
                       await Provider.of<HomeViewModel>(
@@ -101,12 +132,34 @@ class _HomeViewState extends State<HomeView> {
                       );
                     }
                   },
+=======
+                  refreshTriggerPullDistance: 96,
+                  refreshIndicatorExtent: 72,
+                  builder:
+                      (
+                        context,
+                        refreshState,
+                        pulledExtent,
+                        refreshTriggerPullDistance,
+                        refreshIndicatorExtent,
+                      ) => _HomeRefreshIndicator(
+                        refreshState: refreshState,
+                        pulledExtent: pulledExtent,
+                        refreshTriggerPullDistance: refreshTriggerPullDistance,
+                        refreshIndicatorExtent: refreshIndicatorExtent,
+                      ),
+                  onRefresh: _refreshHome,
+>>>>>>> e-all
                 ),
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+<<<<<<< HEAD
                       const HomeHeader(),
+=======
+                      HomeHeader(searchController: _searchController),
+>>>>>>> e-all
                       // Stats Row
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -190,12 +243,20 @@ class _HomeViewState extends State<HomeView> {
                             final job = jobs[index];
                             final resolvedJob = appState.resolveJob(job);
                             return JobCard(
+<<<<<<< HEAD
                                   job: resolvedJob,
                                   applyButtonText:
                                       resolvedJob.canApply == false
                                       ? 'تم التقديم'
                                       : AppConstants.applyNow,
                                 );
+=======
+                              job: resolvedJob,
+                              applyButtonText: resolvedJob.canApply == false
+                                  ? 'تم التقديم'
+                                  : AppConstants.applyNow,
+                            );
+>>>>>>> e-all
                           },
                         ),
                       );
@@ -210,4 +271,91 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
+<<<<<<< HEAD
+=======
+
+  Future<void> _refreshHome() {
+    final activeRefresh = _activeRefresh;
+    if (activeRefresh != null) return activeRefresh;
+
+    _searchController.clear();
+    Provider.of<HomeViewModel>(context, listen: false).clearSearch();
+
+    late final Future<void> refresh;
+    refresh = Provider.of<HomeViewModel>(context, listen: false)
+        .fetchHomeData(forceRefresh: true)
+        .whenComplete(() {
+          if (mounted) {
+            _activeRefresh = null;
+            unawaited(
+              Provider.of<NotificationsViewModel>(
+                context,
+                listen: false,
+              ).fetchUnreadCount(),
+            );
+          }
+        });
+    _activeRefresh = refresh;
+    return refresh;
+  }
+}
+
+class _HomeRefreshIndicator extends StatelessWidget {
+  final RefreshIndicatorMode refreshState;
+  final double pulledExtent;
+  final double refreshTriggerPullDistance;
+  final double refreshIndicatorExtent;
+
+  const _HomeRefreshIndicator({
+    required this.refreshState,
+    required this.pulledExtent,
+    required this.refreshTriggerPullDistance,
+    required this.refreshIndicatorExtent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final percentage = (pulledExtent / refreshTriggerPullDistance)
+        .clamp(0.0, 1.0)
+        .toDouble();
+    final isActive =
+        refreshState == RefreshIndicatorMode.armed ||
+        refreshState == RefreshIndicatorMode.refresh ||
+        refreshState == RefreshIndicatorMode.done;
+
+    return SizedBox(
+      height: refreshIndicatorExtent,
+      child: Center(
+        child: AnimatedOpacity(
+          duration: 180.ms,
+          opacity: percentage == 0 ? 0 : 1,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: isActive
+                  ? const CircularProgressIndicator(strokeWidth: 2.6)
+                  : CircularProgressIndicator(
+                      value: percentage,
+                      strokeWidth: 2.6,
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+>>>>>>> e-all
 }

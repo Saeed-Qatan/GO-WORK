@@ -12,6 +12,10 @@ import 'package:gowork/routing/app_router.dart';
 class ApiClient {
   late final Dio _dio;
   final SessionGuard _sessionGuard = SessionGuard();
+<<<<<<< HEAD
+=======
+  static bool _isOpeningNoInternet = false;
+>>>>>>> e-all
 
   ApiClient() {
     _dio = Dio(
@@ -94,8 +98,12 @@ class ApiClient {
 
           if (e.type == DioExceptionType.connectionError ||
               e.type == DioExceptionType.connectionTimeout) {
+<<<<<<< HEAD
             // Navigate to No Internet globally
             rootNavigatorKey.currentContext?.go(AppRoutes.noInternet);
+=======
+            _openNoInternetIfNeeded();
+>>>>>>> e-all
           }
           
           return handler.next(e);
@@ -419,6 +427,24 @@ class ApiClient {
     return AppApiException(AppErrorParser.parse(e), data: e.message);
   }
 
+<<<<<<< HEAD
+=======
+  void _openNoInternetIfNeeded() {
+    if (_isOpeningNoInternet) return;
+
+    final currentRoute = appRouter.routerDelegate.currentConfiguration.uri.path;
+    if (currentRoute == AppRoutes.noInternet) return;
+
+    final context = rootNavigatorKey.currentContext;
+    if (context == null) return;
+
+    _isOpeningNoInternet = true;
+    context.push(AppRoutes.noInternet).whenComplete(() {
+      _isOpeningNoInternet = false;
+    });
+  }
+
+>>>>>>> e-all
   String _debugPath(String path) {
     const deviceTokenPrefix = 'notifications/device-tokens/';
     if (!path.startsWith(deviceTokenPrefix)) return path;

@@ -27,7 +27,11 @@ class ProfileSkillsCard extends StatelessWidget {
         children: [
           // Section header
           Row(
+<<<<<<< HEAD
             mainAxisAlignment: MainAxisAlignment.end,
+=======
+            mainAxisAlignment: MainAxisAlignment.start,
+>>>>>>> e-all
             children: [
               Text(
                 AppConstants.skills,

@@ -63,9 +63,13 @@ class _SearchViewState extends State<SearchView> {
                         cacheExtent: 800,
                         slivers: [
                           SliverPadding(
+<<<<<<< HEAD
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                             ),
+=======
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+>>>>>>> e-all
                             sliver: SliverToBoxAdapter(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,12 +166,16 @@ class _SearchViewState extends State<SearchView> {
                 hint: 'جميع المجالات',
                 value: viewModel.selectedCategory,
                 items: viewModel.isCategoriesLoading
+<<<<<<< HEAD
                     ? [
                         FilterOption(
                           label: 'جاري التحميل...',
                           rawValue: '',
                         ),
                       ]
+=======
+                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+>>>>>>> e-all
                     : viewModel.categoryOptions,
                 onChanged: viewModel.setCategory,
               ),
@@ -183,12 +191,16 @@ class _SearchViewState extends State<SearchView> {
                 hint: 'الكل',
                 value: viewModel.selectedLocation,
                 items: viewModel.isLocationTypesLoading
+<<<<<<< HEAD
                     ? [
                         FilterOption(
                           label: 'جاري التحميل...',
                           rawValue: '',
                         ),
                       ]
+=======
+                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+>>>>>>> e-all
                     : viewModel.locationOptions,
                 onChanged: viewModel.setLocation,
                 showSearch: false,
@@ -201,12 +213,16 @@ class _SearchViewState extends State<SearchView> {
                 hint: 'الكل',
                 value: viewModel.selectedCountry,
                 items: viewModel.isCountriesLoading
+<<<<<<< HEAD
                     ? [
                         FilterOption(
                           label: 'جاري التحميل...',
                           rawValue: '',
                         ),
                       ]
+=======
+                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+>>>>>>> e-all
                     : viewModel.countryOptions,
                 onChanged: viewModel.setCountry,
               ),
@@ -222,12 +238,16 @@ class _SearchViewState extends State<SearchView> {
                 hint: 'الكل',
                 value: viewModel.selectedType,
                 items: viewModel.isJobTypesLoading
+<<<<<<< HEAD
                     ? [
                         FilterOption(
                           label: 'جاري التحميل...',
                           rawValue: '',
                         ),
                       ]
+=======
+                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
+>>>>>>> e-all
                     : viewModel.jobTypeOptions,
                 onChanged: viewModel.setType,
                 showSearch: false,

@@ -11,10 +11,17 @@ class EditPhoneField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+<<<<<<< HEAD
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
+=======
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, right: 4.5),
+>>>>>>> e-all
           child: Text(
             AppConstants.phoneLabel,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -24,12 +31,20 @@ class EditPhoneField extends StatelessWidget {
           ),
         ),
         Directionality(
+<<<<<<< HEAD
           textDirection: TextDirection.ltr,
+=======
+          textDirection: TextDirection.rtl,
+>>>>>>> e-all
           child: TextFormField(
             controller: viewModel.phoneController,
             validator: (val) => viewModel.formData.validatePhone(val ?? ''),
             keyboardType: TextInputType.phone,
+<<<<<<< HEAD
             textAlign: TextAlign.left,
+=======
+            textAlign: TextAlign.right,
+>>>>>>> e-all
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,

@@ -11,10 +11,17 @@ class EditCVSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+<<<<<<< HEAD
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
+=======
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12, right: 4.5),
+>>>>>>> e-all
           child: Text(
             AppConstants.cvSectionTitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(

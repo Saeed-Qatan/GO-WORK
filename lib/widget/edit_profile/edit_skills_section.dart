@@ -17,6 +17,19 @@ class EditSkillsSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+<<<<<<< HEAD
+=======
+            Padding(
+              padding: const EdgeInsets.only(right: 4.5),
+              child: Text(
+                AppConstants.skills,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+>>>>>>> e-all
             GestureDetector(
               onTap: () {
                 showDialog(
@@ -50,12 +63,17 @@ class EditSkillsSection extends StatelessWidget {
               },
               child: Text(
                 AppConstants.addSkill,
+<<<<<<< HEAD
+=======
+                textAlign: TextAlign.right,
+>>>>>>> e-all
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
+<<<<<<< HEAD
             Text(
               AppConstants.skills,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -63,6 +81,8 @@ class EditSkillsSection extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+=======
+>>>>>>> e-all
           ],
         ),
         const SizedBox(height: 12),

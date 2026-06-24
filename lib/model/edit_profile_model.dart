@@ -91,6 +91,9 @@ class EditProfileModel {
     if (!RegExp(r'^\+?[0-9\s]+$').hasMatch(value)) {
       return 'رقم الهاتف غير صالح';
     }
+    if (value.trim().length < 9) {
+      return 'رقم الهاتف يجب ان يكون على الاقل 9 رقم';
+    }
     return null;
   }
 

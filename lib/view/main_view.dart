@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
+<<<<<<< HEAD
+=======
+import 'package:provider/provider.dart';
+>>>>>>> e-all
 import 'home_view.dart';
 import 'search_view.dart';
 import 'applications_view.dart';
 import 'interviews_view.dart';
 import 'settings_view.dart';
 import '../widget/custom_bottom_nav_bar.dart';
+<<<<<<< HEAD
+=======
+import '../viewmodel/home_view_model.dart';
+>>>>>>> e-all
 
 class MainView extends StatefulWidget {
   const MainView({super.key});
@@ -42,6 +50,10 @@ class _MainViewState extends State<MainView> {
       bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
+<<<<<<< HEAD
+=======
+          context.read<HomeViewModel>().clearSearch();
+>>>>>>> e-all
           setState(() {
             _currentIndex = index;
           });

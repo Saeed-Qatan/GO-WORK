@@ -89,7 +89,11 @@ class AppConstants {
   // Edit Profile Screen
   static const String editProfileTitle = 'تعديل الملف الشخصي';
   static const String editProfileBtn = 'تعديل الملف';
+<<<<<<< HEAD
   static const String downloadCV = 'تحميل السيرة';
+=======
+  static const String downloadCV = 'عرض السيرة';
+>>>>>>> e-all
   static const String changePhoto = 'تغيير الصورة';
   static const String firstNameLabel = 'الاسم الأول';
   static const String middleNameLabel = 'الاسم الأوسط';
@@ -97,7 +101,11 @@ class AppConstants {
   static const String jobTitleLabel = 'المسمى الوظيفي';
   static const String saveChanges = 'حفظ التغييرات';
   static const String cancel = 'إلغاء';
+<<<<<<< HEAD
   static const String addSkill = '+ إضافة';
+=======   
+  static const String addSkill = 'إضافة + ';
+>>>>>>> e-all
   static const String cvSectionTitle = 'السيرة الذاتية';
   static const String cvUploadHint = 'اضغط للتحديث أو اسحب ملفاً جديداً';
 }

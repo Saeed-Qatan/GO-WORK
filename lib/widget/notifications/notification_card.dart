@@ -103,7 +103,11 @@ class NotificationCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
+<<<<<<< HEAD
                 notification.title,
+=======
+                notification.displayTitle,
+>>>>>>> e-all
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: unread ? FontWeight.w800 : FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -118,7 +122,11 @@ class NotificationCard extends StatelessWidget {
         ),
         const SizedBox(height: 5),
         Text(
+<<<<<<< HEAD
           notification.body,
+=======
+          notification.displayBody,
+>>>>>>> e-all
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.textSecondary,
             height: 1.5,

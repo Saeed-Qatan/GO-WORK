@@ -135,6 +135,46 @@ class NotificationModel {
 
   NotificationModel copyWithRead() => copyWith(isRead: true);
 
+<<<<<<< HEAD
+=======
+  String get displayTitle {
+    if (type != NotificationType.jobCreated) return title;
+    return _isDefaultJobTitle(title) ? 'إعلان وظيفة جديدة' : title;
+  }
+
+  String get displayBody {
+    if (type != NotificationType.jobCreated) return body;
+    return _isDefaultJobBody(body)
+        ? 'اضغط لعرض تفاصيل الوظيفة والتقديم.'
+        : body;
+  }
+
+  static bool _isDefaultJobTitle(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'new job opportunity!':
+      case 'new job opportunity':
+      case 'new job':
+      case 'job created':
+      case 'jobcreated':
+      case 'إشعار جديد':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  static bool _isDefaultJobBody(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'tap to view details and apply!':
+      case 'tap to view details and apply':
+      case 'view details and apply':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+>>>>>>> e-all
   static NotificationType _parseType(String? value) {
     switch (value?.trim().toLowerCase()) {
       case 'general':

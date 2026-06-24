@@ -16,6 +16,10 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   final ProfileRepository _profileRepository;
   final PushNotificationService? _pushNotificationService;
   StreamSubscription<NotificationModel>? _pushSubscription;
+<<<<<<< HEAD
+=======
+  Future<void>? _activeFetch;
+>>>>>>> e-all
   int _sessionVersion = 0;
 
   HomeViewModel({
@@ -78,7 +82,25 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   int _selectedIndex = 0; // 0 is Home
   int get selectedIndex => _selectedIndex;
 
+<<<<<<< HEAD
   Future<void> fetchHomeData({bool forceRefresh = false}) async {
+=======
+  Future<void> fetchHomeData({bool forceRefresh = false}) {
+    final activeFetch = _activeFetch;
+    if (activeFetch != null) return activeFetch;
+
+    late final Future<void> fetch;
+    fetch = _fetchHomeData(forceRefresh: forceRefresh).whenComplete(() {
+      if (identical(_activeFetch, fetch)) {
+        _activeFetch = null;
+      }
+    });
+    _activeFetch = fetch;
+    return fetch;
+  }
+
+  Future<void> _fetchHomeData({bool forceRefresh = false}) async {
+>>>>>>> e-all
     final requestVersion = _sessionVersion;
     final hasExistingData = _stats.isNotEmpty || _jobs.isNotEmpty;
     if (forceRefresh) {
@@ -164,13 +186,30 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
 
   /// Updates the search query and notifies listeners to re-filter jobs.
   void onSearchChanged(String query) {
+<<<<<<< HEAD
+=======
+    if (_searchQuery == query) return;
+>>>>>>> e-all
     _searchQuery = query;
     notifyListeners();
+  }
+
+<<<<<<< HEAD
+  @override
+  void resetSessionState({bool notify = true}) {
+    _sessionVersion++;
+=======
+  void clearSearch({bool notify = true}) {
+    if (_searchQuery.isEmpty) return;
+    _searchQuery = '';
+    if (notify) notifyListeners();
   }
 
   @override
   void resetSessionState({bool notify = true}) {
     _sessionVersion++;
+    _activeFetch = null;
+>>>>>>> e-all
     _repository.clearCache();
     _stats = [];
     _jobs = [];
