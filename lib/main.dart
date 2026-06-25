@@ -185,7 +185,10 @@ class _MyAppState extends State<MyApp> {
             notificationTopicService: notificationTopicService,
           ),
         ),
-        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(
+          create: (_) =>
+              HomeViewModel(pushNotificationService: pushNotificationService),
+        ),
         ChangeNotifierProvider(create: (_) => JobApplicationStateViewModel()),
         ChangeNotifierProvider(
           create: (_) => ApplicationsViewModel(autoFetch: false),
