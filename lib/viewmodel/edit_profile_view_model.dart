@@ -154,6 +154,24 @@ class EditProfileViewModel extends ChangeNotifier {
       if (_categories.isEmpty) {
         _categoriesErrorMessage =
             'تعذر تحميل المجالات. يمكنك إعادة المحاولة قبل الحفظ.';
+      } else {
+        final profile = _profileViewModel.profile;
+        if (_selectedCategoryId == null &&
+            profile != null &&
+            profile.categoryName.isNotEmpty) {
+          final matched = _categories.firstWhere(
+            (cat) =>
+                cat['name'].toString().trim().toLowerCase() ==
+                profile.categoryName.trim().toLowerCase(),
+            orElse: () => <String, dynamic>{},
+          );
+          if (matched.isNotEmpty) {
+            _selectedCategoryId = matched['id'].toString();
+            debugPrint(
+              '=== EDIT PROFILE VM: MATCHED CATEGORY NAME "${profile.categoryName}" TO ID "$_selectedCategoryId" ===',
+            );
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error fetching profile categories: $e');
