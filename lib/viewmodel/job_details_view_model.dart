@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../model/home/home_model.dart';
@@ -8,6 +10,7 @@ import '../utils/status_translator.dart';
 import '../widget/common/success_bottom_sheet.dart';
 import 'job_application_state_view_model.dart';
 import 'applications_view_model.dart';
+import 'home_view_model.dart';
 import 'session_resettable.dart';
 
 class JobDetailsViewModel extends ChangeNotifier implements SessionResettable {
@@ -105,6 +108,15 @@ class JobDetailsViewModel extends ChangeNotifier implements SessionResettable {
     _isLoading = true;
     notifyListeners();
 
+    ApplicationsViewModel? appVm;
+    HomeViewModel? homeVm;
+    try {
+      appVm = Provider.of<ApplicationsViewModel>(context, listen: false);
+      homeVm = Provider.of<HomeViewModel>(context, listen: false);
+    } catch (e) {
+      debugPrint('Failed to resolve shared view models: $e');
+    }
+
     try {
       final response = await _jobService.applyToJob(jobId);
 
@@ -121,23 +133,23 @@ class JobDetailsViewModel extends ChangeNotifier implements SessionResettable {
         // Optimistically add the application locally so it appears
         // immediately under the "تم التقديم" tab without waiting for
         // the backend.
-        if (context.mounted) {
-          try {
-            final appVm = Provider.of<ApplicationsViewModel>(
-              context,
-              listen: false,
-            );
-            appVm.addOptimisticApplication(
-              jobId: jobId,
-              jobTitle: _jobDetails?.title ?? '',
-              company: _jobDetails?.company ?? '',
-              companyLogo: _jobDetails?.companyLogoUrl ?? '',
-            );
-            // Also refresh from backend in the background to sync
-            appVm.fetchApplications(showLoading: false);
-          } catch (e) {
-            debugPrint('Failed to update applications: $e');
-          }
+        try {
+          appVm?.addOptimisticApplication(
+            jobId: jobId,
+            jobTitle: _jobDetails?.title ?? '',
+            company: _jobDetails?.company ?? '',
+            companyLogo: _jobDetails?.companyLogoUrl ?? '',
+          );
+          // Also refresh from backend in the background to sync
+          unawaited(appVm?.fetchApplications(showLoading: false));
+        } catch (e) {
+          debugPrint('Failed to update applications: $e');
+        }
+
+        try {
+          homeVm?.handleJobApplied(jobId);
+        } catch (e) {
+          debugPrint('Failed to update home stats: $e');
         }
 
         // Show success msg

@@ -139,7 +139,12 @@ class HomeService {
         totalApps = apps.length;
         for (var app in apps) {
           final s = app['status']?.toString().toLowerCase() ?? '';
-          if (s.contains('review') || s == '2' || s.contains('pending')) {
+          final statusId = app['statusId']?.toString().toLowerCase() ?? '';
+          final statusValue =
+              app['statusValue']?.toString().toLowerCase() ?? '';
+          if (_isPendingReviewStatus(s) ||
+              _isPendingReviewStatus(statusId) ||
+              _isPendingReviewStatus(statusValue)) {
             pendingApps++;
           }
         }
@@ -187,5 +192,18 @@ class HomeService {
     if (value is int) return value;
     if (value is double) return value.toInt();
     return int.tryParse(value.toString()) ?? 0;
+  }
+
+  bool _isPendingReviewStatus(String value) {
+    final normalized = value.trim().toLowerCase().replaceAll(
+      RegExp(r'[\s_\-]+'),
+      '',
+    );
+
+    if (normalized.isEmpty) return false;
+    return normalized == '1' ||
+        normalized == 'pendingreview' ||
+        normalized.contains('pending') ||
+        normalized.contains('review');
   }
 }
