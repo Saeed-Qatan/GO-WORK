@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -63,13 +65,7 @@ class _SearchViewState extends State<SearchView> {
                         cacheExtent: 800,
                         slivers: [
                           SliverPadding(
-<<<<<<< HEAD
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                            ),
-=======
                             padding: const EdgeInsets.symmetric(horizontal: 24),
->>>>>>> e-all
                             sliver: SliverToBoxAdapter(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +196,7 @@ class _SearchViewState extends State<SearchView> {
                       ]
 =======
                     ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
->>>>>>> e-all
+>>>>>>> e-all   
                     : viewModel.locationOptions,
                 onChanged: viewModel.setLocation,
                 showSearch: false,
