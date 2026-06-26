@@ -6,6 +6,7 @@ import 'package:gowork/routing/app_router.dart';
 import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../utils/snackbar_service.dart';
 import '../widget/profile/profile_header_card.dart';
 import '../widget/profile/profile_action_buttons.dart';
 import '../widget/profile/profile_contact_info_card.dart';
@@ -94,11 +95,7 @@ class _ProfileViewState extends State<ProfileView> {
                   onDownloadCV: () async {
                     final cvUrl = profile.cvUrl;
                     if (cvUrl.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('لا يوجد سيرة ذاتية للعرض'),
-                        ),
-                      );
+                      SnackbarService.showWarning('لا يوجد سيرة ذاتية للعرض');
                       return;
                     }
                     final uri = Uri.parse(cvUrl);
@@ -109,10 +106,8 @@ class _ProfileViewState extends State<ProfileView> {
                       );
                     } else {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('تعذر فتح رابط السيرة الذاتية'),
-                          ),
+                        SnackbarService.showError(
+                          'تعذر فتح رابط السيرة الذاتية',
                         );
                       }
                     }
