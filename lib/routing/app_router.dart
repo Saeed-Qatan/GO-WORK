@@ -110,8 +110,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.resetPassword,
       builder: (context, state) {
-        final email = state.extra as String;
-        return ResetPasswordView(email: email);
+        final data = state.extra as Map<String, dynamic>;
+        return ResetPasswordView(
+          email: data['email'] as String,
+          code: data['code'] as String,
+        );
       },
     ),
     GoRoute(

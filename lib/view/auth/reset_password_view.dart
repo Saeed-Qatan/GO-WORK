@@ -9,13 +9,18 @@ import 'package:go_router/go_router.dart';
 
 class ResetPasswordView extends StatelessWidget {
   final String email;
+  final String code;
 
-  const ResetPasswordView({super.key, required this.email});
+  const ResetPasswordView({
+    super.key,
+    required this.email,
+    required this.code,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ResetPasswordViewModel(email: email),
+      create: (_) => ResetPasswordViewModel(email: email, code: code),
       child: Consumer<ResetPasswordViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
@@ -51,20 +56,12 @@ class ResetPasswordView extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'أدخل الكود المرسل إلى بريدك الإلكتروني وكلمة المرور الجديدة',
+                          'أدخل كلمة المرور الجديدة وتأكيدها',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: AppColors.textSecondary),
                         ),
                         const SizedBox(height: 32),
-                        CustomTextField(
-                          label: 'كود التحقق',
-                          hint: 'أدخل الكود',
-                          prefixIcon: Icons.vpn_key_outlined,
-                          controller: viewModel.codeController,
-                          validator: viewModel.validateCode,
-                        ),
-                        const SizedBox(height: 16),
                         CustomTextField(
                           label: 'كلمة المرور الجديدة',
                           hint: '********',

@@ -33,6 +33,7 @@ class ApplicationsViewModel extends ChangeNotifier implements SessionResettable 
     final seen = <String>{'all'};
 
     for (final status in _statuses) {
+      if (status.label == 'تم التقديم') continue;
       final tab = ApplicationFilterTab.status(status);
       if (seen.add(tab.uniqueKey)) tabs.add(tab);
     }
@@ -226,8 +227,12 @@ class ApplicationsViewModel extends ChangeNotifier implements SessionResettable 
   }
 
   void _applyFilter() {
+    if (_selectedFilterIndex >= filterTabItems.length) {
+      _selectedFilterIndex = 0;
+    }
     final selectedTab = filterTabItems[_selectedFilterIndex];
     _filteredApplications = _allApplications
+        .where((app) => app.statusLabel != 'تم التقديم')
         .where(selectedTab.matches)
         .toList();
   }
