@@ -25,11 +25,8 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-<<<<<<< HEAD
-=======
   final TextEditingController _searchController = TextEditingController();
 
->>>>>>> e-all
   // Dummy data for skeletonizer
   final List<StatModel> _dummyStats = List.generate(
     3,
@@ -54,11 +51,8 @@ class _HomeViewState extends State<HomeView> {
     ),
   );
 
-<<<<<<< HEAD
-=======
   Future<void>? _activeRefresh;
 
->>>>>>> e-all
   @override
   void initState() {
     super.initState();
@@ -75,15 +69,12 @@ class _HomeViewState extends State<HomeView> {
   }
 
   @override
-<<<<<<< HEAD
-=======
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
   @override
->>>>>>> e-all
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // Light background for contrast
@@ -95,8 +86,6 @@ class _HomeViewState extends State<HomeView> {
               viewModel.jobs.isEmpty;
           final stats = isInitialLoading ? _dummyStats : viewModel.stats;
           final jobs = isInitialLoading ? _dummyJobs : viewModel.filteredJobs;
-<<<<<<< HEAD
-=======
           if (_searchController.text != viewModel.searchQuery) {
             _searchController.value = TextEditingValue(
               text: viewModel.searchQuery,
@@ -105,7 +94,6 @@ class _HomeViewState extends State<HomeView> {
               ),
             );
           }
->>>>>>> e-all
 
           return Skeletonizer(
             enabled: isInitialLoading,
@@ -116,23 +104,6 @@ class _HomeViewState extends State<HomeView> {
               ),
               slivers: [
                 CupertinoSliverRefreshControl(
-<<<<<<< HEAD
-                  onRefresh: () async {
-                    if (!viewModel.isLoading && !viewModel.isRefreshing) {
-                      await Provider.of<HomeViewModel>(
-                        context,
-                        listen: false,
-                      ).fetchHomeData(forceRefresh: true);
-                      if (!context.mounted) return;
-                      unawaited(
-                        Provider.of<NotificationsViewModel>(
-                          context,
-                          listen: false,
-                        ).fetchUnreadCount(),
-                      );
-                    }
-                  },
-=======
                   refreshTriggerPullDistance: 96,
                   refreshIndicatorExtent: 72,
                   builder:
@@ -149,17 +120,12 @@ class _HomeViewState extends State<HomeView> {
                         refreshIndicatorExtent: refreshIndicatorExtent,
                       ),
                   onRefresh: _refreshHome,
->>>>>>> e-all
                 ),
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-<<<<<<< HEAD
-                      const HomeHeader(),
-=======
                       HomeHeader(searchController: _searchController),
->>>>>>> e-all
                       // Stats Row
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -243,20 +209,11 @@ class _HomeViewState extends State<HomeView> {
                             final job = jobs[index];
                             final resolvedJob = appState.resolveJob(job);
                             return JobCard(
-<<<<<<< HEAD
-                                  job: resolvedJob,
-                                  applyButtonText:
-                                      resolvedJob.canApply == false
-                                      ? 'تم التقديم'
-                                      : AppConstants.applyNow,
-                                );
-=======
                               job: resolvedJob,
                               applyButtonText: resolvedJob.canApply == false
                                   ? 'تم التقديم'
                                   : AppConstants.applyNow,
                             );
->>>>>>> e-all
                           },
                         ),
                       );
@@ -271,8 +228,6 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
-<<<<<<< HEAD
-=======
 
   Future<void> _refreshHome() {
     final activeRefresh = _activeRefresh;
@@ -357,5 +312,4 @@ class _HomeRefreshIndicator extends StatelessWidget {
       ),
     );
   }
->>>>>>> e-all
 }

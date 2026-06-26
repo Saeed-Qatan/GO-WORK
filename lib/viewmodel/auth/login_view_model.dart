@@ -30,17 +30,6 @@ class LoginViewModel extends ChangeNotifier {
   ProfileModel? _profileSnapshot;
   ProfileModel? get profileSnapshot => _profileSnapshot;
 
-<<<<<<< HEAD
-  bool _rememberMe = false;
-  bool get rememberMe => _rememberMe;
-
-  void toggleRememberMe(bool? value) {
-    _rememberMe = value ?? false;
-    notifyListeners();
-  }
-
-=======
->>>>>>> e-all
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;

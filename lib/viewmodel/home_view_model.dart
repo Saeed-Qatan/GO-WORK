@@ -16,14 +16,8 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   final ProfileRepository _profileRepository;
   final PushNotificationService? _pushNotificationService;
   StreamSubscription<NotificationModel>? _pushSubscription;
-<<<<<<< HEAD
-=======
   Future<void>? _activeFetch;
-<<<<<<< HEAD
->>>>>>> e-all
-=======
   bool _queuedForceRefresh = false;
->>>>>>> origin/fin2
   int _sessionVersion = 0;
 
   final Set<String> _optimisticAppliedJobIds = <String>{};
@@ -98,9 +92,6 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   int _selectedIndex = 0; // 0 is Home
   int get selectedIndex => _selectedIndex;
 
-<<<<<<< HEAD
-  Future<void> fetchHomeData({bool forceRefresh = false}) async {
-=======
   Future<void> fetchHomeData({bool forceRefresh = false}) {
     final activeFetch = _activeFetch;
     if (activeFetch != null) {
@@ -138,7 +129,6 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   }
 
   Future<void> _fetchHomeData({bool forceRefresh = false}) async {
->>>>>>> e-all
     final requestVersion = _sessionVersion;
     final hasExistingData =
         stats.isNotEmpty ||
@@ -362,19 +352,11 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
 
   /// Updates the search query and notifies listeners to re-filter jobs.
   void onSearchChanged(String query) {
-<<<<<<< HEAD
-=======
     if (_searchQuery == query) return;
->>>>>>> e-all
     _searchQuery = query;
     notifyListeners();
   }
 
-<<<<<<< HEAD
-  @override
-  void resetSessionState({bool notify = true}) {
-    _sessionVersion++;
-=======
   void clearSearch({bool notify = true}) {
     if (_searchQuery.isEmpty) return;
     _searchQuery = '';
@@ -385,12 +367,8 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   void resetSessionState({bool notify = true}) {
     _sessionVersion++;
     _activeFetch = null;
-<<<<<<< HEAD
->>>>>>> e-all
-=======
     _queuedForceRefresh = false;
     _clearOptimisticApplicationStats();
->>>>>>> origin/fin2
     _repository.clearCache();
     _authoritativeStats = [];
     _jobs = [];

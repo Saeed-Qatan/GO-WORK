@@ -43,14 +43,7 @@ class InterviewDetailsView extends StatelessWidget {
               elevation: 0,
               centerTitle: true,
               shape: const Border(
-<<<<<<< HEAD
-                bottom: BorderSide(
-                  color: outlineVariant,
-                  width: 0.2,
-                ),
-=======
                 bottom: BorderSide(color: outlineVariant, width: 0.2),
->>>>>>> e-all
               ),
               leading: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -95,110 +88,6 @@ class InterviewDetailsView extends StatelessWidget {
           children: [
             // Hero Section
             Container(
-<<<<<<< HEAD
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [secondary, AppColors.primary],
-                  begin: Alignment.bottomLeft,
-                  end: Alignment.topRight,
-                ),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: interview.companyLogo != null &&
-                                interview.companyLogo!.isNotEmpty
-                            ? Image.network(
-                                interview.companyLogo!,
-                                cacheWidth: 144,
-                                cacheHeight: 144,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.business_rounded,
-                                  color: AppColors.primary,
-                                  size: 28,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.business_rounded,
-                                color: AppColors.primary,
-                                size: 28,
-                              ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              interview.role.isNotEmpty
-                                  ? interview.role
-                                  : 'مقابلة عمل',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                height: 1.25,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              interview.company.isNotEmpty
-                                  ? interview.company
-                                  : 'الشركة غير محددة',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      InterviewStatusChip(
-                        icon: statusMeta.icon,
-                        label: statusMeta.label,
-                        foreground: statusMeta.color,
-                        background: Colors.white,
-                      ),
-                      const SizedBox(width: 10),
-                      InterviewStatusChip(
-                        icon: typeMeta.icon,
-                        label: typeMeta.label,
-                        foreground: typeMeta.color,
-                        background: Colors.white,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ).animate().fade(duration: 400.ms).slideY(
-=======
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [secondary, AppColors.primary],
@@ -305,7 +194,6 @@ class InterviewDetailsView extends StatelessWidget {
                 .animate()
                 .fade(duration: 400.ms)
                 .slideY(
->>>>>>> e-all
                   begin: 0.2,
                   curve: Curves.easeOutCubic,
                   duration: 400.ms,
@@ -314,27 +202,6 @@ class InterviewDetailsView extends StatelessWidget {
 
             // Detail Sections
             _buildSectionCard(
-<<<<<<< HEAD
-              title: 'معلومات المقابلة',
-              icon: Icons.event_note_rounded,
-              children: [
-                _buildInfoRow(
-                  icon: Icons.access_time_rounded,
-                  label: 'الوقت والتاريخ',
-                  value: timeLabel,
-                ),
-                _buildInfoRow(
-                  icon: typeMeta.isOnline
-                      ? Icons.videocam_outlined
-                      : Icons.location_on_outlined,
-                  label: 'الموقع',
-                  value: interview.location.isNotEmpty
-                      ? interview.location
-                      : 'غير محدد',
-                ),
-              ],
-            ).animate().fade(duration: 400.ms, delay: 100.ms).slideY(
-=======
                   title: 'معلومات المقابلة',
                   icon: Icons.event_note_rounded,
                   children: [
@@ -357,7 +224,6 @@ class InterviewDetailsView extends StatelessWidget {
                 .animate()
                 .fade(duration: 400.ms, delay: 100.ms)
                 .slideY(
->>>>>>> e-all
                   begin: 0.2,
                   curve: Curves.easeOutCubic,
                   duration: 400.ms,
@@ -369,25 +235,6 @@ class InterviewDetailsView extends StatelessWidget {
             if (interview.interviewerName?.isNotEmpty == true ||
                 interview.interviewerRole?.isNotEmpty == true)
               _buildSectionCard(
-<<<<<<< HEAD
-                title: 'معلومات المقابل',
-                icon: Icons.person_outline_rounded,
-                children: [
-                  if (interview.interviewerName?.isNotEmpty == true)
-                    _buildInfoRow(
-                      icon: Icons.badge_outlined,
-                      label: 'الاسم',
-                      value: interview.interviewerName!,
-                    ),
-                  if (interview.interviewerRole?.isNotEmpty == true)
-                    _buildInfoRow(
-                      icon: Icons.work_outline_rounded,
-                      label: 'المنصب الوظيفي',
-                      value: interview.interviewerRole!,
-                    ),
-                ],
-              ).animate().fade(duration: 400.ms, delay: 150.ms).slideY(
-=======
                     title: 'معلومات المقابل',
                     icon: Icons.person_outline_rounded,
                     children: [
@@ -408,7 +255,6 @@ class InterviewDetailsView extends StatelessWidget {
                   .animate()
                   .fade(duration: 400.ms, delay: 150.ms)
                   .slideY(
->>>>>>> e-all
                     begin: 0.2,
                     curve: Curves.easeOutCubic,
                     duration: 400.ms,
@@ -421,24 +267,6 @@ class InterviewDetailsView extends StatelessWidget {
             // Notes Section
             if (interview.notes?.trim().isNotEmpty == true)
               _buildSectionCard(
-<<<<<<< HEAD
-                title: 'ملاحظات تفصيلية',
-                icon: Icons.description_outlined,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      interview.notes!.trim(),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 15,
-                        height: 1.6,
-                      ),
-                    ),
-                  ),
-                ],
-              ).animate().fade(duration: 400.ms, delay: 200.ms).slideY(
-=======
                     title: 'ملاحظات تفصيلية',
                     icon: Icons.description_outlined,
                     children: [
@@ -458,7 +286,6 @@ class InterviewDetailsView extends StatelessWidget {
                   .animate()
                   .fade(duration: 400.ms, delay: 200.ms)
                   .slideY(
->>>>>>> e-all
                     begin: 0.2,
                     curve: Curves.easeOutCubic,
                     duration: 400.ms,
@@ -469,14 +296,10 @@ class InterviewDetailsView extends StatelessWidget {
 
             // Interactive Meeting Link Button if Remote
             if (interview.meetingLink?.trim().isNotEmpty == true)
-<<<<<<< HEAD
-              _buildMeetingLinkButton(context).animate().fade(duration: 400.ms, delay: 250.ms).slideY(
-=======
               _buildMeetingLinkButton(context)
                   .animate()
                   .fade(duration: 400.ms, delay: 250.ms)
                   .slideY(
->>>>>>> e-all
                     begin: 0.2,
                     curve: Curves.easeOutCubic,
                     duration: 400.ms,
@@ -492,22 +315,14 @@ class InterviewDetailsView extends StatelessWidget {
   /// When the interview is declined/rejected, the button is visually locked
   /// and shows an explanatory snackbar instead of opening the link.
   Widget _buildMeetingLinkButton(BuildContext context) {
-<<<<<<< HEAD
-    final isDeclined = interview.status == InterviewStatus.declined;
-=======
     final isDeclined =
         interview.status == InterviewStatus.declined ||
         interview.status == InterviewStatus.missedInterview;
->>>>>>> e-all
 
     return GestureDetector(
       onTap: () {
         if (isDeclined) {
           SnackbarService.showError(
-<<<<<<< HEAD
-            'لا يمكن الانضمام للمقابلة — تم إلغاء المقابلة أو الاعتذار عنها',
-          );
-=======
             'لا يمكن الانضمام للمقابلة — تم رفض المقابلة',
           );
           if (interview.status == InterviewStatus.missedInterview) {
@@ -515,7 +330,6 @@ class InterviewDetailsView extends StatelessWidget {
               'لا يمكن الانضمام للمقابلة - المقابلة فائتة',
             );
           }
->>>>>>> e-all
           return;
         }
         _openMeetingLink(context);
@@ -695,14 +509,7 @@ class InterviewDetailsView extends StatelessWidget {
 
     if (!launched) {
       try {
-<<<<<<< HEAD
-        launched = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-=======
         launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
->>>>>>> e-all
       } catch (_) {
         launched = false;
       }

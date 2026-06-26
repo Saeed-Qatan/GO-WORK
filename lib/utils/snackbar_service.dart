@@ -42,8 +42,6 @@ class SnackbarService {
     );
   }
 
-<<<<<<< HEAD
-=======
   static void showPasswordResetSuccess(String message) {
     _showPremiumSnackBar(
       message,
@@ -53,7 +51,6 @@ class SnackbarService {
     );
   }
 
->>>>>>> e-all
   static void _showPremiumSnackBar(
     String message,
     Color backgroundColor,

@@ -18,11 +18,7 @@ class NoInternetView extends StatelessWidget {
       if (context.canPop()) {
         context.pop();
       } else {
-<<<<<<< HEAD
-        context.go(AppRoutes.home);
-=======
         context.go(AppRoutes.login);
->>>>>>> e-all
       }
     } else {
       SnackbarService.showWarning('لا يزال الاتصال بالإنترنت مقطوعاً، يرجى المحاولة مرة أخرى');

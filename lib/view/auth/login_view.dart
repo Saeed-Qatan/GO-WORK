@@ -118,27 +118,8 @@ class _LoginViewState extends State<LoginView> {
                     ),
                     const SizedBox(height: 16),
                     Row(
-<<<<<<< HEAD
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: viewModel.rememberMe,
-                              activeColor: cs.primary,
-                              onChanged: viewModel.toggleRememberMe,
-                              side: BorderSide(color: cs.onSurfaceVariant),
-                            ),
-                            Text(
-                              AppConstants.rememberMe,
-                              style: TextStyle(color: cs.onSurfaceVariant),
-                            ),
-                          ],
-                        ),
-=======
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
->>>>>>> e-all
                         TextButton(
                           onPressed: () {
                             context.push(AppRoutes.forgetPassword);
@@ -166,16 +147,6 @@ class _LoginViewState extends State<LoginView> {
                           );
                           if (success) {
                             if (context.mounted) {
-<<<<<<< HEAD
-                              SnackbarService.showSuccess('تم تسجيل الدخول بنجاح');
-                              final profileSnapshot =
-                                  viewModel.profileSnapshot;
-                              resetSessionState(context);
-                              if (profileSnapshot != null) {
-                                context
-                                    .read<ProfileViewModel>()
-                                    .seedProfile(profileSnapshot, notify: false);
-=======
                               SnackbarService.showSuccess(
                                 'تم تسجيل الدخول بنجاح',
                               );
@@ -186,7 +157,6 @@ class _LoginViewState extends State<LoginView> {
                                   profileSnapshot,
                                   notify: false,
                                 );
->>>>>>> e-all
                                 context
                                     .read<HomeViewModel>()
                                     .seedProfileSummary(

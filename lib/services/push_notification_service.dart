@@ -317,13 +317,8 @@ class PushNotificationService {
     try {
       await _localNotifications.show(
         model.id,
-<<<<<<< HEAD
-        model.title,
-        model.body,
-=======
         model.displayTitle,
         model.displayBody,
->>>>>>> e-all
         _localNotificationDetails,
         payload: notificationPayload(model),
       );

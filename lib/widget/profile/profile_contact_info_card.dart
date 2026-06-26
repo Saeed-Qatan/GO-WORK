@@ -32,11 +32,7 @@ class ProfileContactInfoCard extends StatelessWidget {
         children: [
           // Section header
           Row(
-<<<<<<< HEAD
-            mainAxisAlignment: MainAxisAlignment.end,
-=======
             mainAxisAlignment: MainAxisAlignment.start,
->>>>>>> e-all
             children: [
               Text(
                 AppConstants.contactInfo,
@@ -96,11 +92,7 @@ class _ContactRow extends StatelessWidget {
         // Text content
         Expanded(
           child: Column(
-<<<<<<< HEAD
-            crossAxisAlignment: CrossAxisAlignment.end,
-=======
             crossAxisAlignment: CrossAxisAlignment.start,
->>>>>>> e-all
             children: [
               Text(
                 label,
@@ -126,18 +118,11 @@ class _ContactRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-<<<<<<< HEAD
-
-=======
->>>>>>> e-all
         // Icon container
         Container(
           width: 40,
           height: 40,
-<<<<<<< HEAD
-=======
 
->>>>>>> e-all
           decoration: BoxDecoration(
             color: const Color(0xFFE8F0FE),
             borderRadius: BorderRadius.circular(10),

@@ -135,8 +135,6 @@ class NotificationModel {
 
   NotificationModel copyWithRead() => copyWith(isRead: true);
 
-<<<<<<< HEAD
-=======
   String get displayTitle {
     if (type != NotificationType.jobCreated) return title;
     return _isDefaultJobTitle(title) ? 'إعلان وظيفة جديدة' : title;
@@ -174,7 +172,6 @@ class NotificationModel {
     }
   }
 
->>>>>>> e-all
   static NotificationType _parseType(String? value) {
     switch (value?.trim().toLowerCase()) {
       case 'general':

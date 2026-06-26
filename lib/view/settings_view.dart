@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import 'package:gowork/widget/delete_account.dart';
-=======
->>>>>>> e-all
 import 'package:go_router/go_router.dart';
 import '../../routing/app_router.dart';
 import '../../theme/app_colors.dart';
@@ -85,11 +81,6 @@ class SettingsView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             const LogoutButton(),
-<<<<<<< HEAD
-            const SizedBox(height: 20),
-            const DeleteAccount(),
-=======
->>>>>>> e-all
             const SizedBox(height: 40),
           ],
         ),

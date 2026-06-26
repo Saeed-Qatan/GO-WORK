@@ -110,43 +110,6 @@ class CustomSearchHeader extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-<<<<<<< HEAD
-          // Filter Button — aligned to start (right in RTL)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: InkWell(
-              onTap: onFilterTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.tune, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'فلترة',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-=======
           // // Filter Button — aligned to start (right in RTL)
           // Align(
           //   alignment: AlignmentDirectional.centerStart,
@@ -182,7 +145,6 @@ class CustomSearchHeader extends StatelessWidget {
           //     ),
           //   ),
           // ),
->>>>>>> e-all
         ],
       ),
     );

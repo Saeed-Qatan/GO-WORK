@@ -18,17 +18,10 @@ class EditLabeledField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-<<<<<<< HEAD
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-=======
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 8, right: 4.5),
->>>>>>> e-all
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -39,11 +32,8 @@ class EditLabeledField extends StatelessWidget {
         ),
         TextFormField(
           controller: controller,
-<<<<<<< HEAD
-=======
           cursorColor: AppColors.primary,
 
->>>>>>> e-all
           textAlign: TextAlign.right,
           validator: validator,
           decoration: InputDecoration(

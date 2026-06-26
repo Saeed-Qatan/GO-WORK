@@ -16,10 +16,7 @@ import '../model/search/filter_option.dart';
 class EditProfileView extends StatelessWidget {
   const EditProfileView({super.key});
 
-<<<<<<< HEAD
-=======
 
->>>>>>> e-all
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -51,10 +48,6 @@ class EditProfileView extends StatelessWidget {
               ),
             ),
           ),
-<<<<<<< HEAD
-
-=======
->>>>>>> e-all
         ),
         body: Consumer<EditProfileViewModel>(
           builder: (context, viewModel, child) {
@@ -79,18 +72,12 @@ class EditProfileView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-<<<<<<< HEAD
-
-=======
->>>>>>> e-all
                     // ── Middle Name + Last Name side by side ──
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: EditLabeledField(
-<<<<<<< HEAD
-=======
                             label: AppConstants.middleNameLabel,
                             controller: viewModel.middleNameController,
                             validator: (val) => viewModel.formData.validateName(
@@ -103,7 +90,6 @@ class EditProfileView extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: EditLabeledField(
->>>>>>> e-all
                             label: AppConstants.lastNameLabel,
                             controller: viewModel.lastNameController,
                             validator: (val) => viewModel.formData.validateName(
@@ -112,17 +98,6 @@ class EditProfileView extends StatelessWidget {
                             ),
                           ),
                         ),
-<<<<<<< HEAD
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: EditLabeledField(
-                            label: AppConstants.middleNameLabel,
-                            controller: viewModel.middleNameController,
-                            // Middle name is optional usually, but we can validate length if not empty
-                          ),
-                        ),
-=======
->>>>>>> e-all
                       ],
                     ),
                     const SizedBox(height: 16),

@@ -18,10 +18,7 @@ class SessionGuard {
     AppRoutes.verifyEmail,
     AppRoutes.forgetPassword,
     AppRoutes.resetPassword,
-<<<<<<< HEAD
-=======
     AppRoutes.noInternet,
->>>>>>> e-all
     AppRoutes.sessionExpired,
   };
 

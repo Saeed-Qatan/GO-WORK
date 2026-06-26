@@ -9,13 +9,9 @@ import '../../core/constants/app_constants.dart';
 import '../../widget/notifications/notification_badge.dart';
 
 class HomeHeader extends StatelessWidget {
-<<<<<<< HEAD
-  const HomeHeader({super.key});
-=======
   final TextEditingController? searchController;
 
   const HomeHeader({super.key, this.searchController});
->>>>>>> e-all
 
   @override
   Widget build(BuildContext context) {
@@ -105,10 +101,7 @@ class HomeHeader extends StatelessWidget {
                         // Profile Avatar (Right in RTL)
                         GestureDetector(
                           onTap: () {
-<<<<<<< HEAD
-=======
                             homeViewModel.clearSearch();
->>>>>>> e-all
                             context.push(AppRoutes.profile);
                           },
                           child: Container(
@@ -171,10 +164,7 @@ class HomeHeader extends StatelessWidget {
                         // Notification Badge (Left in RTL)
                         NotificationBadge(
                           onTap: () {
-<<<<<<< HEAD
-=======
                             homeViewModel.clearSearch();
->>>>>>> e-all
                             context.push(AppRoutes.notifications);
                           },
                         ),
@@ -182,10 +172,7 @@ class HomeHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     TextField(
-<<<<<<< HEAD
-=======
                       controller: searchController,
->>>>>>> e-all
                       onChanged: homeViewModel.onSearchChanged,
                       textInputAction: TextInputAction.search,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(

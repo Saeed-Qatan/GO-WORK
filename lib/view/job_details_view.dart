@@ -116,11 +116,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
             children: [
               ListView(
                 padding: EdgeInsets.only(
-<<<<<<< HEAD
-                  top: MediaQuery.paddingOf(context).top + kToolbarHeight + 24,
-=======
                   top: MediaQuery.paddingOf(context).top + 20,
->>>>>>> e-all
                   left: 20,
                   right: 20,
                   bottom:
@@ -216,11 +212,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
                             ),
                           ],
                         ),
-<<<<<<< HEAD
-                        const SizedBox(height: 32),
-=======
                         const SizedBox(height: 5),
->>>>>>> e-all
                         Container(
                           padding: const EdgeInsets.only(top: 16),
                           decoration: BoxDecoration(
@@ -621,11 +613,7 @@ class _JobDetailsViewState extends State<JobDetailsView> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               textAlign: TextAlign.center,
               maxLines: 2,
-<<<<<<< HEAD
-              overflow: TextOverflow.ellipsis,
-=======
               overflow: TextOverflow.visible,
->>>>>>> e-all
             ),
           ],
         ),

@@ -96,11 +96,7 @@ class _ProfileViewState extends State<ProfileView> {
                     if (cvUrl.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-<<<<<<< HEAD
-                          content: Text('لا يوجد سيرة ذاتية للتحميل'),
-=======
                           content: Text('لا يوجد سيرة ذاتية للعرض'),
->>>>>>> e-all
                         ),
                       );
                       return;
