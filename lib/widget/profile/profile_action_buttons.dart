@@ -4,27 +4,41 @@ import '../../core/constants/app_constants.dart';
 
 class ProfileActionButtons extends StatelessWidget {
   final VoidCallback onEditProfile;
-  final VoidCallback onDownloadCV;
+  final VoidCallback onViewResume;
+
+  /// Shows a loading spinner on the "عرض السيرة" button while the signed
+  /// URL is being fetched from GET /Account/candidate/me/resume.
+  final bool isResumeLoading;
 
   const ProfileActionButtons({
     super.key,
     required this.onEditProfile,
-    required this.onDownloadCV,
+    required this.onViewResume,
+    this.isResumeLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Download CV – outlined button
+        // View Resume – outlined button
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: onDownloadCV,
-            icon: const Icon(
-              Icons.download_rounded,
-              size: 20,
-              color: AppColors.primary,
-            ),
+            onPressed: isResumeLoading ? null : onViewResume,
+            icon: isResumeLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  )
+                : const Icon(
+                    Icons.picture_as_pdf_rounded,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
             label: Text(
               AppConstants.downloadCV,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(

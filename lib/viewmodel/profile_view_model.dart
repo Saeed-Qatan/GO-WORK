@@ -19,11 +19,21 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
   ProfileModel? _profile;
   ProfileModel? get profile => _profile;
 
+  /// Signed URL from GET /Account/candidate/me/resume (data.sasUrl)
+  String _resumeUrl = '';
+  String get resumeUrl => _resumeUrl;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _isResumeLoading = false;
+  bool get isResumeLoading => _isResumeLoading;
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  String? _resumeError;
+  String? get resumeError => _resumeError;
 
   ProfileViewModel({NotificationTopicService? notificationTopicService})
     : _notificationTopicService = notificationTopicService;
@@ -77,6 +87,34 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
     _isLoading = false;
     _errorMessage = null;
     if (notify) notifyListeners();
+  }
+
+  /// Fetch the signed resume URL from GET /Account/candidate/me/resume.
+  /// The backend returns: { data: { sasUrl: "...", expiresAt: "...", succeeded: true } }
+  Future<void> fetchResume() async {
+    _isResumeLoading = true;
+    _resumeError = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.getResume();
+      debugPrint('=== RESUME RESPONSE: $response ===');
+
+      // Extract sasUrl from response.data.sasUrl
+      final data = response['data'];
+      final sasUrl =
+          (data is Map ? data['sasUrl'] ?? data['SasUrl'] ?? '' : '').toString().trim();
+
+      _resumeUrl = sasUrl;
+      debugPrint('=== RESUME URL: $_resumeUrl ===');
+    } catch (e) {
+      debugPrint('=== RESUME FETCH ERROR: $e ===');
+      _resumeError = AppErrorParser.parse(e);
+      _resumeUrl = '';
+    } finally {
+      _isResumeLoading = false;
+      notifyListeners();
+    }
   }
 
   /// PATCH /Account/Candidate/UpdateProfile - form-data with all fields + files.
@@ -154,8 +192,11 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
   void resetSessionState({bool notify = true}) {
     _sessionVersion++;
     _profile = null;
+    _resumeUrl = '';
     _isLoading = false;
+    _isResumeLoading = false;
     _errorMessage = null;
+    _resumeError = null;
     if (notify) notifyListeners();
   }
 }

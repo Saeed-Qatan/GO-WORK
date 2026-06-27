@@ -23,9 +23,11 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
-    // Fetch profile only when this page is actually shown (after login)
+    // Fetch profile and resume URL when this page is shown (after login)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileViewModel>().fetchProfile();
+      final vm = context.read<ProfileViewModel>();
+      vm.fetchProfile();
+      vm.fetchResume();
     });
   }
 
@@ -37,6 +39,12 @@ class _ProfileViewState extends State<ProfileView> {
         backgroundColor: const Color(0xFFF5F7FB),
         elevation: 0,
         scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          color: AppColors.primary,
+          tooltip: 'رجوع',
+          onPressed: () => context.pop(),
+        ),
         title: Text(
           AppConstants.profileTitle,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -45,7 +53,6 @@ class _ProfileViewState extends State<ProfileView> {
           ),
         ),
         centerTitle: true,
-        automaticallyImplyLeading: false,
       ),
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
@@ -89,16 +96,23 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // ── Action Buttons ──
                 ProfileActionButtons(
+                  isResumeLoading: viewModel.isResumeLoading,
                   onEditProfile: () {
                     context.push(AppRoutes.editProfile);
                   },
-                  onDownloadCV: () async {
-                    final cvUrl = profile.cvUrl;
-                    if (cvUrl.isEmpty) {
-                      SnackbarService.showWarning('لا يوجد سيرة ذاتية للعرض');
+                  onViewResume: () async {
+                    // Always try to fetch a fresh signed URL before opening
+                    await viewModel.fetchResume();
+                    final resumeUrl = viewModel.resumeUrl;
+
+                    if (resumeUrl.isEmpty) {
+                      SnackbarService.showWarning(
+                        viewModel.resumeError ?? 'لا يوجد سيرة ذاتية للعرض',
+                      );
                       return;
                     }
-                    final uri = Uri.parse(cvUrl);
+
+                    final uri = Uri.parse(resumeUrl);
                     if (await canLaunchUrl(uri)) {
                       await launchUrl(
                         uri,
