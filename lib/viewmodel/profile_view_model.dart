@@ -92,27 +92,32 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
   /// Fetch the signed resume URL from GET /Account/candidate/me/resume.
   /// The backend returns: { data: { sasUrl: "...", expiresAt: "...", succeeded: true } }
   Future<void> fetchResume() async {
+    debugPrint('[DEBUG_RCA] fetchResume() started.');
     _isResumeLoading = true;
     _resumeError = null;
     notifyListeners();
 
     try {
+      debugPrint('[DEBUG_RCA] Invoking _repository.getResume()...');
       final response = await _repository.getResume();
-      debugPrint('=== RESUME RESPONSE: $response ===');
+      debugPrint('[DEBUG_RCA] Raw response received: $response');
 
-      // Extract sasUrl from response.data.sasUrl
       final data = response['data'];
+      debugPrint('[DEBUG_RCA] Parsed data field: $data (Type: ${data.runtimeType})');
+
       final sasUrl =
           (data is Map ? data['sasUrl'] ?? data['SasUrl'] ?? '' : '').toString().trim();
+      debugPrint('[DEBUG_RCA] Extracted sasUrl: "$sasUrl"');
 
       _resumeUrl = sasUrl;
-      debugPrint('=== RESUME URL: $_resumeUrl ===');
-    } catch (e) {
-      debugPrint('=== RESUME FETCH ERROR: $e ===');
+    } catch (e, stack) {
+      debugPrint('[DEBUG_RCA] Exception caught during fetchResume: $e');
+      debugPrint('[DEBUG_RCA] Stacktrace: $stack');
       _resumeError = AppErrorParser.parse(e);
       _resumeUrl = '';
     } finally {
       _isResumeLoading = false;
+      debugPrint('[DEBUG_RCA] fetchResume() finished. _resumeUrl: "$_resumeUrl", error: "$_resumeError"');
       notifyListeners();
     }
   }

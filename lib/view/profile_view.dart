@@ -101,11 +101,14 @@ class _ProfileViewState extends State<ProfileView> {
                     context.push(AppRoutes.editProfile);
                   },
                   onViewResume: () async {
+                    debugPrint('[DEBUG_RCA] "View Resume" button pressed.');
                     // Always try to fetch a fresh signed URL before opening
                     await viewModel.fetchResume();
                     final resumeUrl = viewModel.resumeUrl;
+                    debugPrint('[DEBUG_RCA] viewModel.resumeUrl is: "$resumeUrl"');
 
                     if (resumeUrl.isEmpty) {
+                      debugPrint('[DEBUG_RCA] Resume URL is empty. Warning shown.');
                       SnackbarService.showWarning(
                         viewModel.resumeError ?? 'لا يوجد سيرة ذاتية للعرض',
                       );
@@ -113,13 +116,44 @@ class _ProfileViewState extends State<ProfileView> {
                     }
 
                     final uri = Uri.parse(resumeUrl);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
+                    debugPrint('[DEBUG_RCA] Uri object parsed: $uri');
+
+                    debugPrint('[DEBUG_RCA] Checking canLaunchUrl(uri)...');
+                    final canLaunch = await canLaunchUrl(uri);
+                    debugPrint('[DEBUG_RCA] canLaunchUrl(uri) result: $canLaunch');
+
+                    if (canLaunch) {
+                      debugPrint('[DEBUG_RCA] canLaunch is true, invoking launchUrl...');
+                      try {
+                        final success = await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                        debugPrint('[DEBUG_RCA] launchUrl completed. Success: $success');
+                      } catch (e, stack) {
+                        debugPrint('[DEBUG_RCA] Exception during launchUrl: $e');
+                        debugPrint('[DEBUG_RCA] Stack: $stack');
+                        if (context.mounted) {
+                          SnackbarService.showError('تعذر فتح رابط السيرة الذاتية');
+                        }
+                      }
                     } else {
-                      if (context.mounted) {
+                      debugPrint('[DEBUG_RCA] canLaunch is false! Android 11+ Package Visibility likely blocking.');
+                      debugPrint('[DEBUG_RCA] Attempting direct launchUrl fallback as recommended...');
+                      bool fallbackSuccess = false;
+                      try {
+                        fallbackSuccess = await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                        debugPrint('[DEBUG_RCA] Fallback launchUrl success: $fallbackSuccess');
+                      } catch (e, stack) {
+                        debugPrint('[DEBUG_RCA] Fallback launchUrl threw exception: $e');
+                        debugPrint('[DEBUG_RCA] Stack: $stack');
+                      }
+
+                      if (!fallbackSuccess && context.mounted) {
+                        debugPrint('[DEBUG_RCA] Both canLaunchUrl and fallback launchUrl failed.');
                         SnackbarService.showError(
                           'تعذر فتح رابط السيرة الذاتية',
                         );
