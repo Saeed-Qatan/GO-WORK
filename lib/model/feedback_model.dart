@@ -1,6 +1,6 @@
 enum FeedbackType {
-  complaint('1', 'شكوى'),
-  suggestion('2', 'اقتراح');
+  complaint('2', 'شكوى'),
+  suggestion('1', 'اقتراح');
 
   const FeedbackType(this.apiValue, this.label);
 
