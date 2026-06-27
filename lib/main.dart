@@ -40,23 +40,26 @@ void main() async {
   // Register the background message handler before Firebase.initializeApp
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
+  // Initialize Firebase here to avoid blocking the splash screen animation.
+  // runApp is called immediately afterwards — the native splash is dismissed
+  // on the first rendered frame inside SplashView.
   await Firebase.initializeApp();
-  unawaited(_initializeNotifications());
+  unawaited(initializeNotifications());
 
   runApp(const MyApp());
 }
 
-Future<void> _initializeNotifications() async {
+Future<void> initializeNotifications() async {
   try {
     await pushNotificationService.initialize();
   } catch (e) {
     debugPrint('=== FCM: PUSH NOTIFICATION INITIALIZE ERROR: $e ===');
   }
 
-  await _subscribeToCurrentUserTopics();
+  await subscribeToCurrentUserTopics();
 }
 
-Future<void> _subscribeToCurrentUserTopics() async {
+Future<void> subscribeToCurrentUserTopics() async {
   final token = await LocalStorage().getString('token');
   if (token == null || token.isEmpty) {
     final cachedCategoryId = await LocalStorage().getString('categoryId');

@@ -66,18 +66,30 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.onboarding,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final nextRoute = state.uri.queryParameters['next'];
         final safeNextRoute = nextRoute == AppRoutes.home
             ? AppRoutes.home
             : AppRoutes.login;
 
-        return OnboardingView(nextRoute: safeNextRoute);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: OnboardingView(nextRoute: safeNextRoute),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
       },
     ),
     GoRoute(
       path: AppRoutes.login,
-      builder: (context, state) => const LoginView(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const LoginView(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     ),
     GoRoute(
       path: AppRoutes.registerInfo,
@@ -123,7 +135,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.home,
-      builder: (context, state) => const MainView(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const MainView(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     ),
     GoRoute(
       path: AppRoutes.editProfile,
