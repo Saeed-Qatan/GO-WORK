@@ -3,6 +3,7 @@ import '../../theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../model/applications/application_model.dart';
 import '../../model/home/home_model.dart';
+import '../../utils/snackbar_service.dart';
 import '../../utils/timezone_utils.dart';
 import '../../view/job_details_view.dart';
 
@@ -208,14 +209,7 @@ class ApplicationCard extends StatelessWidget {
             child: InkWell(
               onTap: () {
                 if (application.jobId.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'معرف الوظيفة غير متاح',
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
-                  );
+                  SnackbarService.showError('معرف الوظيفة غير متاح');
                   return;
                 }
 

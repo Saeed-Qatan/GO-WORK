@@ -10,8 +10,9 @@ class ProfileService {
     return await _apiClient.get(ApiConstants.getProfile);
   }
 
-  /// GET /Account/candidate/me/resume — fetch resume
-  Future<dynamic> getResume() async {
+  /// GET /Account/candidate/me/resume — fetch signed resume URL
+  /// Returns: { statusCode, success, data: { sasUrl, expiresAt, succeeded }, errors }
+  Future<Map<String, dynamic>> getResume() async {
     return await _apiClient.get(ApiConstants.getResume);
   }
 

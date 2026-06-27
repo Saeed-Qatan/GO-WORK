@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/app_colors.dart';
+import '../../utils/snackbar_service.dart';
 
 /// Tappable meeting-link button. Opens the link via [onTap].
 /// Long-press copies the URL to the clipboard.
@@ -89,14 +90,6 @@ class InterviewMeetingLinkButton extends StatelessWidget {
 
   void _copyLink(BuildContext context) {
     Clipboard.setData(ClipboardData(text: link));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('تم نسخ الرابط'),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    SnackbarService.showSuccess('تم نسخ الرابط');
   }
 }

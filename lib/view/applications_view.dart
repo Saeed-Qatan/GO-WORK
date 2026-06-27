@@ -8,6 +8,7 @@ import '../core/constants/app_constants.dart';
 import '../widget/applications/application_card.dart';
 import '../widget/applications/applications_header.dart';
 import '../widget/common/animated_empty_state.dart';
+import '../utils/snackbar_service.dart';
 
 class ApplicationsView extends StatefulWidget {
   const ApplicationsView({super.key});
@@ -105,28 +106,7 @@ class _ApplicationsViewState extends State<ApplicationsView> {
 
     // ── Step 3a: Success → SnackBar ──────────────────────────────────────────
     if (errorMsg == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.green.shade700,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 10),
-              Text(
-                'تم سحب الطلب بنجاح',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      SnackbarService.showSuccess('تم سحب الطلب بنجاح');
       return;
     }
 

@@ -6,6 +6,7 @@ import 'package:gowork/routing/app_router.dart';
 import '../viewmodel/profile_view_model.dart';
 import '../theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../utils/snackbar_service.dart';
 import '../widget/profile/profile_header_card.dart';
 import '../widget/profile/profile_action_buttons.dart';
 import '../widget/profile/profile_contact_info_card.dart';
@@ -22,9 +23,11 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
-    // Fetch profile only when this page is actually shown (after login)
+    // Fetch profile and resume URL when this page is shown (after login)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileViewModel>().fetchProfile();
+      final vm = context.read<ProfileViewModel>();
+      vm.fetchProfile();
+      vm.fetchResume();
     });
   }
 
@@ -36,6 +39,12 @@ class _ProfileViewState extends State<ProfileView> {
         backgroundColor: const Color(0xFFF5F7FB),
         elevation: 0,
         scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          color: AppColors.primary,
+          tooltip: 'رجوع',
+          onPressed: () => context.pop(),
+        ),
         title: Text(
           AppConstants.profileTitle,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -44,7 +53,6 @@ class _ProfileViewState extends State<ProfileView> {
           ),
         ),
         centerTitle: true,
-        automaticallyImplyLeading: false,
       ),
       body: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
@@ -88,31 +96,66 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // ── Action Buttons ──
                 ProfileActionButtons(
+                  isResumeLoading: viewModel.isResumeLoading,
                   onEditProfile: () {
                     context.push(AppRoutes.editProfile);
                   },
-                  onDownloadCV: () async {
-                    final cvUrl = profile.cvUrl;
-                    if (cvUrl.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('لا يوجد سيرة ذاتية للعرض'),
-                        ),
+                  onViewResume: () async {
+                    debugPrint('[DEBUG_RCA] "View Resume" button pressed.');
+                    // Always try to fetch a fresh signed URL before opening
+                    await viewModel.fetchResume();
+                    final resumeUrl = viewModel.resumeUrl;
+                    debugPrint('[DEBUG_RCA] viewModel.resumeUrl is: "$resumeUrl"');
+
+                    if (resumeUrl.isEmpty) {
+                      debugPrint('[DEBUG_RCA] Resume URL is empty. Warning shown.');
+                      SnackbarService.showWarning(
+                        viewModel.resumeError ?? 'لا يوجد سيرة ذاتية للعرض',
                       );
                       return;
                     }
-                    final uri = Uri.parse(cvUrl);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
+
+                    final uri = Uri.parse(resumeUrl);
+                    debugPrint('[DEBUG_RCA] Uri object parsed: $uri');
+
+                    debugPrint('[DEBUG_RCA] Checking canLaunchUrl(uri)...');
+                    final canLaunch = await canLaunchUrl(uri);
+                    debugPrint('[DEBUG_RCA] canLaunchUrl(uri) result: $canLaunch');
+
+                    if (canLaunch) {
+                      debugPrint('[DEBUG_RCA] canLaunch is true, invoking launchUrl...');
+                      try {
+                        final success = await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                        debugPrint('[DEBUG_RCA] launchUrl completed. Success: $success');
+                      } catch (e, stack) {
+                        debugPrint('[DEBUG_RCA] Exception during launchUrl: $e');
+                        debugPrint('[DEBUG_RCA] Stack: $stack');
+                        if (context.mounted) {
+                          SnackbarService.showError('تعذر فتح رابط السيرة الذاتية');
+                        }
+                      }
                     } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('تعذر فتح رابط السيرة الذاتية'),
-                          ),
+                      debugPrint('[DEBUG_RCA] canLaunch is false! Android 11+ Package Visibility likely blocking.');
+                      debugPrint('[DEBUG_RCA] Attempting direct launchUrl fallback as recommended...');
+                      bool fallbackSuccess = false;
+                      try {
+                        fallbackSuccess = await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                        debugPrint('[DEBUG_RCA] Fallback launchUrl success: $fallbackSuccess');
+                      } catch (e, stack) {
+                        debugPrint('[DEBUG_RCA] Fallback launchUrl threw exception: $e');
+                        debugPrint('[DEBUG_RCA] Stack: $stack');
+                      }
+
+                      if (!fallbackSuccess && context.mounted) {
+                        debugPrint('[DEBUG_RCA] Both canLaunchUrl and fallback launchUrl failed.');
+                        SnackbarService.showError(
+                          'تعذر فتح رابط السيرة الذاتية',
                         );
                       }
                     }

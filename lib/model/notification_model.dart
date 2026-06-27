@@ -136,15 +136,36 @@ class NotificationModel {
   NotificationModel copyWithRead() => copyWith(isRead: true);
 
   String get displayTitle {
-    if (type != NotificationType.jobCreated) return title;
-    return _isDefaultJobTitle(title) ? 'إعلان وظيفة جديدة' : title;
+    if (_isDefaultJobTitle(title)) {
+      return 'فرصة عمل جديدة!';
+    }
+    if (title.trim().toLowerCase() == 'new notification') {
+      return 'إشعار جديد';
+    }
+    return title;
   }
 
   String get displayBody {
-    if (type != NotificationType.jobCreated) return body;
-    return _isDefaultJobBody(body)
-        ? 'اضغط لعرض تفاصيل الوظيفة والتقديم.'
-        : body;
+    final translated = _translateJobBody(body);
+    if (translated != null) return translated;
+
+    if (_isDefaultJobBody(body)) {
+      return 'اضغط لعرض تفاصيل الوظيفة والتقديم.';
+    }
+    return body;
+  }
+
+  static String? _translateJobBody(String value) {
+    final RegExp regex = RegExp(
+      r'a new (.*?) position has just opened up[\.\s]*tap to view details and apply!?',
+      caseSensitive: false,
+    );
+    final match = regex.firstMatch(value.trim());
+    if (match != null && match.groupCount >= 1) {
+      final jobName = match.group(1);
+      return 'شواغر جديدة لوظيفة $jobName متاحة الآن. اضغط لعرض التفاصيل والتقديم!';
+    }
+    return null;
   }
 
   static bool _isDefaultJobTitle(String value) {

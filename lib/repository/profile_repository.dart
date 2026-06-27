@@ -177,8 +177,9 @@ class ProfileRepository {
     );
   }
 
-  /// Get candidate resume from /Account/candidate/me/resume
-  Future<dynamic> getResume() async {
+  /// GET /Account/candidate/me/resume
+  /// Returns: { statusCode, success, data: { sasUrl, expiresAt, succeeded }, errors }
+  Future<Map<String, dynamic>> getResume() async {
     return await _service.getResume();
   }
 

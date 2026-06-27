@@ -45,6 +45,7 @@ class _FakeProfileRepository extends ProfileRepository {
   @override
   Future<ProfileModel> getUserProfile() async {
     return ProfileModel(
+      categoryName: 'Mobile Development',
       firstName: 'User',
       middleName: '',
       lastName: 'A',

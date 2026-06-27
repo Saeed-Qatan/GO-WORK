@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:gowork/model/feedback_model.dart';
 import 'package:gowork/theme/app_colors.dart';
+import 'package:gowork/utils/snackbar_service.dart';
 import 'package:gowork/viewmodel/feedback_view_model.dart';
 import 'package:gowork/widget/custom_button.dart';
 
@@ -49,16 +50,14 @@ class _FeedbackBodyState extends State<_FeedbackBody> {
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? viewModel.successMessage ?? 'تم إرسال الرسالة بنجاح'
-              : viewModel.errorMessage ?? 'حدث خطأ غير متوقع',
-        ),
-        backgroundColor: success ? AppColors.success : AppColors.error,
-      ),
-    );
+    final message = success
+        ? viewModel.successMessage ?? 'تم إرسال الرسالة بنجاح'
+        : viewModel.errorMessage ?? 'حدث خطأ غير متوقع';
+    if (success) {
+      SnackbarService.showSuccess(message);
+    } else {
+      SnackbarService.showError(message);
+    }
 
     if (success) {
       context.pop();

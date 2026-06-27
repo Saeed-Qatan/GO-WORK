@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:gowork/utils/app_error_parser.dart';
 import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/model/auth/email_verification_args.dart';
 
 enum ForgetState { idle, loading, success, error }
 
@@ -54,8 +55,14 @@ class ForgetViewModel extends ChangeNotifier {
 
       if (context.mounted) {
         SnackbarService.showInfo('تم إرسال كود التحقق إلى بريدك الإلكتروني');
-        // Navigate to Reset Password Page
-        context.pushReplacement(AppRoutes.resetPassword, extra: email);
+        // Navigate to Email Verification Page
+        context.pushReplacement(
+          AppRoutes.verifyEmail,
+          extra: EmailVerificationArgs(
+            email: email,
+            isForgetPassword: true,
+          ),
+        );
       }
     } catch (e) {
       _state = ForgetState.error;

@@ -11,6 +11,7 @@ import 'package:gowork/utils/app_error_parser.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:gowork/utils/session_state_reset.dart';
+import 'package:gowork/repository/forget_repository.dart';
 
 class EmailVerificationViewModel extends ChangeNotifier {
   final List<TextEditingController> controllers = List.generate(
@@ -21,6 +22,7 @@ class EmailVerificationViewModel extends ChangeNotifier {
 
   String? email;
   String? password;
+  bool isForgetPassword = false;
   bool isLoading = false;
   int countdown = 60;
   Timer? _timer;
@@ -37,9 +39,11 @@ class EmailVerificationViewModel extends ChangeNotifier {
     if (args is EmailVerificationArgs) {
       email = args.email;
       password = args.password;
+      isForgetPassword = args.isForgetPassword;
     } else if (args is String) {
       email = args;
       password = null;
+      isForgetPassword = false;
     }
     notifyListeners();
   }
@@ -71,6 +75,14 @@ class EmailVerificationViewModel extends ChangeNotifier {
     final code = controllers.map((c) => c.text).join();
     if (code.length < 6) {
       SnackbarService.showError('الرجاء إدخال الرمز المكون من 6 أرقام');
+      return;
+    }
+
+    if (isForgetPassword) {
+      context.pushReplacement(
+        AppRoutes.resetPassword,
+        extra: {'email': email!, 'code': code},
+      );
       return;
     }
 
@@ -143,7 +155,12 @@ class EmailVerificationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await EmailVerificationService().resendCode(email!);
+      if (isForgetPassword) {
+        final ForgetRepository forgetRepository = ForgetRepository();
+        await forgetRepository.forgetPassword(email!);
+      } else {
+        await EmailVerificationService().resendCode(email!);
+      }
       _startTimer();
       SnackbarService.showSuccess('تم إعادة إرسال الرمز');
     } catch (e) {

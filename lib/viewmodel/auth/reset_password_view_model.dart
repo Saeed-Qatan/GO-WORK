@@ -12,12 +12,12 @@ class ResetPasswordViewModel extends ChangeNotifier {
   final ResetPasswordRepository _repository = ResetPasswordRepository();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  final TextEditingController codeController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
   final String email;
+  final String code;
 
   ResetState _state = ResetState.idle;
   ResetState get state => _state;
@@ -27,14 +27,7 @@ class ResetPasswordViewModel extends ChangeNotifier {
 
   bool get isLoading => _state == ResetState.loading;
 
-  ResetPasswordViewModel({required this.email});
-
-  String? validateCode(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'الرجاء إدخال الكود';
-    }
-    return null;
-  }
+  ResetPasswordViewModel({required this.email, required this.code});
 
   String? validatePassword(String? v) {
     if (v == null || v.isEmpty) return 'الرجاء إدخال كلمة المرور';
@@ -68,7 +61,7 @@ class ResetPasswordViewModel extends ChangeNotifier {
     try {
       final request = ResetPasswordRequest(
         email: email,
-        code: codeController.text.trim(),
+        code: code,
         newPassword: passwordController.text,
         confirmPassword: confirmPasswordController.text,
       );
@@ -91,7 +84,6 @@ class ResetPasswordViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    codeController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();

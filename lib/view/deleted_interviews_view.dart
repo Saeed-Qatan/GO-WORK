@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/snackbar_service.dart';
 import '../viewmodel/interviews_view_model.dart';
 import '../widget/common/animated_empty_state.dart';
 import '../widget/interviews/interview_card.dart';
@@ -104,20 +105,8 @@ class DeletedInterviewsView extends StatelessWidget {
                             onPressed: () async {
                               await viewModel.restoreInterview(interview.id);
                               if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                    'تم استعادة المقابلة إلى القائمة الرئيسية بنجاح',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  backgroundColor: AppColors.success,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
+                              SnackbarService.showSuccess(
+                                'تم استعادة المقابلة إلى القائمة الرئيسية بنجاح',
                               );
                             },
                           ),

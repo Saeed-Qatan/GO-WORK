@@ -19,11 +19,21 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
   ProfileModel? _profile;
   ProfileModel? get profile => _profile;
 
+  /// Signed URL from GET /Account/candidate/me/resume (data.sasUrl)
+  String _resumeUrl = '';
+  String get resumeUrl => _resumeUrl;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _isResumeLoading = false;
+  bool get isResumeLoading => _isResumeLoading;
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  String? _resumeError;
+  String? get resumeError => _resumeError;
 
   ProfileViewModel({NotificationTopicService? notificationTopicService})
     : _notificationTopicService = notificationTopicService;
@@ -77,6 +87,39 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
     _isLoading = false;
     _errorMessage = null;
     if (notify) notifyListeners();
+  }
+
+  /// Fetch the signed resume URL from GET /Account/candidate/me/resume.
+  /// The backend returns: { data: { sasUrl: "...", expiresAt: "...", succeeded: true } }
+  Future<void> fetchResume() async {
+    debugPrint('[DEBUG_RCA] fetchResume() started.');
+    _isResumeLoading = true;
+    _resumeError = null;
+    notifyListeners();
+
+    try {
+      debugPrint('[DEBUG_RCA] Invoking _repository.getResume()...');
+      final response = await _repository.getResume();
+      debugPrint('[DEBUG_RCA] Raw response received: $response');
+
+      final data = response['data'];
+      debugPrint('[DEBUG_RCA] Parsed data field: $data (Type: ${data.runtimeType})');
+
+      final sasUrl =
+          (data is Map ? data['sasUrl'] ?? data['SasUrl'] ?? '' : '').toString().trim();
+      debugPrint('[DEBUG_RCA] Extracted sasUrl: "$sasUrl"');
+
+      _resumeUrl = sasUrl;
+    } catch (e, stack) {
+      debugPrint('[DEBUG_RCA] Exception caught during fetchResume: $e');
+      debugPrint('[DEBUG_RCA] Stacktrace: $stack');
+      _resumeError = AppErrorParser.parse(e);
+      _resumeUrl = '';
+    } finally {
+      _isResumeLoading = false;
+      debugPrint('[DEBUG_RCA] fetchResume() finished. _resumeUrl: "$_resumeUrl", error: "$_resumeError"');
+      notifyListeners();
+    }
   }
 
   /// PATCH /Account/Candidate/UpdateProfile - form-data with all fields + files.
@@ -154,8 +197,11 @@ class ProfileViewModel extends ChangeNotifier implements SessionResettable {
   void resetSessionState({bool notify = true}) {
     _sessionVersion++;
     _profile = null;
+    _resumeUrl = '';
     _isLoading = false;
+    _isResumeLoading = false;
     _errorMessage = null;
+    _resumeError = null;
     if (notify) notifyListeners();
   }
 }
