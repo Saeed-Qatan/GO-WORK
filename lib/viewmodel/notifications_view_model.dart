@@ -31,6 +31,7 @@ class NotificationsViewModel extends ChangeNotifier
   StreamSubscription<NotificationModel>? _pushSubscription;
   int _sessionVersion = 0;
   final Set<int> _apiNotificationIds = <int>{};
+  final Set<int> _pendingReadNotificationIds = <int>{};
 
   List<NotificationModel> _notifications = [];
   List<NotificationModel> get notifications => _notifications;
@@ -189,8 +190,27 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   Future<bool> markAsRead(int notificationId) async {
+    debugPrint('=== VM: markAsRead triggered for id=$notificationId ===');
+    
+    // Add to session-persistent read IDs set
+    _pendingReadNotificationIds.add(notificationId);
+
+    // If notifications list is currently empty, ensure cache is fully loaded first
+    // to prevent race conditions when app launches by tapping a notification.
+    if (_notifications.isEmpty) {
+      debugPrint('=== VM: markAsRead: notifications list is empty, awaiting cache load... ===');
+      await _loadCachedNotifications();
+    }
+
     final target = _findNotification(notificationId);
     if (target == null) {
+      // Immediate visual update to decrease unread count badge in current UI state
+      debugPrint('=== VM: markAsRead: target not found. Decrementing count locally ===');
+      if (_unreadCount > 0) {
+        _unreadCount--;
+        notifyListeners();
+      }
+
       try {
         await _repository.markAsRead(notificationId);
         await fetchUnreadCount(notify: false);
@@ -223,12 +243,10 @@ class NotificationsViewModel extends ChangeNotifier
     }
 
     final apiNotification = _apiBackedMatchFor(target);
-    if (apiNotification == null) {
-      return true;
-    }
+    final idToMark = apiNotification?.id ?? notificationId;
 
     try {
-      await _repository.markAsRead(apiNotification.id);
+      await _repository.markAsRead(idToMark);
       await fetchUnreadCount(notify: false);
       notifyListeners();
       return true;
@@ -398,9 +416,15 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   void _setNotifications(List<NotificationModel> notifications) {
-    _notifications = notifications;
-    _unreadNotifications = notifications.where((n) => !n.isRead).toList();
-    _readNotifications = notifications.where((n) => n.isRead).toList();
+    final updated = notifications.map((n) {
+      if (_pendingReadNotificationIds.contains(n.id) && !n.isRead) {
+        return n.copyWithRead();
+      }
+      return n;
+    }).toList();
+    _notifications = updated;
+    _unreadNotifications = updated.where((n) => !n.isRead).toList();
+    _readNotifications = updated.where((n) => n.isRead).toList();
   }
 
   NotificationModel? _findNotification(int notificationId) {
@@ -477,6 +501,7 @@ class NotificationsViewModel extends ChangeNotifier
     _sessionVersion++;
     _setNotifications([]);
     _apiNotificationIds.clear();
+    _pendingReadNotificationIds.clear();
     _unreadCount = 0;
     _viewState = NotificationsViewState.initial;
     _errorMessage = null;
