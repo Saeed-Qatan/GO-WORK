@@ -16,7 +16,6 @@ import '../model/search/filter_option.dart';
 class EditProfileView extends StatelessWidget {
   const EditProfileView({super.key});
 
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -40,13 +39,18 @@ class EditProfileView extends StatelessWidget {
           automaticallyImplyLeading: false,
           leading: TextButton(
             onPressed: () => context.pop(),
-            child: Text(
-              AppConstants.cancel,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Icon(
+              Icons.arrow_back_ios_new,
+              color: AppColors.primary,
+              size: 24,
             ),
+            // Text(
+            //   AppConstants.cancel,
+            //   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            //     color: AppColors.primary,
+            //     fontWeight: FontWeight.w600,
+            //   ),
+            // ),
           ),
         ),
         body: Consumer<EditProfileViewModel>(
