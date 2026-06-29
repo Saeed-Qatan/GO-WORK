@@ -31,7 +31,9 @@ class NotificationTapAction {
   });
 
   bool get hasTarget =>
-      notificationId != null || (actionUrl != null && actionUrl!.isNotEmpty);
+      notification != null ||
+      notificationId != null ||
+      (actionUrl != null && actionUrl!.isNotEmpty);
 }
 
 @pragma('vm:entry-point')
@@ -285,7 +287,9 @@ class PushNotificationService {
     _messageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen((
       message,
     ) {
-      unawaited(_handleRemoteMessageTap(message, NotificationLifecycle.openedApp));
+      unawaited(
+        _handleRemoteMessageTap(message, NotificationLifecycle.openedApp),
+      );
     });
 
     final initialMessage = await _firebaseMessaging.getInitialMessage();
@@ -351,7 +355,8 @@ class PushNotificationService {
             : null;
         return NotificationTapAction(
           notificationId:
-              _parseRemoteOptionalInt(decoded['id']) ?? notification?.id,
+              _parseRemoteOptionalInt(decoded['id']) ??
+              notification?.notificationId,
           actionUrl:
               decoded['actionUrl']?.toString() ?? notification?.actionUrl,
           notification: notification,
@@ -400,7 +405,7 @@ const NotificationDetails _localNotificationDetails = NotificationDetails(
 NotificationTapAction? _tapActionFromNotification(NotificationModel? model) {
   if (model == null) return null;
   return NotificationTapAction(
-    notificationId: model.id,
+    notificationId: model.notificationId,
     actionUrl: model.actionUrl,
     notification: model,
   );
@@ -509,7 +514,9 @@ int _stableMessageId(RemoteMessage message) {
     message.notification?.body,
     _stableDataString(message.data),
   ].whereType<String>().join('|');
-  return _stablePositiveId(source.isEmpty ? DateTime.now().toIso8601String() : source);
+  return _stablePositiveId(
+    source.isEmpty ? DateTime.now().toIso8601String() : source,
+  );
 }
 
 String _stableDataString(Map<String, dynamic> data) {

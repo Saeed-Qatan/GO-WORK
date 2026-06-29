@@ -20,6 +20,7 @@ class NotificationsViewModel extends ChangeNotifier
     with WidgetsBindingObserver
     implements SessionResettable {
   static const int _defaultPageSize = 20;
+  static const Duration _pendingReadCountAdjustmentTtl = Duration(minutes: 2);
 
   final NotificationsRepository _repository;
   final PushNotificationService _pushService;
@@ -31,6 +32,10 @@ class NotificationsViewModel extends ChangeNotifier
   StreamSubscription<NotificationModel>? _pushSubscription;
   int _sessionVersion = 0;
   final Set<int> _apiNotificationIds = <int>{};
+  final Set<int> _pendingReadNotificationIds = <int>{};
+  final List<NotificationModel> _pendingReadNotifications =
+      <NotificationModel>[];
+  DateTime? _pendingReadUpdatedAt;
 
   List<NotificationModel> _notifications = [];
   List<NotificationModel> get notifications => _notifications;
@@ -117,6 +122,7 @@ class NotificationsViewModel extends ChangeNotifier
       _totalPages = page.totalPages;
       _setLoadedState();
       unawaited(_localStore.save(_notifications));
+      await _syncReadStateToApi(remote: page.items, local: cached);
       await fetchUnreadCount(notify: false);
     } catch (e) {
       final cached = await _localStore.load();
@@ -148,7 +154,8 @@ class NotificationsViewModel extends ChangeNotifier
     }
 
     try {
-      _unreadCount = await _repository.getUnreadCount();
+      final serverUnreadCount = await _repository.getUnreadCount();
+      _unreadCount = _resolveUnreadCount(serverUnreadCount);
       if (notify) notifyListeners();
     } catch (e) {
       _unreadCount = _unreadNotifications.length;
@@ -189,8 +196,29 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   Future<bool> markAsRead(int notificationId) async {
+    debugPrint('=== VM: markAsRead triggered for id=$notificationId ===');
+
+    // If notifications list is currently empty, ensure cache is fully loaded first
+    // to prevent race conditions when app launches by tapping a notification.
+    if (_notifications.isEmpty) {
+      debugPrint(
+        '=== VM: markAsRead: notifications list is empty, awaiting cache load... ===',
+      );
+      await _loadCachedNotifications();
+    }
+
     final target = _findNotification(notificationId);
     if (target == null) {
+      _rememberPendingRead(notificationId: notificationId);
+      // Immediate visual update to decrease unread count badge in current UI state
+      debugPrint(
+        '=== VM: markAsRead: target not found. Decrementing count locally ===',
+      );
+      if (_unreadCount > 0) {
+        _unreadCount--;
+        notifyListeners();
+      }
+
       try {
         await _repository.markAsRead(notificationId);
         await fetchUnreadCount(notify: false);
@@ -201,13 +229,31 @@ class NotificationsViewModel extends ChangeNotifier
       return true;
     }
 
+    return markNotificationAsRead(target);
+  }
+
+  Future<bool> markNotificationAsRead(NotificationModel notification) async {
+    debugPrint(
+      '=== VM: markNotificationAsRead triggered for '
+      '${notificationDebugIdentity(notification)} ===',
+    );
+
+    _rememberPendingRead(notification: notification);
+
+    if (_notifications.isEmpty) {
+      debugPrint(
+        '=== VM: markNotificationAsRead: notifications list is empty, awaiting cache load... ===',
+      );
+      await _loadCachedNotifications();
+    }
+
+    final target = _findMatchingNotification(notification) ?? notification;
     final matchingIndexes = _matchingIndexes(target);
     if (matchingIndexes.isNotEmpty &&
         matchingIndexes.every((index) => _notifications[index].isRead)) {
-      return true;
+      return _markApiBackedNotificationReadIfNeeded(target);
     }
 
-    final previousUnreadCount = _unreadCount;
     final unreadMatches = matchingIndexes
         .where((index) => !_notifications[index].isRead)
         .length;
@@ -220,20 +266,37 @@ class NotificationsViewModel extends ChangeNotifier
       _unreadCount = (_unreadCount - unreadMatches).clamp(0, 1 << 31).toInt();
       await _localStore.save(_notifications);
       notifyListeners();
+    } else if (!target.isRead) {
+      _setNotifications(
+        _dedupeAndSort([target.copyWithRead(), ..._notifications]),
+      );
+      if (_unreadCount > 0) {
+        _unreadCount--;
+      }
+      await _localStore.save(_notifications);
+      notifyListeners();
     }
 
+    return _markApiBackedNotificationReadIfNeeded(target);
+  }
+
+  Future<bool> _markApiBackedNotificationReadIfNeeded(
+    NotificationModel target,
+  ) async {
     final apiNotification = _apiBackedMatchFor(target);
     if (apiNotification == null) {
+      debugPrint(
+        '=== MARK AS READ: local-only notification marked read without API call '
+        '${notificationDebugIdentity(target)} ===',
+      );
       return true;
     }
 
     try {
       await _repository.markAsRead(apiNotification.id);
-      await fetchUnreadCount(notify: false);
       notifyListeners();
       return true;
     } catch (e) {
-      _unreadCount = previousUnreadCount;
       debugPrint('=== MARK AS READ ERROR: $e ===');
       return true;
     }
@@ -245,8 +308,10 @@ class NotificationsViewModel extends ChangeNotifier
     try {
       await _repository.markAllAsRead();
       _setNotifications(_notifications.map((n) => n.copyWithRead()).toList());
+      _pendingReadNotificationIds.clear();
+      _pendingReadNotifications.clear();
       await _localStore.save(_notifications);
-      await fetchUnreadCount(notify: false);
+      _unreadCount = 0;
       notifyListeners();
       return true;
     } catch (e) {
@@ -297,7 +362,7 @@ class NotificationsViewModel extends ChangeNotifier
     BuildContext context,
     NotificationModel notification,
   ) async {
-    await markAsRead(notification.id);
+    await markNotificationAsRead(notification);
     if (!context.mounted) return;
 
     final actionUrl = notification.actionUrl?.trim();
@@ -398,14 +463,31 @@ class NotificationsViewModel extends ChangeNotifier
   }
 
   void _setNotifications(List<NotificationModel> notifications) {
-    _notifications = notifications;
-    _unreadNotifications = notifications.where((n) => !n.isRead).toList();
-    _readNotifications = notifications.where((n) => n.isRead).toList();
+    final updated = notifications.map((n) {
+      if (_hasPendingReadFor(n) && !n.isRead) {
+        return n.copyWithRead();
+      }
+      return n;
+    }).toList();
+    _notifications = updated;
+    _unreadNotifications = updated.where((n) => !n.isRead).toList();
+    _readNotifications = updated.where((n) => n.isRead).toList();
   }
 
   NotificationModel? _findNotification(int notificationId) {
     for (final notification in _notifications) {
-      if (notification.id == notificationId) return notification;
+      if (_matchesNotificationId(notification, notificationId)) {
+        return notification;
+      }
+    }
+    return null;
+  }
+
+  NotificationModel? _findMatchingNotification(NotificationModel target) {
+    for (final notification in _notifications) {
+      if (notificationsRepresentSameEvent(notification, target)) {
+        return notification;
+      }
     }
     return null;
   }
@@ -433,6 +515,124 @@ class NotificationsViewModel extends ChangeNotifier
   bool _isApiBackedNotification(NotificationModel notification) {
     return _apiNotificationIds.contains(notification.id) ||
         isApiBackedNotification(notification);
+  }
+
+  void _rememberPendingRead({
+    NotificationModel? notification,
+    int? notificationId,
+  }) {
+    if (notificationId != null) {
+      _pendingReadNotificationIds.add(notificationId);
+    }
+
+    if (notification == null) {
+      if (notificationId != null) {
+        _pendingReadUpdatedAt = DateTime.now();
+      }
+      return;
+    }
+
+    _pendingReadNotificationIds.add(notification.id);
+    final backendNotificationId = notification.notificationId;
+    if (backendNotificationId != null) {
+      _pendingReadNotificationIds.add(backendNotificationId);
+    }
+
+    final alreadyTracked = _pendingReadNotifications.any(
+      (item) => notificationsRepresentSameEvent(item, notification),
+    );
+    if (!alreadyTracked) {
+      _pendingReadNotifications.add(notification.copyWithRead());
+    }
+
+    _pendingReadUpdatedAt = DateTime.now();
+  }
+
+  bool _hasPendingReadFor(NotificationModel notification) {
+    if (_pendingReadNotificationIds.any(
+      (id) => _matchesNotificationId(notification, id),
+    )) {
+      return true;
+    }
+
+    return _pendingReadNotifications.any(
+      (item) => notificationsRepresentSameEvent(item, notification),
+    );
+  }
+
+  bool _matchesNotificationId(NotificationModel notification, int id) {
+    return notification.id == id || notification.notificationId == id;
+  }
+
+  int _resolveUnreadCount(int serverUnreadCount) {
+    final pendingReadCount = _activePendingReadCount();
+    if (pendingReadCount == 0) return serverUnreadCount;
+
+    final adjustedServerCount = serverUnreadCount > _unreadCount
+        ? (serverUnreadCount - pendingReadCount).clamp(0, 1 << 31).toInt()
+        : serverUnreadCount;
+    final localUnreadCount = _unreadNotifications.length;
+    return adjustedServerCount < localUnreadCount
+        ? localUnreadCount
+        : adjustedServerCount;
+  }
+
+  int _activePendingReadCount() {
+    final pendingReadUpdatedAt = _pendingReadUpdatedAt;
+    if (pendingReadUpdatedAt == null ||
+        DateTime.now().difference(pendingReadUpdatedAt) >
+            _pendingReadCountAdjustmentTtl) {
+      _pendingReadNotificationIds.clear();
+      _pendingReadNotifications.clear();
+      _pendingReadUpdatedAt = null;
+      return 0;
+    }
+
+    var count = _pendingReadNotifications.length;
+    for (final id in _pendingReadNotificationIds) {
+      final representedByNotification = _pendingReadNotifications.any(
+        (notification) => _matchesNotificationId(notification, id),
+      );
+      if (!representedByNotification) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  Future<void> _syncReadStateToApi({
+    required List<NotificationModel> remote,
+    required List<NotificationModel> local,
+  }) async {
+    final apiIdsToMark = <int>{};
+
+    for (final remoteNotification in remote) {
+      if (remoteNotification.isRead) continue;
+
+      final hasReadLocalCopy = local.any(
+        (localNotification) =>
+            localNotification.isRead &&
+            notificationsRepresentSameEvent(
+              localNotification,
+              remoteNotification,
+            ),
+      );
+      final hasPendingRead = _hasPendingReadFor(remoteNotification);
+
+      if (hasReadLocalCopy || hasPendingRead) {
+        apiIdsToMark.add(remoteNotification.id);
+      }
+    }
+
+    if (apiIdsToMark.isEmpty) return;
+
+    for (final id in apiIdsToMark) {
+      try {
+        await _repository.markAsRead(id);
+      } catch (e) {
+        debugPrint('=== PENDING MARK AS READ SYNC ERROR: id=$id error=$e ===');
+      }
+    }
   }
 
   void _logMergeInputs({
@@ -477,6 +677,9 @@ class NotificationsViewModel extends ChangeNotifier
     _sessionVersion++;
     _setNotifications([]);
     _apiNotificationIds.clear();
+    _pendingReadNotificationIds.clear();
+    _pendingReadNotifications.clear();
+    _pendingReadUpdatedAt = null;
     _unreadCount = 0;
     _viewState = NotificationsViewState.initial;
     _errorMessage = null;
