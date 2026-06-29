@@ -4,6 +4,7 @@ enum InterviewStatus {
   confirmed,
   scheduled,
   declined,
+  withdrawn,
   missedInterview,
   waiting,
 }
@@ -93,7 +94,7 @@ class InterviewModel {
       'location': location,
       'interviewerName': interviewerName,
       'interviewerRole': interviewerRole,
-      'status': status.name,
+      'status': status == InterviewStatus.withdrawn ? 'withdraw' : status.name,
       'interviewType': interviewType,
       'meetingLink': meetingLink,
       'notes': notes,
@@ -110,6 +111,9 @@ class InterviewModel {
         s == 'missedinterview' ||
         s == 'no_show') {
       return InterviewStatus.missedInterview;
+    }
+    if (s == 'withdraw' || s == 'withdrawn') {
+      return InterviewStatus.withdrawn;
     }
     if (s == 'declined' ||
         s == 'rejected' ||

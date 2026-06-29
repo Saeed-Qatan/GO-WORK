@@ -201,6 +201,11 @@ class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
         normalized == 'missedinterview') {
       return InterviewStatus.missedInterview;
     }
+    if (normalized == 'withdraw' ||
+        normalized == 'withdrawn' ||
+        normalized == 'cancel') {
+      return InterviewStatus.withdrawn;
+    }
     return InterviewStatus.declined;
   }
 

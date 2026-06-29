@@ -45,7 +45,7 @@ void main() {
   });
 
   test(
-    'cancel action persists declined status across view model recreation',
+    'cancel action persists withdrawn status across view model recreation',
     () async {
       final scheduledInterview = _interview(status: InterviewStatus.scheduled);
       final firstRepository = _FakeInterviewsRepository([scheduledInterview]);
@@ -65,7 +65,7 @@ void main() {
       expect(success, isTrue);
       expect(firstRepository.submitCount, 1);
       expect(firstRepository.submittedAction, 'cancel');
-      expect(firstViewModel.interviews.single.status, InterviewStatus.declined);
+      expect(firstViewModel.interviews.single.status, InterviewStatus.withdrawn);
 
       final reopenedRepository = _FakeInterviewsRepository([
         scheduledInterview,
@@ -78,10 +78,21 @@ void main() {
 
       expect(
         reopenedViewModel.interviews.single.status,
-        InterviewStatus.declined,
+        InterviewStatus.withdrawn,
       );
     },
   );
+
+  test('withdraw interview status parses and displays as Arabic label', () {
+    final interview = InterviewModel.fromJson({
+      'id': 'interview-1',
+      'status': 'withdraw',
+    });
+
+    expect(interview.status, InterviewStatus.withdrawn);
+    expect(InterviewStatusMapper.forStatus(interview.status).label, 'منسحب');
+    expect(interview.toJson()['status'], 'withdraw');
+  });
 
   test(
     'past unconfirmed interviews are marked missed and synced to backend',
