@@ -18,6 +18,7 @@ class _FakeNotificationsRepository extends NotificationsRepository {
   bool failHide = false;
   bool failGetNotifications = false;
   bool failUnreadCount = false;
+  bool keepUnreadCountAfterMarkRead = false;
   int unreadFetchCount = 0;
   int markReadCount = 0;
   int markAllCount = 0;
@@ -54,7 +55,9 @@ class _FakeNotificationsRepository extends NotificationsRepository {
     markReadCount++;
     markReadIds.add(notificationId);
     if (failMarkRead) throw Exception('mark failed');
-    unreadCount = (unreadCount - 1).clamp(0, 1 << 31).toInt();
+    if (!keepUnreadCountAfterMarkRead) {
+      unreadCount = (unreadCount - 1).clamp(0, 1 << 31).toInt();
+    }
   }
 
   @override
@@ -514,6 +517,7 @@ void main() {
         repository: repository,
         pushService: pushService,
         localStore: _FakeNotificationsLocalStore(),
+        sessionGuard: _FakeSessionGuard(hasToken: true),
         autoFetchUnreadCount: false,
       );
 
@@ -669,6 +673,235 @@ void main() {
       expect(viewModel.notifications.single.isRead, isTrue);
       expect(repository.markReadCount, 0);
     });
+
+    test(
+      'marks tapped local push read, then syncs matching API notification id',
+      () async {
+        final localPushNotification = _notification(
+          id: 9001,
+          notificationId: 501,
+          isRead: false,
+          deliveryType: NotificationDeliveryType.unknown,
+          deliveryTypeRaw: null,
+          actionUrl: '/jobs/42',
+          title: 'Job 42',
+          body: 'New job is available',
+        );
+        final localStore = _FakeNotificationsLocalStore([
+          localPushNotification,
+        ]);
+        final repository = _FakeNotificationsRepository(
+          unreadCount: 1,
+          pages: {
+            1: NotificationsPage(
+              items: [
+                _notification(
+                  id: 12,
+                  notificationId: 501,
+                  isRead: false,
+                  actionUrl: '/jobs/42',
+                  title: 'Job 42',
+                  body: 'New job is available',
+                ),
+              ],
+              currentPage: 1,
+              pageSize: 20,
+              totalCount: 1,
+              totalPages: 1,
+            ),
+          },
+        );
+        final viewModel = NotificationsViewModel(
+          repository: repository,
+          pushService: _FakePushNotificationService(),
+          localStore: localStore,
+          sessionGuard: _FakeSessionGuard(hasToken: true),
+          autoFetchUnreadCount: false,
+        );
+
+        await viewModel.markNotificationAsRead(localPushNotification);
+
+        expect(viewModel.notifications.single.isRead, isTrue);
+        expect(repository.markReadCount, 0);
+
+        await viewModel.fetchNotifications(refresh: true);
+
+        expect(viewModel.notifications, hasLength(1));
+        expect(viewModel.notifications.single.id, 12);
+        expect(viewModel.notifications.single.isRead, isTrue);
+        expect(repository.markReadIds, [12]);
+        expect(viewModel.unreadCount, 0);
+      },
+    );
+
+    test(
+      'marks tapped push read immediately even when cache has not loaded it',
+      () async {
+        final tappedPushNotification = _notification(
+          id: 9001,
+          notificationId: 501,
+          isRead: false,
+          deliveryType: NotificationDeliveryType.unknown,
+          deliveryTypeRaw: null,
+          actionUrl: '/jobs/42',
+          title: 'Job 42',
+          body: 'New job is available',
+        );
+        final localStore = _FakeNotificationsLocalStore();
+        final repository = _FakeNotificationsRepository(
+          unreadCount: 1,
+          pages: {
+            1: NotificationsPage(
+              items: [
+                _notification(
+                  id: 12,
+                  notificationId: 501,
+                  isRead: false,
+                  actionUrl: '/jobs/42',
+                  title: 'Job 42',
+                  body: 'New job is available',
+                ),
+              ],
+              currentPage: 1,
+              pageSize: 20,
+              totalCount: 1,
+              totalPages: 1,
+            ),
+          },
+        );
+        final viewModel = NotificationsViewModel(
+          repository: repository,
+          pushService: _FakePushNotificationService(),
+          localStore: localStore,
+          sessionGuard: _FakeSessionGuard(hasToken: true),
+          autoFetchUnreadCount: false,
+        );
+
+        await viewModel.fetchUnreadCount();
+        await viewModel.markNotificationAsRead(tappedPushNotification);
+
+        expect(viewModel.unreadCount, 0);
+        expect(viewModel.notifications.single.id, 9001);
+        expect(viewModel.notifications.single.isRead, isTrue);
+        expect(localStore.stored.single.isRead, isTrue);
+        expect(repository.markReadCount, 0);
+
+        await viewModel.fetchNotifications(refresh: true);
+
+        expect(viewModel.notifications.single.id, 12);
+        expect(viewModel.notifications.single.isRead, isTrue);
+        expect(repository.markReadIds, [12]);
+      },
+    );
+
+    test(
+      'does not let a stale server unread count restore the bell badge',
+      () async {
+        final repository = _FakeNotificationsRepository(
+          unreadCount: 1,
+          pages: {
+            1: NotificationsPage(
+              items: [
+                _notification(
+                  id: 12,
+                  notificationId: 501,
+                  isRead: false,
+                  actionUrl: '/jobs/42',
+                  title: 'Job 42',
+                  body: 'New job is available',
+                ),
+              ],
+              currentPage: 1,
+              pageSize: 20,
+              totalCount: 1,
+              totalPages: 1,
+            ),
+          },
+        )..keepUnreadCountAfterMarkRead = true;
+        final viewModel = NotificationsViewModel(
+          repository: repository,
+          pushService: _FakePushNotificationService(),
+          localStore: _FakeNotificationsLocalStore(),
+          sessionGuard: _FakeSessionGuard(hasToken: true),
+          autoFetchUnreadCount: false,
+        );
+
+        await viewModel.fetchNotifications();
+        await viewModel.markAsRead(12);
+        await viewModel.fetchUnreadCount();
+
+        expect(repository.markReadIds, [12]);
+        expect(viewModel.notifications.single.isRead, isTrue);
+        expect(viewModel.unreadCount, 0);
+      },
+    );
+
+    test(
+      'syncs pending push read only to the matching API notification',
+      () async {
+        final readPushNotification = _notification(
+          id: 9001,
+          notificationId: 501,
+          isRead: false,
+          deliveryType: NotificationDeliveryType.unknown,
+          deliveryTypeRaw: null,
+          actionUrl: '/jobs/42',
+          title: 'Job 42',
+          body: 'New job is available',
+        );
+        final localStore = _FakeNotificationsLocalStore([readPushNotification]);
+        final repository = _FakeNotificationsRepository(
+          unreadCount: 2,
+          pages: {
+            1: NotificationsPage(
+              items: [
+                _notification(
+                  id: 12,
+                  notificationId: 501,
+                  isRead: false,
+                  actionUrl: '/jobs/42',
+                  title: 'Job 42',
+                  body: 'New job is available',
+                ),
+                _notification(
+                  id: 13,
+                  notificationId: 502,
+                  isRead: false,
+                  actionUrl: '/jobs/43',
+                  title: 'Job 43',
+                  body: 'Another job is available',
+                ),
+              ],
+              currentPage: 1,
+              pageSize: 20,
+              totalCount: 2,
+              totalPages: 1,
+            ),
+          },
+        );
+        final viewModel = NotificationsViewModel(
+          repository: repository,
+          pushService: _FakePushNotificationService(),
+          localStore: localStore,
+          sessionGuard: _FakeSessionGuard(hasToken: true),
+          autoFetchUnreadCount: false,
+        );
+
+        await viewModel.markNotificationAsRead(readPushNotification);
+        await viewModel.fetchNotifications(refresh: true);
+
+        expect(repository.markReadIds, [12]);
+        expect(
+          viewModel.notifications.firstWhere((item) => item.id == 12).isRead,
+          isTrue,
+        );
+        expect(
+          viewModel.notifications.firstWhere((item) => item.id == 13).isRead,
+          isFalse,
+        );
+        expect(viewModel.unreadCount, 1);
+      },
+    );
 
     test('uses cached notifications when remote fetch fails', () async {
       final repository = _FakeNotificationsRepository(pages: {})

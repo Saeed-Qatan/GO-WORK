@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gowork/repository/notifications_repository.dart';
 import 'package:gowork/utils/api_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeApiClient extends ApiClient {
   final List<String> calls = [];
@@ -69,7 +70,13 @@ class _FakeApiClient extends ApiClient {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('NotificationsRepository', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
     test('fetches paginated notifications from documented endpoint', () async {
       final apiClient = _FakeApiClient()
         ..nextGetResponse = {

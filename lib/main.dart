@@ -101,7 +101,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _notificationTapSubscription = pushNotificationService.onNotificationTapped
-        .listen(_openNotificationsFromSystemTap);
+        .listen(_scheduleOpenNotificationsFromSystemTap);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(pushNotificationService.ensureDeviceNotificationSetup());
@@ -109,17 +109,29 @@ class _MyAppState extends State<MyApp> {
       final pendingAction = pushNotificationService
           .takePendingTappedNotificationAction();
       if (pendingAction != null) {
-        _openNotificationsFromSystemTap(pendingAction);
+        unawaited(_openNotificationsFromSystemTap(pendingAction));
       }
+    });
+  }
+
+  void _scheduleOpenNotificationsFromSystemTap(NotificationTapAction action) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_openNotificationsFromSystemTap(action));
     });
   }
 
   Future<void> _openNotificationsFromSystemTap(
     NotificationTapAction action,
   ) async {
+    if (rootNavigatorKey.currentContext == null) {
+      _scheduleOpenNotificationsFromSystemTap(action);
+      return;
+    }
+
     if (_isDuplicateNotificationTap(action)) return;
 
-    _markTappedNotificationRead(action.notificationId);
+    _markTappedNotificationRead(action);
 
     if (await _notificationNavigationService.openFromSystemTap(
       action.actionUrl,
@@ -127,7 +139,8 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    await _notificationNavigationService.openFallbackNotificationsFromSystemTap();
+    await _notificationNavigationService
+        .openFallbackNotificationsFromSystemTap();
   }
 
   bool _isDuplicateNotificationTap(NotificationTapAction action) {
@@ -155,18 +168,23 @@ class _MyAppState extends State<MyApp> {
     ].join('|');
   }
 
-  void _markTappedNotificationRead(int? notificationId) {
-    if (notificationId == null) return;
-
+  void _markTappedNotificationRead(NotificationTapAction action) {
     final navigatorContext = rootNavigatorKey.currentContext;
     if (navigatorContext == null) return;
 
     try {
-      unawaited(
-        navigatorContext.read<NotificationsViewModel>().markAsRead(
-          notificationId,
-        ),
-      );
+      final notificationsViewModel = navigatorContext
+          .read<NotificationsViewModel>();
+      final notification = action.notification;
+      if (notification != null) {
+        unawaited(notificationsViewModel.markNotificationAsRead(notification));
+        return;
+      }
+
+      final notificationId = action.notificationId;
+      if (notificationId != null) {
+        unawaited(notificationsViewModel.markAsRead(notificationId));
+      }
     } catch (e) {
       debugPrint('=== NOTIFICATION TAP MARK READ ERROR: $e ===');
     }
