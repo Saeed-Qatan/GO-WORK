@@ -4,6 +4,7 @@ enum InterviewStatus {
   confirmed,
   scheduled,
   declined,
+  withdrawn,
   missedInterview,
   waiting,
 }
@@ -74,11 +75,27 @@ class InterviewModel {
       location: json['location'] ?? '',
       interviewerName: json['interviewerName'],
       interviewerRole: json['interviewerRole'],
-      status: _parseStatus(json['status']?.toString()),
+      status: _resolveStatus(
+        _parseStatus(json['status']?.toString()),
+        scheduledAt,
+      ),
       interviewType: json['interviewType'],
       meetingLink: json['meetingLink'],
       notes: json['notes'],
     );
+  }
+
+  static InterviewStatus _resolveStatus(
+      InterviewStatus parsedStatus, DateTime? scheduledAt) {
+    if (scheduledAt != null && scheduledAt.isBefore(DateTime.now())) {
+      // If the time has passed and the backend returned 'declined' (which covers 'rejected' from timeouts),
+      // we mark it as missed. We do not override 'waiting' or 'scheduled' here so that
+      // shouldMarkAsMissed can still trigger the backend sync for them.
+      if (parsedStatus == InterviewStatus.declined) {
+        return InterviewStatus.missedInterview;
+      }
+    }
+    return parsedStatus;
   }
 
   Map<String, dynamic> toJson() {
@@ -93,7 +110,7 @@ class InterviewModel {
       'location': location,
       'interviewerName': interviewerName,
       'interviewerRole': interviewerRole,
-      'status': status.name,
+      'status': status == InterviewStatus.withdrawn ? 'withdraw' : status.name,
       'interviewType': interviewType,
       'meetingLink': meetingLink,
       'notes': notes,
@@ -110,6 +127,9 @@ class InterviewModel {
         s == 'missedinterview' ||
         s == 'no_show') {
       return InterviewStatus.missedInterview;
+    }
+    if (s == 'withdraw' || s == 'withdrawn') {
+      return InterviewStatus.withdrawn;
     }
     if (s == 'declined' ||
         s == 'rejected' ||

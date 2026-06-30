@@ -317,6 +317,7 @@ class InterviewDetailsView extends StatelessWidget {
   Widget _buildMeetingLinkButton(BuildContext context) {
     final isDeclined =
         interview.status == InterviewStatus.declined ||
+        interview.status == InterviewStatus.withdrawn ||
         interview.status == InterviewStatus.missedInterview;
 
     return GestureDetector(

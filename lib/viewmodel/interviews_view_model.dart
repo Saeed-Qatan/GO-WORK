@@ -104,12 +104,32 @@ class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
       await _ensureLocalStateLoaded();
       final fetched = await _repository.getInterviews();
       if (requestVersion != _sessionVersion) return;
+      bool localStatusesChanged = false;
       _interviews = fetched.map((interview) {
         if (_localStatuses.containsKey(interview.id)) {
-          return interview.copyWith(status: _localStatuses[interview.id]);
+          final localStatus = _localStatuses[interview.id]!;
+          final backendStatus = interview.status;
+
+          // If backend caught up, or progressed to a decisive terminal state,
+          // we stop overriding and trust the backend.
+          if (backendStatus == localStatus ||
+              backendStatus == InterviewStatus.declined ||
+              backendStatus == InterviewStatus.withdrawn ||
+              backendStatus == InterviewStatus.missedInterview) {
+            _localStatuses.remove(interview.id);
+            localStatusesChanged = true;
+            return interview;
+          }
+
+          return interview.copyWith(status: localStatus);
         }
         return interview;
       }).toList();
+
+      if (localStatusesChanged) {
+        // Run asynchronously so we don't block the mapping/rendering
+        _persistLocalStatuses();
+      }
       await _syncMissedInterviewsWithBackend(requestVersion);
       if (requestVersion != _sessionVersion) return;
       await _refreshArchivedSnapshotsFromFetchedInterviews();
@@ -200,6 +220,11 @@ class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
         normalized == 'missinginterview' ||
         normalized == 'missedinterview') {
       return InterviewStatus.missedInterview;
+    }
+    if (normalized == 'withdraw' ||
+        normalized == 'withdrawn' ||
+        normalized == 'cancel') {
+      return InterviewStatus.withdrawn;
     }
     return InterviewStatus.declined;
   }

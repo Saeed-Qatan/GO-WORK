@@ -96,7 +96,7 @@ class AppConstants {
   static const String lastNameLabel = 'الاسم الأخير';
   static const String jobTitleLabel = 'المسمى الوظيفي';
   static const String saveChanges = 'حفظ التغييرات';
-  static const String cancel = 'إلغاء';
+  static const String cancel = 'تراجع';
   static const String addSkill = 'إضافة + ';
   static const String cvSectionTitle = 'السيرة الذاتية';
   static const String cvUploadHint = 'اضغط للتحديث أو اسحب ملفاً جديداً';

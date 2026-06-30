@@ -68,6 +68,13 @@ class InterviewStatusMapper {
           color: AppColors.error,
           background: AppColors.errorBackground,
         );
+      case InterviewStatus.withdrawn:
+        return const InterviewStatusMeta(
+          label: 'منسحب',
+          icon: Icons.logout_rounded,
+          color: AppColors.warning,
+          background: AppColors.warningBackground,
+        );
       case InterviewStatus.missedInterview:
         return const InterviewStatusMeta(
           label: 'فائتة',
