@@ -11,7 +11,7 @@ class ApiConstants {
   static const String changePassword = 'Account/ChangePassword';
   static const String resendOtp = 'Account/ResendOtp';
   static const String resendLink = 'Account/ResendLink';
-
+  static const String deleteAccount = 'Account/Candidate/DeleteAccount';
   // ================= Profile Endpoints =================
   static const String getProfile = 'Account/Me';
   static const String updateProfile = 'Account/Candidate/UpdateProfile';
