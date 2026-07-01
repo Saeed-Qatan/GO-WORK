@@ -73,37 +73,6 @@ class HomeService {
       debugPrint('=== HOME ERROR: recommendations: $e ===');
     }
 
-    // 1b. Fallback: if no recommendations, fetch from Jobs/search
-    if (jobsList.isEmpty) {
-      try {
-        debugPrint(
-          '=== HOME: No recommendations, trying ${ApiConstants.searchJobs} ===',
-        );
-        final searchResp = await _apiClient.get(ApiConstants.searchJobs);
-        debugPrint('=== HOME: search keys: ${searchResp.keys.toList()} ===');
-
-        if (searchResp['data'] is List) {
-          jobsList = searchResp['data'];
-        } else if (searchResp['data'] is Map<String, dynamic>) {
-          final searchData = searchResp['data'] as Map<String, dynamic>;
-          if (searchData['items'] is List) {
-            jobsList = searchData['items'];
-          } else if (searchData['jobs'] is List) {
-            jobsList = searchData['jobs'];
-          }
-        } else if (searchResp['jobs'] is List) {
-          jobsList = searchResp['jobs'];
-        } else if (searchResp['items'] is List) {
-          jobsList = searchResp['items'];
-        }
-        debugPrint(
-          '=== HOME: Search fallback found ${jobsList.length} jobs ===',
-        );
-      } catch (e) {
-        debugPrint('=== HOME ERROR: search fallback: $e ===');
-      }
-    }
-
     // 2. If stats were NOT in the recommendations response, try individual endpoints
     if (!statsFromRecommendations) {
       debugPrint(
