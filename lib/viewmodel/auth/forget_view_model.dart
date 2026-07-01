@@ -58,10 +58,7 @@ class ForgetViewModel extends ChangeNotifier {
         // Navigate to Email Verification Page
         context.pushReplacement(
           AppRoutes.verifyEmail,
-          extra: EmailVerificationArgs(
-            email: email,
-            isForgetPassword: true,
-          ),
+          extra: EmailVerificationArgs(email: email, isForgetPassword: true),
         );
       }
     } catch (e) {
