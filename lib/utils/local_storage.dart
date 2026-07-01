@@ -115,6 +115,7 @@ class LocalStorage {
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     final preservedStrings = <String, String?>{};
+    final preservedBools = <String, bool?>{};
 
     for (final key in prefs.getKeys()) {
       if (key.startsWith('interview_local_statuses_') ||
@@ -126,6 +127,10 @@ class LocalStorage {
           key.startsWith('categoryId_')) {
         preservedStrings[key] = prefs.getString(key);
       }
+      // الـ Onboarding خاص بالجهاز — يظهر مرة واحدة فقط عند التثبيت
+      if (key == 'has_seen_seeker_onboarding') {
+        preservedBools[key] = prefs.getBool(key);
+      }
     }
 
     await prefs.clear();
@@ -134,11 +139,21 @@ class LocalStorage {
         await prefs.setString(entry.key, entry.value!);
       }
     }
+    for (final entry in preservedBools.entries) {
+      if (entry.value != null) {
+        await prefs.setBool(entry.key, entry.value!);
+      }
+    }
   }
 
   /// مسح **كل** البيانات المحلية بدون استثناء — يُستخدم عند حذف الحساب نهائياً.
+  /// يحتفظ فقط بمفتاح الـ Onboarding لأنه خاص بالجهاز وليس بالحساب.
   Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
+    final seenOnboarding = prefs.getBool('has_seen_seeker_onboarding');
     await prefs.clear();
+    if (seenOnboarding != null) {
+      await prefs.setBool('has_seen_seeker_onboarding', seenOnboarding);
+    }
   }
 }
