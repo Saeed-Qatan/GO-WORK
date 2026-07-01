@@ -6,6 +6,7 @@ import '../model/notification_model.dart';
 import '../model/profile_model.dart';
 import '../repository/home_repository.dart';
 import '../repository/profile_repository.dart';
+import '../repository/search_repository.dart';
 import '../services/push_notification_service.dart';
 import '../utils/app_error_parser.dart';
 import '../utils/search_text_normalizer.dart';
@@ -14,6 +15,7 @@ import 'session_resettable.dart';
 class HomeViewModel extends ChangeNotifier implements SessionResettable {
   final HomeRepository _repository;
   final ProfileRepository _profileRepository;
+  final SearchRepository _searchRepository;
   final PushNotificationService? _pushNotificationService;
   StreamSubscription<NotificationModel>? _pushSubscription;
   Future<void>? _activeFetch;
@@ -27,9 +29,11 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   HomeViewModel({
     HomeRepository? repository,
     ProfileRepository? profileRepository,
+    SearchRepository? searchRepository,
     PushNotificationService? pushNotificationService,
   }) : _repository = repository ?? HomeRepository(),
        _profileRepository = profileRepository ?? ProfileRepository(),
+       _searchRepository = searchRepository ?? SearchRepository(),
        _pushNotificationService = pushNotificationService {
     _subscribeToLiveNotifications();
   }
@@ -62,16 +66,17 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  /// Returns jobs filtered by the current search query (client-side).
+  Timer? _searchDebounce;
+  List<JobModel> _searchResults = [];
+  bool _isSearching = false;
+  bool get isSearching => _isSearching;
+
+  /// Returns jobs filtered by the current search query (backend search).
   List<JobModel> get filteredJobs {
     final query = SearchTextNormalizer.normalize(_searchQuery);
     if (query.isEmpty) return _jobs;
 
-    return _jobs
-        .where(
-          (job) => SearchTextNormalizer.normalize(job.title).contains(query),
-        )
-        .toList();
+    return _searchResults;
   }
 
   String _userName = '';
@@ -103,14 +108,15 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
 
     late final Future<void> fetch;
     final requestVersion = _sessionVersion;
-    fetch = _runFetchQueue(
-      initialForceRefresh: forceRefresh,
-      requestVersion: requestVersion,
-    ).whenComplete(() {
-      if (identical(_activeFetch, fetch)) {
-        _activeFetch = null;
-      }
-    });
+    fetch =
+        _runFetchQueue(
+          initialForceRefresh: forceRefresh,
+          requestVersion: requestVersion,
+        ).whenComplete(() {
+          if (identical(_activeFetch, fetch)) {
+            _activeFetch = null;
+          }
+        });
     _activeFetch = fetch;
     return fetch;
   }
@@ -217,7 +223,8 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
     final fetchedCoreStats = _ensureCoreStats(fetchedStats);
     final optimisticCount = _optimisticAppliedJobIds.length;
 
-    if (_optimisticReviewCountBase == null || _optimisticSentCountBase == null) {
+    if (_optimisticReviewCountBase == null ||
+        _optimisticSentCountBase == null) {
       _clearOptimisticApplicationStats();
       return;
     }
@@ -354,12 +361,49 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
   void onSearchChanged(String query) {
     if (_searchQuery == query) return;
     _searchQuery = query;
+    
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+
+    if (query.trim().isEmpty) {
+      _searchResults.clear();
+      _isSearching = false;
+      notifyListeners();
+      return;
+    }
+
+    _isSearching = true;
     notifyListeners();
+
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      _performSearch(query);
+    });
+  }
+
+  Future<void> _performSearch(String query) async {
+    try {
+      final results = await _searchRepository.searchJobs(query: query);
+      if (_searchQuery == query) {
+        _searchResults = results;
+      }
+    } catch (e) {
+      if (_searchQuery == query) {
+        _errorMessage = AppErrorParser.parse(e);
+        _searchResults = [];
+      }
+    } finally {
+      if (_searchQuery == query) {
+        _isSearching = false;
+        notifyListeners();
+      }
+    }
   }
 
   void clearSearch({bool notify = true}) {
     if (_searchQuery.isEmpty) return;
     _searchQuery = '';
+    _searchDebounce?.cancel();
+    _searchResults.clear();
+    _isSearching = false;
     if (notify) notifyListeners();
   }
 
@@ -373,6 +417,9 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
     _authoritativeStats = [];
     _jobs = [];
     _searchQuery = '';
+    _searchDebounce?.cancel();
+    _searchResults.clear();
+    _isSearching = false;
     _userName = '';
     _userProfileImage = '';
     _isLoading = false;
@@ -384,6 +431,7 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _pushSubscription?.cancel();
     super.dispose();
   }

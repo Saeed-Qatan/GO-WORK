@@ -255,11 +255,6 @@ class EditProfileViewModel extends ChangeNotifier {
       return false;
     }
 
-    if (_formData.skills.isEmpty) {
-      SnackbarService.showWarning('يرجى إضافة مهارة واحدة على الأقل');
-      return false;
-    }
-
     _isLoading = true;
     if (!_isDisposed) notifyListeners();
 

@@ -132,40 +132,31 @@ class SearchViewModel extends ChangeNotifier {
     skipAuth: true,
   );
 
-  Future<void> _fetchCountries() => _fetchFilterData(
-    ApiConstants.jobCountries,
-    (data) {
-      _countries = data;
-      _countryOptions = _mapOptions(_countries, allLabel);
-    },
-    (v) => _isCountriesLoading = v,
-  );
+  Future<void> _fetchCountries() =>
+      _fetchFilterData(ApiConstants.jobCountries, (data) {
+        _countries = data;
+        _countryOptions = _mapOptions(_countries, allLabel);
+      }, (v) => _isCountriesLoading = v);
 
-  Future<void> _fetchLocationTypes() => _fetchFilterData(
-    ApiConstants.locationTypes,
-    (data) {
-      _locationTypes = data;
-      _locationOptions = _mapOptions(
-        _locationTypes,
-        allLabel,
-        translate: StatusTranslator.workModeLabel,
-      );
-    },
-    (v) => _isLocationTypesLoading = v,
-  );
+  Future<void> _fetchLocationTypes() =>
+      _fetchFilterData(ApiConstants.locationTypes, (data) {
+        _locationTypes = data;
+        _locationOptions = _mapOptions(
+          _locationTypes,
+          allLabel,
+          translate: StatusTranslator.workModeLabel,
+        );
+      }, (v) => _isLocationTypesLoading = v);
 
-  Future<void> _fetchJobTypes() => _fetchFilterData(
-    ApiConstants.jobTypes,
-    (data) {
-      _jobTypes = data;
-      _jobTypeOptions = _mapOptions(
-        _jobTypes,
-        allLabel,
-        translate: StatusTranslator.jobTypeLabel,
-      );
-    },
-    (v) => _isJobTypesLoading = v,
-  );
+  Future<void> _fetchJobTypes() =>
+      _fetchFilterData(ApiConstants.jobTypes, (data) {
+        _jobTypes = data;
+        _jobTypeOptions = _mapOptions(
+          _jobTypes,
+          allLabel,
+          translate: StatusTranslator.jobTypeLabel,
+        );
+      }, (v) => _isJobTypesLoading = v);
 
   void onSearchChanged(String query) {
     _searchQuery = query;
@@ -258,19 +249,8 @@ class SearchViewModel extends ChangeNotifier {
     final selectedCountry = _selectedCountry;
     final selectedLocation = _selectedLocation;
     final selectedType = _selectedType;
-    // Client-side title fallback keeps visible results tied to job names
-    // without changing the backend search request.
-    final query = SearchTextNormalizer.normalize(_searchQuery);
 
     return jobs.where((job) {
-      // ── Text search (client-side fallback) ──────────────────────────────
-      if (query.isNotEmpty) {
-        final matchesText = SearchTextNormalizer.normalize(
-          job.title,
-        ).contains(query);
-        if (!matchesText) return false;
-      }
-
       // ── Dropdown filters ─────────────────────────────────────────────────
       if (selectedCategory != null &&
           !_matchesText(job.category, selectedCategory.rawValue)) {

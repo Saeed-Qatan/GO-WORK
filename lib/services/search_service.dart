@@ -16,7 +16,7 @@ class SearchService {
     String? country,
   }) async {
     final queryParams = <String, String>{};
-    _addParam(queryParams, 'query', query);
+    _addParam(queryParams, 'search', query);
     _addParam(queryParams, 'category', category);
     _addParam(queryParams, 'locationType', workMode);
     _addParam(queryParams, 'jobType', type);
