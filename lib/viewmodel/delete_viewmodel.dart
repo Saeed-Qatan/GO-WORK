@@ -39,8 +39,8 @@ class DeleteAccountViewModel extends ChangeNotifier {
       final result = await _repository.deleteAccount();
       debugPrint('=== DELETE ACCOUNT SUCCESS: ${result.message} ===');
 
-      // مسح كل بيانات الجلسة المحلية
-      await _storage.clear();
+      // مسح كل بيانات الجلسة المحلية بدون استثناء (حذف الحساب نهائياً)
+      await _storage.clearAll();
 
       _isDeleted = true;
     } catch (e) {

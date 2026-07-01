@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gowork/routing/app_router.dart';
 import 'package:gowork/utils/snackbar_service.dart';
+import 'package:gowork/utils/session_state_reset.dart';
 
 
 /// زر حذف الحساب — نفس تصميم LogoutButton تماماً
@@ -119,6 +120,8 @@ class _DeleteAccountButtonContent extends StatelessWidget {
     // ③ معالجة النتيجة
     if (vm.isDeleted) {
       SnackbarService.showSuccess('تم حذف الحساب بنجاح');
+      // مسح جميع بيانات الجلسة من الذاكرة (ViewModels)
+      resetSessionState(context);
       context.go(AppRoutes.login);
     } else if (vm.errorMessage != null) {
       SnackbarService.showError(vm.errorMessage!);

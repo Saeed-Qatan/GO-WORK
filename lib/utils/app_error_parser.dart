@@ -197,7 +197,7 @@ class AppErrorParser {
 
     if (lower.contains('user not found') ||
         lower.contains('account not found')) {
-      return 'لم يتم العثور على الحساب';
+      return 'البريد الالكتروني أو كلمة المرور غير صحيحة';
     }
 
     if (lower.contains('current password') &&

@@ -135,4 +135,10 @@ class LocalStorage {
       }
     }
   }
+
+  /// مسح **كل** البيانات المحلية بدون استثناء — يُستخدم عند حذف الحساب نهائياً.
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }
