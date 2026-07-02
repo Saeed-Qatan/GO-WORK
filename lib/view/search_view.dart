@@ -1,280 +1,290 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
-import '../viewmodel/search_view_model.dart';
-import '../viewmodel/job_application_state_view_model.dart';
-import '../widget/search/custom_search_header.dart';
-import '../widget/search/filter_dropdown.dart';
-import '../widget/search/search_job_card.dart';
-import '../theme/app_colors.dart';
-import '../routing/app_router.dart';
-import '../widget/common/animated_empty_state.dart';
+import 'package:flutter/foundation.dart';
+import '../core/constants/api_constants.dart';
 import '../model/search/filter_option.dart';
+import '../model/home/home_model.dart';
+import '../repository/search_repository.dart';
+import '../utils/api_storage.dart';
+import '../utils/app_error_parser.dart';
+import '../utils/status_translator.dart';
 
-class SearchView extends StatefulWidget {
-  const SearchView({super.key});
+class SearchViewModel extends ChangeNotifier {
+  static const String allLabel = 'الكل';
+  static const String allCategoriesLabel = 'جميع المجالات';
 
-  @override
-  State<SearchView> createState() => _SearchViewState();
-}
+  final SearchRepository _repository = SearchRepository();
+  final ApiClient _apiClient = ApiClient();
+  bool _isDisposed = false;
 
-class _SearchViewState extends State<SearchView> {
-  final TextEditingController _searchController = TextEditingController();
+  List<JobModel> _jobs = [];
+  List<JobModel> get jobs => _jobs;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> _countries = [];
+  List<Map<String, dynamic>> _locationTypes = [];
+  List<Map<String, dynamic>> _jobTypes = [];
+  List<FilterOption> _categoryOptions = [];
+  List<FilterOption> _countryOptions = [];
+  List<FilterOption> _locationOptions = [];
+  List<FilterOption> _jobTypeOptions = [];
+
+  bool _isCategoriesLoading = false;
+  bool _isCountriesLoading = false;
+  bool _isLocationTypesLoading = false;
+  bool _isJobTypesLoading = false;
+
+  bool get isCategoriesLoading => _isCategoriesLoading;
+  bool get isCountriesLoading => _isCountriesLoading;
+  bool get isLocationTypesLoading => _isLocationTypesLoading;
+  bool get isJobTypesLoading => _isJobTypesLoading;
+
+  List<FilterOption> get categoryOptions => _categoryOptions;
+  List<FilterOption> get countryOptions => _countryOptions;
+  List<FilterOption> get locationOptions => _locationOptions;
+  List<FilterOption> get jobTypeOptions => _jobTypeOptions;
+
+  String _searchQuery = '';
+  FilterOption? _selectedCategory;
+  FilterOption? _selectedLocation;
+  FilterOption? _selectedType;
+  FilterOption? _selectedCountry;
+  int _searchRequestId = 0;
+
+  FilterOption? get selectedCategory => _selectedCategory;
+  FilterOption? get selectedLocation => _selectedLocation;
+  FilterOption? get selectedType => _selectedType;
+  FilterOption? get selectedCountry => _selectedCountry;
+
+  String _sortBy = 'date';
+  String get sortBy => _sortBy;
+
+  SearchViewModel() {
+    _fetchAllFilters();
+    searchJobs();
+  }
+
+  Future<void> _fetchAllFilters() async {
+    _fetchCategories();
+    _fetchCountries();
+    _fetchLocationTypes();
+    _fetchJobTypes();
+  }
+
+  Future<void> _fetchFilterData(
+    String endpoint,
+    void Function(List<Map<String, dynamic>>) onSuccess,
+    void Function(bool) setLoading, {
+    bool skipAuth = false,
+  }) async {
+    if (_isDisposed) return;
+    setLoading(true);
+    if (!_isDisposed) notifyListeners();
+
+    try {
+      final response = await _apiClient.get(endpoint, skipAuth: skipAuth);
+      List<dynamic>? list;
+
+      if (response['data'] is List) {
+        list = response['data'] as List<dynamic>;
+      } else if (response.containsKey('success') && response['data'] is List) {
+        list = response['data'] as List<dynamic>;
+      }
+
+      if (list != null && list.isNotEmpty) {
+        // مهم: نحتفظ بالـ id لأنه هو اللي لازم يرسل للـ backend عند الفلترة،
+        // الـ name يستخدم فقط للعرض.
+        final parsed = list.map((item) {
+          return <String, dynamic>{
+            'id': (item['id'] ?? item['Id'] ?? item['code'] ?? '').toString(),
+            'name':
+                (item['name'] ??
+                        item['Name'] ??
+                        item['title'] ??
+                        item['Title'] ??
+                        '')
+                    .toString(),
+          };
+        }).toList();
+        onSuccess(parsed);
+      } else {
+        onSuccess([]);
+      }
+    } catch (e) {
+      debugPrint('Error fetching filter data ($endpoint): $e');
+      onSuccess([]);
+    } finally {
+      setLoading(false);
+      if (!_isDisposed) notifyListeners();
+    }
+  }
+
+  Future<void> _fetchCategories() => _fetchFilterData(
+    ApiConstants.jobCategories,
+    (data) {
+      _categories = data;
+      _categoryOptions = _mapOptions(_categories, allCategoriesLabel);
+    },
+    (v) => _isCategoriesLoading = v,
+    skipAuth: true,
+  );
+
+  Future<void> _fetchCountries() =>
+      _fetchFilterData(ApiConstants.jobCountries, (data) {
+        _countries = data;
+        _countryOptions = _mapOptions(_countries, allLabel);
+      }, (v) => _isCountriesLoading = v);
+
+  Future<void> _fetchLocationTypes() =>
+      _fetchFilterData(ApiConstants.locationTypes, (data) {
+        _locationTypes = data;
+        _locationOptions = _mapOptions(
+          _locationTypes,
+          allLabel,
+          translate: StatusTranslator.workModeLabel,
+        );
+      }, (v) => _isLocationTypesLoading = v);
+
+  Future<void> _fetchJobTypes() =>
+      _fetchFilterData(ApiConstants.jobTypes, (data) {
+        _jobTypes = data;
+        _jobTypeOptions = _mapOptions(
+          _jobTypes,
+          allLabel,
+          translate: StatusTranslator.jobTypeLabel,
+        );
+      }, (v) => _isJobTypesLoading = v);
+
+  void onSearchChanged(String query) {
+    _searchQuery = query;
+    searchJobs();
+  }
+
+  void setCategory(FilterOption? value) {
+    _selectedCategory = value;
+    searchJobs();
+  }
+
+  void setLocation(FilterOption? value) {
+    _selectedLocation = value;
+    searchJobs();
+  }
+
+  void setType(FilterOption? value) {
+    _selectedType = value;
+    searchJobs();
+  }
+
+  void setCountry(FilterOption? value) {
+    _selectedCountry = value;
+    searchJobs();
+  }
+
+  void setSortBy(String sortBy) {
+    _sortBy = sortBy;
+    _applySorting();
+    if (!_isDisposed) notifyListeners();
+  }
+
+  Future<void> searchJobs() async {
+    if (_isDisposed) return;
+    final requestId = ++_searchRequestId;
+    _isLoading = true;
+    _errorMessage = null;
+    _debugLog('=== SEARCH VM: searchJobs start ===');
+    _debugLog(
+      '=== SEARCH VM: query="$_searchQuery", categoryId="${_selectedCategory?.id}", '
+      'countryId="${_selectedCountry?.id}", locationType="${_selectedLocation?.rawValue}", '
+      'jobType="${_selectedType?.rawValue}" ===',
+    );
+    notifyListeners();
+
+    try {
+      // category/country: جداول حقيقية بـ id رقمي → نرسل الـ id.
+      // jobType/locationType: enums ثابتة (FullTime, Remote, ...) → نرسل الاسم
+      // الإنجليزي الخام (rawValue) نفسه لأنه هو قيمة الـ enum المتوقعة بالـ backend.
+      // لا يوجد أي فلترة محلية إضافية بعد هذا الاستدعاء — كلها من السيرفر.
+      final jobs = await _repository.searchJobs(
+        query: _searchQuery,
+        categoryId: _selectedCategory?.id,
+        countryId: _selectedCountry?.id,
+        locationType: _selectedLocation?.rawValue,
+        jobType: _selectedType?.rawValue,
+      );
+      if (_isDisposed || requestId != _searchRequestId) return;
+      _jobs = jobs;
+      _applySorting();
+      _debugLog('=== SEARCH VM: jobs loaded=${_jobs.length} ===');
+    } catch (e) {
+      if (_isDisposed || requestId != _searchRequestId) return;
+      _errorMessage = AppErrorParser.parse(e);
+      _debugLog(
+        '=== SEARCH VM ERROR (${e.runtimeType}): $e | parsed=$_errorMessage ===',
+      );
+      _jobs = [];
+    } finally {
+      if (!_isDisposed && requestId == _searchRequestId) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  void _applySorting() {
+    if (_sortBy == 'date') {
+      _jobs.sort((a, b) {
+        final aDate = DateTime.tryParse(a.postedDate ?? '') ?? DateTime(2000);
+        final bDate = DateTime.tryParse(b.postedDate ?? '') ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+    } else if (_sortBy == 'salary') {
+      _jobs.sort((a, b) {
+        final aSalary = double.tryParse(a.maxSalary) ?? 0.0;
+        final bSalary = double.tryParse(b.maxSalary) ?? 0.0;
+        return bSalary.compareTo(aSalary);
+      });
+    }
+  }
+
+  List<FilterOption> _mapOptions(
+    List<Map<String, dynamic>> items,
+    String defaultOption, {
+    String Function(String value)? translate,
+  }) {
+    if (items.isEmpty) return [];
+
+    final seen = <String>{};
+    final options = <FilterOption>[];
+    for (final item in items) {
+      final rawId = item['id']?.toString() ?? '';
+      final rawName = item['name']?.toString() ?? '';
+      if (rawName.trim().isEmpty || rawId.trim().isEmpty) continue;
+
+      final displayName = translate?.call(rawName) ?? rawName;
+      final label = displayName.isEmpty ? rawName : displayName;
+      if (label == defaultOption) continue;
+
+      if (seen.add(rawId)) {
+        options.add(FilterOption(label: label, rawValue: rawName, id: rawId));
+      }
+    }
+
+    return options;
+  }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _isDisposed = true;
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SearchViewModel(),
-      // Builder separates the provider scope from the consumer scope so that
-      // CustomSearchHeader (and its TextField) is NOT inside Consumer and
-      // therefore does NOT rebuild on every notifyListeners() call. Without
-      // this, each keystroke triggers _isLoading = true → notifyListeners() →
-      // Consumer rebuild → TextField recreated → focus lost.
-      child: Builder(
-        builder: (context) {
-          // Read once — the callback ref is stable and causes no rebuilds.
-          final viewModel = context.read<SearchViewModel>();
-
-          return Scaffold(
-            backgroundColor: const Color(0xFFF5F5F5),
-            body: Column(
-              children: [
-                // Header lives OUTSIDE Consumer — never rebuilt during search.
-                CustomSearchHeader(
-                  searchController: _searchController,
-                  onSearchChanged: viewModel.onSearchChanged,
-                  onSubmitted: viewModel.onSearchChanged,
-                  onFilterTap: () {
-                    // Logic to show advanced filters or bottom sheet if needed
-                  },
-                ),
-
-                // Only the results / filters section rebuilds on ViewModel changes.
-                Expanded(
-                  child: Consumer<SearchViewModel>(
-                    builder: (context, viewModel, child) {
-                      return CustomScrollView(
-                        cacheExtent: 800,
-                        slivers: [
-                          SliverPadding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            sliver: SliverToBoxAdapter(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 24),
-                                  _buildFilters(viewModel),
-                                  const SizedBox(height: 24),
-                                  _buildSortAndCount(context, viewModel),
-                                  const SizedBox(height: 16),
-                                  if (viewModel.isLoading)
-                                    const Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(32.0),
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    )
-                                  else if (viewModel.errorMessage != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 64.0),
-                                      child: AnimatedEmptyState(
-                                        icon: Icons.error_outline_rounded,
-                                        title: 'حدث خطأ',
-                                        subtitle: viewModel.errorMessage!,
-                                      ),
-                                    )
-                                  else if (viewModel.jobs.isEmpty)
-                                    const Padding(
-                                      padding: EdgeInsets.only(top: 64.0),
-                                      child: AnimatedEmptyState(
-                                        icon: Icons.search_off_rounded,
-                                        title: 'لا توجد نتائج',
-                                        subtitle:
-                                            'لم نعثر على وظائف تطابق معايير البحث الخاصة بك.\nجرب تغيير الفلاتر أو كلمات البحث.',
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (!viewModel.isLoading &&
-                              viewModel.errorMessage == null &&
-                              viewModel.jobs.isNotEmpty)
-                            Consumer<JobApplicationStateViewModel>(
-                              builder: (context, appState, child) {
-                                return SliverPadding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                  ),
-                                  sliver: SliverList.builder(
-                                    itemCount: viewModel.jobs.length,
-                                    itemBuilder: (context, index) {
-                                      final jobItem = viewModel.jobs[index];
-                                      final resolvedJob = appState.resolveJob(
-                                        jobItem,
-                                      );
-                                      return SearchJobCard(
-                                        key: ValueKey(resolvedJob.id),
-                                        job: resolvedJob,
-                                        isUrgent: index == 0,
-                                        onTap: () {
-                                          context.push(
-                                            AppRoutes.jobDetails,
-                                            extra: resolvedJob,
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFilters(SearchViewModel viewModel) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: FilterDropdown(
-                label: 'المجال',
-                hint: 'جميع المجالات',
-                value: viewModel.selectedCategory,
-                items: viewModel.isCategoriesLoading
-                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
-                    : viewModel.categoryOptions,
-                onChanged: viewModel.setCategory,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: FilterDropdown(
-                label: 'مكان العمل',
-                hint: 'الكل',
-                value: viewModel.selectedLocation,
-                items: viewModel.isLocationTypesLoading
-                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
-                    : viewModel.locationOptions,
-                onChanged: viewModel.setLocation,
-                showSearch: false,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: FilterDropdown(
-                label: 'الدولة',
-                hint: 'الكل',
-                value: viewModel.selectedCountry,
-                items: viewModel.isCountriesLoading
-                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
-                    : viewModel.countryOptions,
-                onChanged: viewModel.setCountry,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: FilterDropdown(
-                label: 'نوع الوظيفة',
-                hint: 'الكل',
-                value: viewModel.selectedType,
-                items: viewModel.isJobTypesLoading
-                    ? [FilterOption(label: 'جاري التحميل...', rawValue: '')]
-                    : viewModel.jobTypeOptions,
-                onChanged: viewModel.setType,
-                showSearch: false,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSortAndCount(BuildContext context, SearchViewModel viewModel) {
-    return Row(
-      children: [
-        PopupMenuButton<String>(
-          onSelected: viewModel.setSortBy,
-          offset: const Offset(0, 40),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'date',
-              child: Text(
-                'حسب التاريخ (الأحدث)',
-                style: TextStyle(
-                  color: viewModel.sortBy == 'date'
-                      ? AppColors.primary
-                      : AppColors.textPrimary,
-                  fontWeight: viewModel.sortBy == 'date'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-            ),
-            PopupMenuItem(
-              value: 'salary',
-              child: Text(
-                'حسب الراتب (الأعلى)',
-                style: TextStyle(
-                  color: viewModel.sortBy == 'salary'
-                      ? AppColors.primary
-                      : AppColors.textPrimary,
-                  fontWeight: viewModel.sortBy == 'salary'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-            ),
-          ],
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(Icons.sort, color: AppColors.textSecondary),
-          ),
-        ),
-        const Spacer(),
-        Text(
-          'تم العثور على ${viewModel.jobs.length} وظيفة',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
+  void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint(message);
+    }
   }
 }

@@ -10,17 +10,23 @@ class SearchService {
 
   Future<List<dynamic>> searchJobs({
     String? query,
-    String? category,
-    String? workMode,
-    String? type,
-    String? country,
+    String? categoryId,
+    String? countryId,
+    String? locationType,
+    String? jobType,
   }) async {
     final queryParams = <String, String>{};
     _addParam(queryParams, 'search', query);
-    _addParam(queryParams, 'category', category);
-    _addParam(queryParams, 'locationType', workMode);
-    _addParam(queryParams, 'jobType', type);
-    _addParam(queryParams, 'country', country);
+    // ✅ أسماء الـ query keys مؤكدة من الباك إند: categories, countries,
+    // jobTypes, locationTypes (plural camelCase — مطابقة لأسماء endpoints
+    // الفلاتر: Jobs/countries, Jobs/job-types, Jobs/location-types).
+    // categories/countries: القيمة id رقمي (جدول حقيقي بقاعدة البيانات).
+    _addParam(queryParams, 'categories', categoryId);
+    _addParam(queryParams, 'countries', countryId);
+    // jobTypes/locationTypes: القيمة اسم الـ enum الإنجليزي كما هو
+    // (FullTime, PartTime, Contract, Internship / OnSite, Remote, Hybrid).
+    _addParam(queryParams, 'locationTypes', locationType);
+    _addParam(queryParams, 'jobTypes', jobType);
 
     final endpoint = _buildEndpoint(queryParams);
     _debugLog('=== SEARCH SERVICE: GET $endpoint ===');

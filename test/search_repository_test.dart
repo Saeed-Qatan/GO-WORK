@@ -37,10 +37,10 @@ void main() {
 
       await repository.searchJobs(
         query: 'Backend Developer',
-        category: 'تطوير البرمجيات',
-        workMode: 'OnSite',
-        type: 'FullTime',
-        country: 'اليمن',
+        categoryId: 'تطوير البرمجيات',
+        locationType: 'OnSite',
+        jobType: 'FullTime',
+        countryId: 'اليمن',
       );
 
       final endpoint = Uri.parse(client.requestedEndpoint!);

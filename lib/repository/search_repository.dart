@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import '../model/home/home_model.dart';
 import '../services/search_service.dart';
 import '../utils/api_storage.dart';
@@ -11,18 +11,18 @@ class SearchRepository {
 
   Future<List<JobModel>> searchJobs({
     String? query,
-    String? category,
-    String? workMode,
-    String? type,
-    String? country,
+    String? categoryId,
+    String? countryId,
+    String? locationType,
+    String? jobType,
   }) async {
     try {
       final rawJobs = await _service.searchJobs(
         query: query,
-        category: category,
-        workMode: workMode,
-        type: type,
-        country: country,
+        categoryId: categoryId,
+        countryId: countryId,
+        locationType: locationType,
+        jobType: jobType,
       );
       final jobs = _parseJobs(rawJobs);
       _debugLog('Search repository parsed count: ${jobs.length}');

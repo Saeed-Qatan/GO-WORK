@@ -203,10 +203,10 @@ class SearchViewModel extends ChangeNotifier {
     try {
       final jobs = await _repository.searchJobs(
         query: _searchQuery,
-        category: _selectedCategory?.rawValue,
-        workMode: _selectedLocation?.rawValue,
-        type: _selectedType?.rawValue,
-        country: _selectedCountry?.rawValue,
+        categoryId: _selectedCategory?.rawValue,
+        locationType: _selectedLocation?.rawValue,
+        jobType: _selectedType?.rawValue,
+        countryId: _selectedCountry?.rawValue,
       );
       if (_isDisposed || requestId != _searchRequestId) return;
       _jobs = _applyClientFilters(jobs);
