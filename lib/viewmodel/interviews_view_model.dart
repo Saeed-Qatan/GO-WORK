@@ -20,7 +20,6 @@ class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
       'deleted_interview_ids';
   static const String _archivedInterviewsStorageKeyPrefix =
       'archived_interviews';
-  static const String _missedInterviewAction = 'MissedInterview';
 
   final IInterviewsRepository _repository;
   final LocalStorage _storage;
@@ -113,9 +112,9 @@ class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
           // If backend caught up, or progressed to a decisive terminal state,
           // we stop overriding and trust the backend.
           if (backendStatus == localStatus ||
-              backendStatus == InterviewStatus.declined ||
+              backendStatus == InterviewStatus.cancelled ||
               backendStatus == InterviewStatus.withdrawn ||
-              backendStatus == InterviewStatus.missedInterview) {
+              backendStatus == InterviewStatus.missingInterview) {
             _localStatuses.remove(interview.id);
             localStatusesChanged = true;
             return interview;
@@ -130,7 +129,7 @@ class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
         // Run asynchronously so we don't block the mapping/rendering
         _persistLocalStatuses();
       }
-      await _syncMissedInterviewsWithBackend(requestVersion);
+
       if (requestVersion != _sessionVersion) return;
       await _refreshArchivedSnapshotsFromFetchedInterviews();
     } catch (e) {
@@ -219,59 +218,16 @@ class InterviewsViewModel extends ChangeNotifier implements SessionResettable {
     if (normalized == 'missinterview' ||
         normalized == 'missinginterview' ||
         normalized == 'missedinterview') {
-      return InterviewStatus.missedInterview;
+      return InterviewStatus.missingInterview;
     }
     if (normalized == 'withdraw' ||
         normalized == 'withdrawn' ||
         normalized == 'cancel') {
       return InterviewStatus.withdrawn;
     }
-    return InterviewStatus.declined;
+    return InterviewStatus.cancelled;
   }
 
-  Future<void> _syncMissedInterviewsWithBackend(int requestVersion) async {
-    final missedCandidates = _interviews
-        .where((interview) => interview.shouldMarkAsMissed)
-        .toList();
-    if (missedCandidates.isEmpty) return;
-
-    for (final interview in missedCandidates) {
-      if (requestVersion != _sessionVersion) return;
-      _interviews = _interviews.map((item) {
-        return item.id == interview.id
-            ? item.copyWith(status: InterviewStatus.missedInterview)
-            : item;
-      }).toList();
-    }
-
-    var shouldPersist = false;
-    for (final interview in missedCandidates) {
-      if (requestVersion != _sessionVersion) return;
-
-      try {
-        final response = await _repository.submitInterviewAction(
-          interview.id,
-          _missedInterviewAction,
-        );
-        if (requestVersion != _sessionVersion) return;
-
-        if (response['success'] == true) {
-          _localStatuses[interview.id] = InterviewStatus.missedInterview;
-          shouldPersist = true;
-        } else {
-          debugPrint(
-            'Failed to mark missed interview ${interview.id}: $response',
-          );
-        }
-      } catch (e) {
-        debugPrint('Failed to mark missed interview ${interview.id}: $e');
-      }
-    }
-
-    if (shouldPersist && requestVersion == _sessionVersion) {
-      await _persistLocalStatuses();
-    }
-  }
 
   Future<void> _ensureLocalStateLoaded() async {
     final scope = await _currentStorageScope();

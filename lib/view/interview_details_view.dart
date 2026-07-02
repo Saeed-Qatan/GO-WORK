@@ -316,9 +316,9 @@ class InterviewDetailsView extends StatelessWidget {
   /// and shows an explanatory snackbar instead of opening the link.
   Widget _buildMeetingLinkButton(BuildContext context) {
     final isDeclined =
-        interview.status == InterviewStatus.declined ||
+        interview.status == InterviewStatus.cancelled ||
         interview.status == InterviewStatus.withdrawn ||
-        interview.status == InterviewStatus.missedInterview;
+        interview.status == InterviewStatus.missingInterview;
 
     return GestureDetector(
       onTap: () {
@@ -326,7 +326,7 @@ class InterviewDetailsView extends StatelessWidget {
           SnackbarService.showError(
             'لا يمكن الانضمام للمقابلة — تم رفض المقابلة',
           );
-          if (interview.status == InterviewStatus.missedInterview) {
+          if (interview.status == InterviewStatus.missingInterview) {
             SnackbarService.showError(
               'لا يمكن الانضمام للمقابلة - المقابلة فائتة',
             );

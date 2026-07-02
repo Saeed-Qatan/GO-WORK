@@ -47,13 +47,6 @@ class InterviewStatusMapper {
   /// Maps [InterviewStatus] → [InterviewStatusMeta].
   static InterviewStatusMeta forStatus(InterviewStatus status) {
     switch (status) {
-      case InterviewStatus.confirmed:
-        return const InterviewStatusMeta(
-          label: AppConstants.confirmed,
-          icon: Icons.verified_rounded,
-          color: AppColors.success,
-          background: AppColors.successBackground,
-        );
       case InterviewStatus.scheduled:
         return const InterviewStatusMeta(
           label: AppConstants.scheduled,
@@ -61,10 +54,31 @@ class InterviewStatusMapper {
           color: AppColors.info,
           background: AppColors.infoBackground,
         );
-      case InterviewStatus.declined:
+      case InterviewStatus.completed:
+        return const InterviewStatusMeta(
+          label: 'مكتملة',
+          icon: Icons.check_circle_rounded,
+          color: AppColors.success,
+          background: AppColors.successBackground,
+        );
+      case InterviewStatus.cancelled:
         return const InterviewStatusMeta(
           label: 'مرفوضة',
           icon: Icons.cancel_rounded,
+          color: AppColors.error,
+          background: AppColors.errorBackground,
+        );
+      case InterviewStatus.confirmed:
+        return const InterviewStatusMeta(
+          label: AppConstants.confirmed,
+          icon: Icons.verified_rounded,
+          color: AppColors.success,
+          background: AppColors.successBackground,
+        );
+      case InterviewStatus.missingInterview:
+        return const InterviewStatusMeta(
+          label: 'فائتة',
+          icon: Icons.event_busy_rounded,
           color: AppColors.error,
           background: AppColors.errorBackground,
         );
@@ -72,20 +86,6 @@ class InterviewStatusMapper {
         return const InterviewStatusMeta(
           label: 'منسحب',
           icon: Icons.logout_rounded,
-          color: AppColors.warning,
-          background: AppColors.warningBackground,
-        );
-      case InterviewStatus.missedInterview:
-        return const InterviewStatusMeta(
-          label: 'فائتة',
-          icon: Icons.event_busy_rounded,
-          color: AppColors.error,
-          background: AppColors.errorBackground,
-        );
-      case InterviewStatus.waiting:
-        return const InterviewStatusMeta(
-          label: AppConstants.waitingConfirmation,
-          icon: Icons.hourglass_top_rounded,
           color: AppColors.warning,
           background: AppColors.warningBackground,
         );

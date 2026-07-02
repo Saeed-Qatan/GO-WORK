@@ -22,8 +22,7 @@ class InterviewCard extends StatelessWidget {
     final statusMeta = InterviewStatusMapper.forStatus(interview.status);
     final typeMeta = InterviewStatusMapper.forType(interview.interviewType);
     final canRespond =
-        (interview.status == InterviewStatus.scheduled ||
-            interview.status == InterviewStatus.waiting) &&
+        (interview.status == InterviewStatus.scheduled) &&
         !interview.isPast;
 
     return Consumer<InterviewsViewModel>(

@@ -94,41 +94,7 @@ void main() {
     expect(interview.toJson()['status'], 'withdraw');
   });
 
-  test(
-    'past unconfirmed interviews are marked missed and synced to backend',
-    () async {
-      final pastInterview = _interview(
-        status: InterviewStatus.scheduled,
-        scheduledAt: DateTime.now().subtract(const Duration(minutes: 5)),
-      );
-      final repository = _FakeInterviewsRepository([pastInterview]);
-      final viewModel = InterviewsViewModel(repository: repository);
 
-      await viewModel.fetchInterviews();
-
-      expect(
-        viewModel.interviews.single.status,
-        InterviewStatus.missedInterview,
-      );
-      expect(repository.submitCount, 1);
-      expect(repository.submittedIds, ['interview-1']);
-      expect(repository.submittedActions, ['MissedInterview']);
-    },
-  );
-
-  test('past confirmed interviews are not marked missed', () async {
-    final confirmedPastInterview = _interview(
-      status: InterviewStatus.confirmed,
-      scheduledAt: DateTime.now().subtract(const Duration(minutes: 5)),
-    );
-    final repository = _FakeInterviewsRepository([confirmedPastInterview]);
-    final viewModel = InterviewsViewModel(repository: repository);
-
-    await viewModel.fetchInterviews();
-
-    expect(viewModel.interviews.single.status, InterviewStatus.confirmed);
-    expect(repository.submitCount, 0);
-  });
 
   test('missed interview status parses and displays as Arabic label', () {
     final interview = InterviewModel.fromJson({
@@ -136,7 +102,7 @@ void main() {
       'status': 'MissedInterview',
     });
 
-    expect(interview.status, InterviewStatus.missedInterview);
+    expect(interview.status, InterviewStatus.missingInterview);
     expect(InterviewStatusMapper.forStatus(interview.status).label, 'فائتة');
   });
 

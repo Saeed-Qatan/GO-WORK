@@ -1,12 +1,12 @@
 import '../utils/timezone_utils.dart';
 
 enum InterviewStatus {
-  confirmed,
   scheduled,
-  declined,
+  completed,
+  cancelled,
+  confirmed,
+  missingInterview,
   withdrawn,
-  missedInterview,
-  waiting,
 }
 
 class InterviewModel {
@@ -75,28 +75,14 @@ class InterviewModel {
       location: json['location'] ?? '',
       interviewerName: json['interviewerName'],
       interviewerRole: json['interviewerRole'],
-      status: _resolveStatus(
-        _parseStatus(json['status']?.toString()),
-        scheduledAt,
-      ),
+      status: _parseStatus(json['status']),
       interviewType: json['interviewType'],
       meetingLink: json['meetingLink'],
       notes: json['notes'],
     );
   }
 
-  static InterviewStatus _resolveStatus(
-      InterviewStatus parsedStatus, DateTime? scheduledAt) {
-    if (scheduledAt != null && scheduledAt.isBefore(DateTime.now())) {
-      // If the time has passed and the backend returned 'declined' (which covers 'rejected' from timeouts),
-      // we mark it as missed. We do not override 'waiting' or 'scheduled' here so that
-      // shouldMarkAsMissed can still trigger the backend sync for them.
-      if (parsedStatus == InterviewStatus.declined) {
-        return InterviewStatus.missedInterview;
-      }
-    }
-    return parsedStatus;
-  }
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -117,39 +103,39 @@ class InterviewModel {
     };
   }
 
-  static InterviewStatus _parseStatus(String? statusString) {
-    if (statusString == null) return InterviewStatus.waiting;
-    final s = statusString.trim().toLowerCase();
-    if (s == 'confirmed') return InterviewStatus.confirmed;
+  static InterviewStatus _parseStatus(dynamic statusVal) {
+    if (statusVal == null) return InterviewStatus.scheduled;
+    
+    // If it's an integer
+    if (statusVal is int || int.tryParse(statusVal.toString()) != null) {
+      final val = statusVal is int ? statusVal : int.parse(statusVal.toString());
+      switch (val) {
+        case 1: return InterviewStatus.scheduled;
+        case 2: return InterviewStatus.completed;
+        case 3: return InterviewStatus.cancelled;
+        case 6: return InterviewStatus.confirmed;
+        case 7: return InterviewStatus.missingInterview;
+        case 8: return InterviewStatus.withdrawn;
+      }
+    }
+
+    // Fallback for strings
+    final s = statusVal.toString().trim().toLowerCase();
     if (s == 'scheduled') return InterviewStatus.scheduled;
-    if (s == 'missinterview' ||
-        s == 'missinginterview' ||
-        s == 'missedinterview' ||
-        s == 'no_show') {
-      return InterviewStatus.missedInterview;
+    if (s == 'completed') return InterviewStatus.completed;
+    if (s == 'cancelled' || s == 'canceled') return InterviewStatus.cancelled;
+    if (s == 'confirmed' || s == 'confirmattendance') return InterviewStatus.confirmed;
+    if (s == 'missinginterview' || s == 'missedinterview' || s == 'missing_interview') {
+      return InterviewStatus.missingInterview;
     }
-    if (s == 'withdraw' || s == 'withdrawn') {
-      return InterviewStatus.withdrawn;
-    }
-    if (s == 'declined' ||
-        s == 'rejected' ||
-        s == 'cancelled' ||
-        s == 'not_attending') {
-      return InterviewStatus.declined;
-    }
-    if (s == 'waiting' || s == 'pending') return InterviewStatus.waiting;
-    return InterviewStatus.waiting;
+    if (s == 'withdrawn' || s == 'withdraw') return InterviewStatus.withdrawn;
+    
+    return InterviewStatus.scheduled; // Default fallback
   }
 
   bool get isPast {
     if (scheduledAt == null) return false;
     return scheduledAt!.isBefore(DateTime.now());
-  }
-
-  bool get shouldMarkAsMissed {
-    return isPast &&
-        (status == InterviewStatus.scheduled ||
-            status == InterviewStatus.waiting);
   }
 
   InterviewModel copyWith({InterviewStatus? status}) {
