@@ -81,7 +81,7 @@ class AppConstants {
       'أكمل ملفك الشخصي للحصول على أفضل الفرص';
   static const String uploadCvLabel = 'رفع السيرة الذاتية';
   static const String chooseCvFile = 'اختر ملف السيرة الذاتية';
-  static const String cvFileFormats = 'PDF, DOC أو DOCX (الحد الأقصى 10MB)';
+  static const String cvFileFormats = 'PDF فقط (الحد الأقصى 10MB)';
   static const String skillsLabel = 'المهارات';
   static const String addSkillHint = 'أضف مهارة جديدة...';
   static const String suggestedSkills = 'مهارات مقترحة:';
@@ -100,4 +100,5 @@ class AppConstants {
   static const String addSkill = 'إضافة + ';
   static const String cvSectionTitle = 'السيرة الذاتية';
   static const String cvUploadHint = 'اضغط للتحديث أو اسحب ملفاً جديداً';
+  static const String cvFormatHint = 'PDF فقط (الحد الأقصى 10MB)';
 }

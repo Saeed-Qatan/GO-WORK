@@ -163,9 +163,9 @@ class _RegisterCVPageState extends State<RegisterCVPage> {
                                   ),
                                   child: const Text("اختر ملف السيرة الذاتية"),
                                 ),
-                              const SizedBox(height: 8),
+                            const SizedBox(height: 8),
                               const Text(
-                                "(الحد الأقصى 10MB - PDF, DOC, DOCX)",
+                                "(الحد الأقصى 10 PDF فقط)",
                                 style: TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 12,

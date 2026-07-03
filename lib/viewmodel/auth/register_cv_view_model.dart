@@ -167,7 +167,7 @@ class RegisterCVViewModel extends ChangeNotifier {
   Future<void> pickCV() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'doc', 'docx'],
+      allowedExtensions: ['pdf'],
     );
 
     if (result?.files.single.path != null) {

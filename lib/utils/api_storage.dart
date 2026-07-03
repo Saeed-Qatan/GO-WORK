@@ -13,6 +13,11 @@ class ApiClient {
   late final Dio _dio;
   final SessionGuard _sessionGuard = SessionGuard();
   static bool _isOpeningNoInternet = false;
+  // ✅ حماية من التكرار: لو أكثر من طلب متوازي رجعوا 401 بنفس اللحظة
+  // (مثلاً 4-5 طلبات فلاتر متوازية بصفحة البحث)، كل واحد منهم كان يحاول
+  // يعمل clearAuth() + context.go(sessionExpired) بشكل مستقل — نفس مشكلة
+  // عدم الاستقرار اللي كانت موجودة بدون هذا الـ guard.
+  static bool _isHandlingSessionExpired = false;
 
   ApiClient() {
     _dio = Dio(
@@ -74,10 +79,7 @@ class ApiClient {
                 .sessionDecisionForUnauthorized(currentRoute: currentRoute);
 
             if (decision.shouldShowSessionExpired) {
-              await LocalStorage().clearAuth();
-              if (currentRoute != AppRoutes.sessionExpired) {
-                rootNavigatorKey.currentContext?.go(AppRoutes.sessionExpired);
-              }
+              await _handleSessionExpired(currentRoute);
 
               return handler.next(
                 e.copyWith(
@@ -417,6 +419,28 @@ class ApiClient {
     }
 
     return AppApiException(AppErrorParser.parse(e), data: e.message);
+  }
+
+  /// ينفّذ clearAuth() + التنقل لصفحة انتهاء الجلسة **مرة وحدة فقط**، حتى
+  /// لو وصلت عدة أخطاء 401 بنفس اللحظة من طلبات متوازية. أي طلب ثاني يوصل
+  /// أثناء التنفيذ يتجاهل التنقل (بس الرسالة نفسها لسا ترجع له بشكل طبيعي).
+  Future<void> _handleSessionExpired(String currentRoute) async {
+    if (_isHandlingSessionExpired) return;
+    _isHandlingSessionExpired = true;
+
+    try {
+      await LocalStorage().clearAuth();
+      if (currentRoute != AppRoutes.sessionExpired) {
+        rootNavigatorKey.currentContext?.go(AppRoutes.sessionExpired);
+      }
+    } finally {
+      // نفك القفل بعد تأخير بسيط بدل فورًا، عشان أي طلبات 401 متوازية
+      // ثانية من نفس الدفعة (اللي وصلت خلال نفس الميلي ثانية) تستفيد من
+      // نفس التنقل بدل ما تفتح نافذة جديدة تسمح بتنقل مكرر لاحقًا بالغلط.
+      Future.delayed(const Duration(milliseconds: 800), () {
+        _isHandlingSessionExpired = false;
+      });
+    }
   }
 
   void _openNoInternetIfNeeded() {
