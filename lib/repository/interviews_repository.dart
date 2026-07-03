@@ -34,13 +34,15 @@ class InterviewsRepository implements IInterviewsRepository {
 
     if (response['data']?['interviews'] != null) {
       return (response['data']['interviews'] as List)
-          .map((json) => InterviewModel.fromJson(json as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((json) => InterviewModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     }
 
     if (response['interviews'] != null) {
       return (response['interviews'] as List)
-          .map((json) => InterviewModel.fromJson(json as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((json) => InterviewModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     }
 

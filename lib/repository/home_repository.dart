@@ -2,22 +2,20 @@
 import '../model/home/home_model.dart';
 import '../services/home_service.dart';
 
-/// Repository that caches home data and provides it to the ViewModel.
+/// Repository that provides fresh home data to the ViewModel.
 class HomeRepository {
-  final HomeService _service = HomeService();
-
-  // Cache for home data to avoid duplicate API calls
-  Map<String, dynamic>? _cachedData;
+  final HomeService _service;
 
   // In-flight future to prevent concurrent duplicate requests
   Future<Map<String, dynamic>>? _activeFetch;
 
-  /// Fetch all home data at once (single request, shared across callers).
-  Future<Map<String, dynamic>> _fetchHomeData() async {
-    if (_cachedData != null) {
-      return _cachedData!;
-    }
+  HomeRepository({HomeService? service}) : _service = service ?? HomeService();
 
+  /// Fetch all home data at once.
+  ///
+  /// This intentionally does not persist results after completion. Home counts,
+  /// especially interviews, must reflect backend status changes immediately.
+  Future<Map<String, dynamic>> _fetchHomeData() async {
     // If a fetch is already in progress, wait for it instead of duplicating
     if (_activeFetch != null) {
       return _activeFetch!;
@@ -25,20 +23,18 @@ class HomeRepository {
 
     _activeFetch = _service.getHomeData();
     try {
-      _cachedData = await _activeFetch;
-      return _cachedData!;
+      return await _activeFetch!;
     } finally {
       _activeFetch = null;
     }
   }
 
-  /// Clear cache (call when refreshing data).
+  /// Cancels the shared in-flight reference so the next call starts fresh.
   void clearCache() {
-    _cachedData = null;
     _activeFetch = null;
   }
 
-  /// Returns parsed stat models from the cached home data.
+  /// Returns parsed stat models from fresh home data.
   Future<List<StatModel>> getStats() async {
     final data = await _fetchHomeData();
     if (data['stats'] != null && data['stats'] is List) {
@@ -49,7 +45,7 @@ class HomeRepository {
     return [];
   }
 
-  /// Returns parsed job models from the cached home data.
+  /// Returns parsed job models from fresh home data.
   Future<List<JobModel>> getRecommendedJobs() async {
     final data = await _fetchHomeData();
     if (data['jobs'] != null && data['jobs'] is List) {
@@ -66,13 +62,13 @@ class HomeRepository {
     return [];
   }
 
-  /// Returns the user's full name from the cached home data.
+  /// Returns the user's full name from fresh home data.
   Future<String> getUserName() async {
     final data = await _fetchHomeData();
     return data['seekerFullName']?.toString() ?? '';
   }
 
-  /// Returns the user's profile photo URL from the cached home data.
+  /// Returns the user's profile photo URL from fresh home data.
   Future<String> getProfilePhoto() async {
     final data = await _fetchHomeData();
     return data['seekerProfilePhoto']?.toString() ?? '';

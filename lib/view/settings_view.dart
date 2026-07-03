@@ -83,7 +83,7 @@ class SettingsView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             const LogoutButton(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             const DeleteAccountButton(),
           ],
         ),

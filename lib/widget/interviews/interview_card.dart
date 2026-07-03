@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +8,7 @@ import '../../model/interview_model.dart';
 import '../../routing/app_router.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/snackbar_service.dart';
+import '../../viewmodel/home_view_model.dart';
 import '../../viewmodel/interviews_view_model.dart';
 import 'interview_date_badge.dart';
 import 'interview_status_chip.dart';
@@ -308,6 +311,11 @@ class InterviewCard extends StatelessWidget {
     if (!context.mounted) return;
 
     if (success) {
+      final nextStatus = _statusForAction(action);
+      context.read<HomeViewModel>().handleInterviewStatusChanged(
+        previousStatus: interview.status,
+        nextStatus: nextStatus,
+      );
       SnackbarService.showSuccess(
         viewModel.successMessage ??
             (action == 'confirm'
@@ -320,6 +328,17 @@ class InterviewCard extends StatelessWidget {
             'تعذر تحديث حالة المقابلة، يرجى المحاولة مرة أخرى',
       );
     }
+  }
+
+  InterviewStatus _statusForAction(String action) {
+    final normalized = action.trim().toLowerCase();
+    if (normalized == 'confirm') return InterviewStatus.confirmed;
+    if (normalized == 'cancel' ||
+        normalized == 'withdraw' ||
+        normalized == 'withdrawn') {
+      return InterviewStatus.withdrawn;
+    }
+    return InterviewStatus.cancelled;
   }
 
   void _confirmDismiss(BuildContext context) {

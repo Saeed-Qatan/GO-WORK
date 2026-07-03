@@ -158,4 +158,6 @@ class ApplicationsRepository implements IApplicationsRepository {
 
     return null;
   }
+
+  
 }

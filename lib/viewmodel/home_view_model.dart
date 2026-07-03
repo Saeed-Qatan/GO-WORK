@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../model/interview_model.dart';
 import '../model/home/home_model.dart';
 import '../model/notification_model.dart';
 import '../model/profile_model.dart';
@@ -197,6 +198,36 @@ class HomeViewModel extends ChangeNotifier implements SessionResettable {
     }
 
     if (added) notifyListeners();
+    unawaited(fetchHomeData(forceRefresh: true));
+  }
+
+  void handleInterviewStatusChanged({
+    required InterviewStatus previousStatus,
+    required InterviewStatus nextStatus,
+  }) {
+    final delta =
+        (nextStatus == InterviewStatus.confirmed ? 1 : 0) -
+        (previousStatus == InterviewStatus.confirmed ? 1 : 0);
+
+    if (delta != 0) {
+      final coreStats = _ensureCoreStats(
+        _authoritativeStats.isEmpty ? _defaultStats() : _authoritativeStats,
+      );
+      final currentCount = _statCountIn(coreStats, StatType.interview);
+      final nextCount = (currentCount + delta).clamp(0, 1 << 31);
+
+      _authoritativeStats = coreStats.map((stat) {
+        if (stat.type != StatType.interview) return stat;
+        return StatModel(
+          count: nextCount.toString(),
+          label: stat.label,
+          type: stat.type,
+        );
+      }).toList();
+
+      notifyListeners();
+    }
+
     unawaited(fetchHomeData(forceRefresh: true));
   }
 

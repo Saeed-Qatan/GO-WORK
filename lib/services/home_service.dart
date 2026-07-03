@@ -1,135 +1,65 @@
 import 'package:flutter/foundation.dart';
+import 'package:gowork/model/interview_model.dart';
+
 import '../core/constants/api_constants.dart';
 import '../utils/api_storage.dart';
 
 /// Service responsible for fetching all data needed by the Home screen.
 class HomeService {
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
 
-  /// Fetches recommended jobs, user info, and stats from the backend.
-  /// Returns a map with keys: seekerFullName, seekerProfilePhoto, stats, jobs.
+  HomeService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+
+  /// Fetches recommended jobs, user info, and home stats.
+  ///
+  /// Interview count is always calculated from CandidateInterviews and only
+  /// counts InterviewStatus.confirmed. Recommendation stats are not trusted for
+  /// this number because they can be stale or count different statuses.
   Future<Map<String, dynamic>> getHomeData() async {
     List<dynamic> jobsList = [];
-    List<Map<String, String>> statsList = [];
     String userName = '';
     String profilePhoto = '';
-    int interviewsCount = 0;
     int pendingApps = 0;
     int totalApps = 0;
-    bool statsFromRecommendations = false;
 
-    // 1. Fetch recommended jobs (primary source for jobs + stats)
     try {
       debugPrint('=== HOME: Fetching ${ApiConstants.recommendedJobs} ===');
       final response = await _apiClient.get(ApiConstants.recommendedJobs);
-      debugPrint(
-        '=== HOME: recommendations keys: ${response.keys.toList()} ===',
-      );
+      final data = response['data'];
 
-      if (response.containsKey('data')) {
-        final data = response['data'];
-        debugPrint('=== HOME: data type: ${data.runtimeType} ===');
+      if (data is Map<String, dynamic>) {
+        userName = data['seekerFullName']?.toString() ?? '';
+        profilePhoto =
+            data['seekerProfilePhoto']?.toString() ??
+            data['profilPhotoUrl']?.toString() ??
+            '';
 
-        if (data is Map<String, dynamic>) {
-          debugPrint('=== HOME: data keys: ${data.keys.toList()} ===');
-
-          // Extract user info
-          userName = data['seekerFullName']?.toString() ?? '';
-          profilePhoto =
-              data['seekerProfilePhoto']?.toString() ??
-              data['profilPhotoUrl']?.toString() ??
-              '';
-
-          // Extract recommended jobs
-          if (data.containsKey('recommendations') &&
-              data['recommendations'] is List) {
-            jobsList = data['recommendations'];
-            debugPrint('=== HOME: Found ${jobsList.length} jobs ===');
-          }
-
-          // Extract stats from recommendations response (original approach)
-          if (data.containsKey('totalInterviewsCount') ||
-              data.containsKey('totalApplicationsCount') ||
-              data.containsKey('pendingReviewApplicationsCount')) {
-            interviewsCount = _toInt(data['totalInterviewsCount']);
-            pendingApps = _toInt(data['pendingReviewApplicationsCount']);
-            totalApps = _toInt(data['totalApplicationsCount']);
-            statsFromRecommendations = true;
-            debugPrint(
-              '=== HOME: Stats from recommendations: interviews=$interviewsCount, pending=$pendingApps, total=$totalApps ===',
-            );
-          }
-        } else if (data is List) {
-          jobsList = data;
-          debugPrint('=== HOME: data is List with ${data.length} items ===');
+        if (data['recommendations'] is List) {
+          jobsList = data['recommendations'] as List<dynamic>;
         }
-      } else if (response.containsKey('recommendations') &&
-          response['recommendations'] is List) {
-        jobsList = response['recommendations'];
-      } else if (response.containsKey('jobs') && response['jobs'] is List) {
-        jobsList = response['jobs'];
+
+        pendingApps = _toInt(data['pendingReviewApplicationsCount']);
+        totalApps = _toInt(data['totalApplicationsCount']);
+      } else if (data is List) {
+        jobsList = data;
+      } else if (response['recommendations'] is List) {
+        jobsList = response['recommendations'] as List<dynamic>;
+      } else if (response['jobs'] is List) {
+        jobsList = response['jobs'] as List<dynamic>;
       }
     } catch (e) {
       debugPrint('=== HOME ERROR: recommendations: $e ===');
     }
 
-    // 2. If stats were NOT in the recommendations response, try individual endpoints
-    if (!statsFromRecommendations) {
-      debugPrint(
-        '=== HOME: Stats not in recommendations, fetching individually ===',
-      );
+    final interviewsCount = await _fetchConfirmedInterviewsCount();
 
-      // Fetch interviews count
-      try {
-        final resp = await _apiClient.get(ApiConstants.interviews);
-        debugPrint('=== HOME: interviews keys: ${resp.keys.toList()} ===');
-        if (resp['data'] is List) {
-          interviewsCount = (resp['data'] as List).length;
-        } else if (resp['interviews'] is List) {
-          interviewsCount = (resp['interviews'] as List).length;
-        } else if (resp.containsKey('totalCount')) {
-          interviewsCount = _toInt(resp['totalCount']);
-        }
-        debugPrint('=== HOME: interviewsCount=$interviewsCount ===');
-      } catch (e) {
-        debugPrint('=== HOME ERROR: interviews: $e ===');
-      }
-
-      // Fetch applications count
-      try {
-        final resp = await _apiClient.get(ApiConstants.applications);
-        debugPrint('=== HOME: applications keys: ${resp.keys.toList()} ===');
-        List<dynamic> apps = [];
-        if (resp['data'] is List) {
-          apps = resp['data'];
-        } else if (resp['applications'] is List) {
-          apps = resp['applications'];
-        }
-        totalApps = apps.length;
-        for (var app in apps) {
-          final s = app['status']?.toString().toLowerCase() ?? '';
-          final statusId = app['statusId']?.toString().toLowerCase() ?? '';
-          final statusValue =
-              app['statusValue']?.toString().toLowerCase() ?? '';
-          if (_isPendingReviewStatus(s) ||
-              _isPendingReviewStatus(statusId) ||
-              _isPendingReviewStatus(statusValue)) {
-            pendingApps++;
-          }
-        }
-        if (totalApps == 0 && resp.containsKey('totalCount')) {
-          totalApps = _toInt(resp['totalCount']);
-        }
-        debugPrint(
-          '=== HOME: totalApps=$totalApps, pendingApps=$pendingApps ===',
-        );
-      } catch (e) {
-        debugPrint('=== HOME ERROR: applications: $e ===');
-      }
+    if (totalApps == 0 && pendingApps == 0) {
+      final applicationCounts = await _fetchApplicationCounts();
+      pendingApps = applicationCounts.pending;
+      totalApps = applicationCounts.total;
     }
 
-    // Build stats list
-    statsList = [
+    final statsList = [
       {
         'count': interviewsCount.toString(),
         'label': 'مقابلات',
@@ -155,7 +85,85 @@ class HomeService {
     };
   }
 
-  /// Safely converts a dynamic value to int.
+  Future<int> _fetchConfirmedInterviewsCount() async {
+    try {
+      debugPrint('=== HOME: Fetching ${ApiConstants.candidateInterviews} ===');
+      final response = await _apiClient.get(ApiConstants.candidateInterviews);
+      final interviews = _extractInterviews(response);
+      final count = interviews
+          .where((interview) => interview.status == InterviewStatus.completed)
+          .length;
+      debugPrint('=== HOME: confirmed interviews count=$count ===');
+      return count;
+    } catch (e) {
+      debugPrint('=== HOME ERROR: interviews: $e ===');
+      return 0;
+    }
+  }
+
+  List<InterviewModel> _extractInterviews(Map<String, dynamic> response) {
+    final data = response['data'];
+    final rawInterviews = data is Map
+        ? data['interviews']
+        : response['interviews'];
+
+    if (rawInterviews is! List) return const [];
+
+    return rawInterviews
+        .whereType<Map>()
+        .map((item) => InterviewModel.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<_ApplicationCounts> _fetchApplicationCounts() async {
+    try {
+      final response = await _apiClient.get(ApiConstants.applications);
+      final apps = _extractApplications(response);
+      var pending = 0;
+
+      for (final app in apps) {
+        final statusValues = [
+          app['status'],
+          app['statusId'],
+          app['statusValue'],
+          app['statusName'],
+          app['applicationStatus'],
+        ];
+
+        if (statusValues.any((value) => _isPendingReviewStatus('$value'))) {
+          pending++;
+        }
+      }
+
+      final total = apps.isNotEmpty
+          ? apps.length
+          : _toInt(response['totalCount']);
+      debugPrint('=== HOME: totalApps=$total, pendingApps=$pending ===');
+      return _ApplicationCounts(total: total, pending: pending);
+    } catch (e) {
+      debugPrint('=== HOME ERROR: applications: $e ===');
+      return const _ApplicationCounts(total: 0, pending: 0);
+    }
+  }
+
+  List<Map<String, dynamic>> _extractApplications(
+    Map<String, dynamic> response,
+  ) {
+    final data = response['data'];
+    final rawApplications = data is List
+        ? data
+        : data is Map
+        ? data['applications'] ?? data['items']
+        : response['applications'];
+
+    if (rawApplications is! List) return const [];
+
+    return rawApplications
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
   int _toInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
@@ -169,10 +177,17 @@ class HomeService {
       '',
     );
 
-    if (normalized.isEmpty) return false;
+    if (normalized.isEmpty || normalized == 'null') return false;
     return normalized == '1' ||
         normalized == 'pendingreview' ||
         normalized.contains('pending') ||
         normalized.contains('review');
   }
+}
+
+class _ApplicationCounts {
+  final int total;
+  final int pending;
+
+  const _ApplicationCounts({required this.total, required this.pending});
 }

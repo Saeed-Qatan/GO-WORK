@@ -105,31 +105,40 @@ class InterviewModel {
 
   static InterviewStatus _parseStatus(dynamic statusVal) {
     if (statusVal == null) return InterviewStatus.scheduled;
-    
+
     // If it's an integer
     if (statusVal is int || int.tryParse(statusVal.toString()) != null) {
       final val = statusVal is int ? statusVal : int.parse(statusVal.toString());
       switch (val) {
-        case 1: return InterviewStatus.scheduled;
-        case 2: return InterviewStatus.completed;
-        case 3: return InterviewStatus.cancelled;
-        case 6: return InterviewStatus.confirmed;
-        case 7: return InterviewStatus.missingInterview;
-        case 8: return InterviewStatus.withdrawn;
+        case 1:
+          return InterviewStatus.scheduled;
+        case 2:
+          return InterviewStatus.completed;
+        case 3:
+          return InterviewStatus.cancelled;
+        case 6:
+          return InterviewStatus.confirmed;
+        case 7:
+          return InterviewStatus.missingInterview;
+        case 8:
+          return InterviewStatus.withdrawn;
       }
     }
 
     // Fallback for strings
     final s = statusVal.toString().trim().toLowerCase();
+    final normalized = s.replaceAll(RegExp(r'[\s_\-]+'), '');
     if (s == 'scheduled') return InterviewStatus.scheduled;
     if (s == 'completed') return InterviewStatus.completed;
     if (s == 'cancelled' || s == 'canceled') return InterviewStatus.cancelled;
-    if (s == 'confirmed' || s == 'confirmattendance') return InterviewStatus.confirmed;
-    if (s == 'missinginterview' || s == 'missedinterview' || s == 'missing_interview') {
+    if (normalized == 'confirmed' || normalized == 'confirmattendance') {
+      return InterviewStatus.confirmed;
+    }
+    if (normalized == 'missinginterview' || normalized == 'missedinterview') {
       return InterviewStatus.missingInterview;
     }
     if (s == 'withdrawn' || s == 'withdraw') return InterviewStatus.withdrawn;
-    
+
     return InterviewStatus.scheduled; // Default fallback
   }
 
