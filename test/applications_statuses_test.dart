@@ -307,57 +307,60 @@ void main() {
     },
   );
 
-  test('local optimistic applications are scoped to the current user', () async {
-    final storage = LocalStorage();
-    final service = _FakeApplicationsService(
-      statusesResponse: {
-        'data': [
-          {'value': 'PendingReview', 'label': 'PendingReview'},
-        ],
-      },
-      applicationsResponse: {'data': <Map<String, dynamic>>[]},
-    );
+  test(
+    'local optimistic applications are scoped to the current user',
+    () async {
+      final storage = LocalStorage();
+      final service = _FakeApplicationsService(
+        statusesResponse: {
+          'data': [
+            {'value': 'PendingReview', 'label': 'PendingReview'},
+          ],
+        },
+        applicationsResponse: {'data': <Map<String, dynamic>>[]},
+      );
 
-    await storage.saveString('userId', 'user-a');
-    final userAViewModel = ApplicationsViewModel(
-      repository: ApplicationsRepository(service: service),
-      autoFetch: false,
-    );
-    await userAViewModel.fetchApplications();
-    userAViewModel.addOptimisticApplication(
-      jobId: 'job-user-a',
-      jobTitle: 'User A Job',
-      company: 'Company A',
-    );
+      await storage.saveString('userId', 'user-a');
+      final userAViewModel = ApplicationsViewModel(
+        repository: ApplicationsRepository(service: service),
+        autoFetch: false,
+      );
+      await userAViewModel.fetchApplications();
+      userAViewModel.addOptimisticApplication(
+        jobId: 'job-user-a',
+        jobTitle: 'User A Job',
+        company: 'Company A',
+      );
 
-    await Future<void>.delayed(Duration.zero);
-    expect(
-      await storage.getString('optimistic_applications_user-a'),
-      isNotNull,
-    );
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        await storage.getString('optimistic_applications_user-a'),
+        isNotNull,
+      );
 
-    await storage.clear();
-    await storage.saveString('userId', 'user-b');
-    final userBViewModel = ApplicationsViewModel(
-      repository: ApplicationsRepository(service: service),
-      autoFetch: false,
-    );
-    await userBViewModel.fetchApplications();
+      await storage.clear();
+      await storage.saveString('userId', 'user-b');
+      final userBViewModel = ApplicationsViewModel(
+        repository: ApplicationsRepository(service: service),
+        autoFetch: false,
+      );
+      await userBViewModel.fetchApplications();
 
-    expect(userBViewModel.applications, isEmpty);
+      expect(userBViewModel.applications, isEmpty);
 
-    await storage.clear();
-    await storage.saveString('userId', 'user-a');
-    final reopenedUserAViewModel = ApplicationsViewModel(
-      repository: ApplicationsRepository(service: service),
-      autoFetch: false,
-    );
-    await reopenedUserAViewModel.fetchApplications();
+      await storage.clear();
+      await storage.saveString('userId', 'user-a');
+      final reopenedUserAViewModel = ApplicationsViewModel(
+        repository: ApplicationsRepository(service: service),
+        autoFetch: false,
+      );
+      await reopenedUserAViewModel.fetchApplications();
 
-    expect(reopenedUserAViewModel.applications.single.jobId, 'job-user-a');
-  });
+      expect(reopenedUserAViewModel.applications.single.jobId, 'job-user-a');
+    },
+  );
 
-  test('local withdrawn applications are scoped to the current user', () async {
+  test('withdrawn applications are not stored locally', () async {
     final storage = LocalStorage();
     final userAService = _ChangingApplicationsService(
       statusesResponse: {
@@ -388,7 +391,8 @@ void main() {
     await userAViewModel.fetchApplications();
     await userAViewModel.withdrawApplication('app-user-a');
 
-    expect(await storage.getString('withdrawn_applications_user-a'), isNotNull);
+    expect(await storage.getString('withdrawn_applications_user-a'), isNull);
+    expect(userAViewModel.applications.single.id, 'app-user-a');
 
     await storage.clear();
     await storage.saveString('userId', 'user-b');
@@ -404,6 +408,21 @@ void main() {
     await userBViewModel.fetchApplications();
 
     expect(userBViewModel.applications, isEmpty);
+
+    await storage.clear();
+    await storage.saveString('userId', 'user-a');
+    final reopenedUserAViewModel = ApplicationsViewModel(
+      repository: ApplicationsRepository(
+        service: _FakeApplicationsService(
+          statusesResponse: userAService.statusesResponse,
+          applicationsResponse: {'data': <Map<String, dynamic>>[]},
+        ),
+      ),
+      autoFetch: false,
+    );
+    await reopenedUserAViewModel.fetchApplications();
+
+    expect(reopenedUserAViewModel.applications, isEmpty);
   });
 }
 

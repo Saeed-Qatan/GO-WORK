@@ -34,27 +34,27 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8 
-  provider: ^6.1.5+1                          //state management
-  http: ^1.6.0                                //http requests
-  google_fonts: ^8.0.0                        // fonts
+  provider: ^6.1.5+1                          
+  http: ^1.6.0                                
+  google_fonts: ^8.0.0                        
   flutter_localizations:
-    sdk: flutter                             //localizations
-  shared_preferences: ^2.5.4                  //local storage
-  file_picker: ^8.1.7                         //uploadd files
-  image_picker: ^1.1.2                        //pick images
-  dio: ^5.9.1                                 //open api requests
-  url_launcher: ^6.3.2                   //open urls
-  flutter_native_splash: ^2.4.7          //splash screen
-  go_router: ^17.2.2                     //routing
-  firebase_core: ^4.7.0                  //firebase
-  firebase_messaging: ^16.2.0            //firebase messaging
-  flutter_local_notifications: ^18.0.0  //view local notifications 
-  flutter_animate: ^4.5.2                //animations
-  animations: ^2.2.0                     //animations
-  rive: ^0.14.6                          //animations
-  skeletonizer: ^2.1.3                   //shimmer loader upload files and more
-  lucide_icons: ^0.257.0                   //icons
-  vibration: ^3.1.8                      // sound notification not working
+    sdk: flutter                             
+  shared_preferences: ^2.5.4                  
+  file_picker: ^8.1.7                         
+  image_picker: ^1.1.2                        
+  dio: ^5.9.1                                 
+  url_launcher: ^6.3.2                   
+  flutter_native_splash: ^2.4.7          
+  go_router: ^17.2.2                     
+  firebase_core: ^4.7.0                  
+  firebase_messaging: ^16.2.0            
+  flutter_local_notifications: ^18.0.0  
+  flutter_animate: ^4.5.2                
+  animations: ^2.2.0                     
+  rive: ^0.14.6                          
+  skeletonizer: ^2.1.3                   
+  lucide_icons: ^0.257.0                   
+  vibration: ^3.1.8                      
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -64,8 +64,8 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0              // for testing and development mode
-  flutter_launcher_icons: ^0.14.3    //launcher icons for android and ios Application
+  flutter_lints: ^5.0.0              
+  flutter_launcher_icons: ^0.14.3    
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -95,18 +95,18 @@ flutter:
           weight: 400
 
 flutter_native_splash:
-  color: "#ffffff"                      //for android Application splash screen background color
-  image: "assets/logo_cropped.png"       //for android Application splash screen image
-  fullscreen: true                      //for android Application splash screen fullscreen
+  color: "#ffffff"                      
+  image: "assets/logo_cropped.png"       
+  fullscreen: true                      
   android_12:
-    image: "assets/logo_cropped.png"     //for android Application splash screen image
-    color: "#ffffff"                     //for android Application splash screen background color
+    image: "assets/logo_cropped.png"     
+    color: "#ffffff"                     
 
 flutter_launcher_icons: 
-  android: true                                        //for android Application
-  ios: true                                            //for ios Application
-  image_path: "assets/app_icon.png"                    //for android and ios Application
-  adaptive_icon_background: "#ffffff"                  //for android Application
-  adaptive_icon_foreground: "assets/app_icon.png"      //for android Application
-  remove_alpha_ios: true                               //for ios Application
+  android: true                                       
+  ios: true                                            
+  image_path: "assets/app_icon.png"                    
+  adaptive_icon_background: "#ffffff"                  
+  adaptive_icon_foreground: "assets/app_icon.png"      
+  remove_alpha_ios: true                               
 

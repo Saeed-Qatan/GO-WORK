@@ -5,8 +5,7 @@ class LocalStorage {
   factory LocalStorage() => _instance;
   LocalStorage._internal();
 
-  static const String _pendingRegistrationEmailKey =
-      'pendingRegistrationEmail';
+  static const String _pendingRegistrationEmailKey = 'pendingRegistrationEmail';
   static const String _pendingRegistrationCategoryIdKey =
       'pendingRegistrationCategoryId';
 
@@ -77,10 +76,7 @@ class LocalStorage {
     if (normalizedEmail.isEmpty || normalizedCategoryId.isEmpty) return;
 
     await saveString(_pendingRegistrationEmailKey, normalizedEmail);
-    await saveString(
-      _pendingRegistrationCategoryIdKey,
-      normalizedCategoryId,
-    );
+    await saveString(_pendingRegistrationCategoryIdKey, normalizedCategoryId);
   }
 
   Future<String?> consumePendingRegistrationCategoryId(String email) async {
@@ -88,8 +84,9 @@ class LocalStorage {
     if (normalizedEmail.isEmpty) return null;
 
     final pendingEmail = await getString(_pendingRegistrationEmailKey);
-    final pendingCategoryId =
-        await getString(_pendingRegistrationCategoryIdKey);
+    final pendingCategoryId = await getString(
+      _pendingRegistrationCategoryIdKey,
+    );
     final normalizedPendingEmail = pendingEmail?.trim().toLowerCase();
     final normalizedPendingCategoryId = pendingCategoryId?.trim();
 
@@ -118,11 +115,7 @@ class LocalStorage {
     final preservedBools = <String, bool?>{};
 
     for (final key in prefs.getKeys()) {
-      if (key.startsWith('interview_local_statuses_') ||
-          key.startsWith('deleted_interview_ids_') ||
-          key.startsWith('archived_interviews_') ||
-          key.startsWith('withdrawn_applications_') ||
-          key.startsWith('optimistic_applications_') ||
+      if (key.startsWith('optimistic_applications_') ||
           key.startsWith('cached_notifications_') ||
           key.startsWith('categoryId_')) {
         preservedStrings[key] = prefs.getString(key);

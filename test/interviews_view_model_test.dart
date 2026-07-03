@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gowork/model/interview_model.dart';
 import 'package:gowork/repository/interviews_repository.dart';
-import 'package:gowork/utils/local_storage.dart';
 import 'package:gowork/viewmodel/interviews_view_model.dart';
 import 'package:gowork/widget/interviews/interview_status_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,7 +44,7 @@ void main() {
   });
 
   test(
-    'cancel action persists withdrawn status across view model recreation',
+    'cancel action keeps withdrawn status only in the current view model',
     () async {
       final scheduledInterview = _interview(status: InterviewStatus.scheduled);
       final firstRepository = _FakeInterviewsRepository([scheduledInterview]);
@@ -65,7 +64,10 @@ void main() {
       expect(success, isTrue);
       expect(firstRepository.submitCount, 1);
       expect(firstRepository.submittedAction, 'cancel');
-      expect(firstViewModel.interviews.single.status, InterviewStatus.withdrawn);
+      expect(
+        firstViewModel.interviews.single.status,
+        InterviewStatus.withdrawn,
+      );
 
       final reopenedRepository = _FakeInterviewsRepository([
         scheduledInterview,
@@ -78,7 +80,7 @@ void main() {
 
       expect(
         reopenedViewModel.interviews.single.status,
-        InterviewStatus.withdrawn,
+        InterviewStatus.scheduled,
       );
     },
   );
@@ -94,8 +96,6 @@ void main() {
     expect(interview.toJson()['status'], 'withdraw');
   });
 
-
-
   test('missed interview status parses and displays as Arabic label', () {
     final interview = InterviewModel.fromJson({
       'id': 'interview-1',
@@ -107,7 +107,7 @@ void main() {
   });
 
   test(
-    'archived interviews stay archived across view model recreation',
+    'archived interviews do not persist across view model recreation',
     () async {
       final firstInterview = _interview(id: 'interview-1');
       final secondInterview = _interview(id: 'interview-2');
@@ -120,7 +120,6 @@ void main() {
 
       await firstViewModel.fetchInterviews();
       await firstViewModel.dismissInterview('interview-1');
-      await LocalStorage().clear();
 
       expect(firstViewModel.interviews.map((item) => item.id), ['interview-2']);
       expect(firstViewModel.deletedInterviews.single.id, 'interview-1');
@@ -135,118 +134,54 @@ void main() {
       await reopenedViewModel.fetchInterviews();
 
       expect(reopenedViewModel.interviews.map((item) => item.id), [
+        'interview-1',
         'interview-2',
       ]);
-      expect(reopenedViewModel.deletedInterviews.single.id, 'interview-1');
+      expect(reopenedViewModel.deletedInterviews, isEmpty);
     },
   );
 
-  test('archived interviews remain visible when backend omits them', () async {
+  test('archived interviews remain visible only in the same session', () async {
     final firstInterview = _interview(id: 'interview-1');
     final secondInterview = _interview(id: 'interview-2');
-    final firstViewModel = InterviewsViewModel(
+    final viewModel = InterviewsViewModel(
       repository: _FakeInterviewsRepository([firstInterview, secondInterview]),
     );
 
-    await firstViewModel.fetchInterviews();
-    await firstViewModel.dismissInterview('interview-1');
+    await viewModel.fetchInterviews();
+    await viewModel.dismissInterview('interview-1');
 
-    final reopenedViewModel = InterviewsViewModel(
-      repository: _FakeInterviewsRepository([secondInterview]),
-    );
+    expect(viewModel.interviews.map((item) => item.id), ['interview-2']);
+    expect(viewModel.deletedInterviews.single.id, 'interview-1');
+    expect(viewModel.deletedInterviews.single.role, firstInterview.role);
 
-    await reopenedViewModel.fetchInterviews();
+    await viewModel.restoreInterview('interview-1');
 
-    expect(reopenedViewModel.interviews.map((item) => item.id), [
-      'interview-2',
-    ]);
-    expect(reopenedViewModel.deletedInterviews.single.id, 'interview-1');
-    expect(
-      reopenedViewModel.deletedInterviews.single.role,
-      firstInterview.role,
-    );
-
-    await reopenedViewModel.restoreInterview('interview-1');
-
-    expect(reopenedViewModel.interviews.map((item) => item.id), [
+    expect(viewModel.interviews.map((item) => item.id), [
       'interview-1',
       'interview-2',
     ]);
-    expect(reopenedViewModel.deletedInterviews, isEmpty);
+    expect(viewModel.deletedInterviews, isEmpty);
   });
 
-  test('stored interview actions are scoped to the current user', () async {
-    final storage = LocalStorage();
-    final interview = _interview(id: 'shared-interview-id');
+  test('session reset clears archived interviews from memory', () async {
+    final interview = _interview(id: 'interview-to-archive');
 
-    await storage.saveString('userId', 'user-a');
-    final userAViewModel = InterviewsViewModel(
+    final viewModel = InterviewsViewModel(
       repository: _FakeInterviewsRepository([interview]),
     );
-    await userAViewModel.fetchInterviews();
-    await userAViewModel.dismissInterview('shared-interview-id');
 
-    await storage.clear();
-    await storage.saveString('userId', 'user-b');
-    final userBViewModel = InterviewsViewModel(
-      repository: _FakeInterviewsRepository([interview]),
-    );
-    await userBViewModel.fetchInterviews();
+    await viewModel.fetchInterviews();
+    await viewModel.dismissInterview('interview-to-archive');
 
-    expect(userBViewModel.interviews.single.id, 'shared-interview-id');
-    expect(userBViewModel.deletedInterviews, isEmpty);
+    expect(viewModel.interviews, isEmpty);
+    expect(viewModel.deletedInterviews.single.id, 'interview-to-archive');
 
-    await storage.clear();
-    await storage.saveString('userId', 'user-a');
-    final reopenedUserAViewModel = InterviewsViewModel(
-      repository: _FakeInterviewsRepository(<InterviewModel>[]),
-    );
-    await reopenedUserAViewModel.fetchInterviews();
+    viewModel.resetSessionState();
 
-    expect(reopenedUserAViewModel.interviews, isEmpty);
-    expect(
-      reopenedUserAViewModel.deletedInterviews.single.id,
-      'shared-interview-id',
-    );
+    expect(viewModel.interviews, isEmpty);
+    expect(viewModel.deletedInterviews, isEmpty);
   });
-
-  test(
-    'session reset clears memory without deleting scoped local state',
-    () async {
-      final storage = LocalStorage();
-      final interview = _interview(id: 'interview-to-archive');
-
-      await storage.saveString('userId', 'user-a');
-      final viewModel = InterviewsViewModel(
-        repository: _FakeInterviewsRepository([interview]),
-      );
-
-      await viewModel.fetchInterviews();
-      await viewModel.dismissInterview('interview-to-archive');
-
-      expect(viewModel.interviews, isEmpty);
-      expect(viewModel.deletedInterviews.single.id, 'interview-to-archive');
-
-      viewModel.resetSessionState();
-
-      expect(viewModel.interviews, isEmpty);
-      expect(viewModel.deletedInterviews, isEmpty);
-      expect(
-        await storage.getString('deleted_interview_ids_user-a'),
-        isNotNull,
-      );
-
-      final reopenedViewModel = InterviewsViewModel(
-        repository: _FakeInterviewsRepository(<InterviewModel>[]),
-      );
-      await reopenedViewModel.fetchInterviews();
-
-      expect(
-        reopenedViewModel.deletedInterviews.single.id,
-        'interview-to-archive',
-      );
-    },
-  );
 
   test(
     'restored interviews stay restored across view model recreation',

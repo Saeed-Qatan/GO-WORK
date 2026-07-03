@@ -7,7 +7,8 @@ import '../utils/local_storage.dart';
 import 'job_application_state_view_model.dart';
 import 'session_resettable.dart';
 
-class ApplicationsViewModel extends ChangeNotifier implements SessionResettable {
+class ApplicationsViewModel extends ChangeNotifier
+    implements SessionResettable {
   final IApplicationsRepository _repository;
   final LocalStorage _storage;
   int _sessionVersion = 0;
@@ -84,24 +85,6 @@ class ApplicationsViewModel extends ChangeNotifier implements SessionResettable 
         }
       }
 
-      // Merge locally stored withdrawn applications and force withdrawn status on them
-      final withdrawnApps = await _loadWithdrawnApplications();
-      final withdrawnStatus = _withdrawnStatus;
-      if (withdrawnStatus != null) {
-        for (final localApp in withdrawnApps) {
-          final index = _allApplications.indexWhere(
-            (item) => item.id == localApp.id,
-          );
-          if (index != -1) {
-            _allApplications[index] = _allApplications[index].withStatus(
-              withdrawnStatus,
-            );
-          } else {
-            _allApplications.insert(0, localApp.withStatus(withdrawnStatus));
-          }
-        }
-      }
-
       if (_selectedFilterIndex >= filterTabItems.length) {
         _selectedFilterIndex = 0;
       }
@@ -137,16 +120,6 @@ class ApplicationsViewModel extends ChangeNotifier implements SessionResettable 
       final currentApplication = _findApplication(applicationId);
       await _repository.withdrawApplication(applicationId);
       final movedApplication = _moveApplicationToWithdrawnStatus(applicationId);
-
-      // Save to persistent storage
-      final withdrawnStatus = _withdrawnStatus;
-      if (movedApplication != null) {
-        await _saveWithdrawnApplication(movedApplication);
-      } else if (currentApplication != null && withdrawnStatus != null) {
-        await _saveWithdrawnApplication(
-          currentApplication.withStatus(withdrawnStatus),
-        );
-      }
 
       await fetchApplications(showLoading: false);
       _restoreWithdrawnApplicationIfMissing(
@@ -237,39 +210,9 @@ class ApplicationsViewModel extends ChangeNotifier implements SessionResettable 
         .toList();
   }
 
-  Future<List<ApplicationModel>> _loadWithdrawnApplications() async {
-    try {
-      final jsonStr = await _storage.getScopedString(
-        'withdrawn_applications',
-      );
-      if (jsonStr == null || jsonStr.isEmpty) return [];
-      final List<dynamic> decoded = json.decode(jsonStr);
-      return decoded.map((item) => ApplicationModel.fromJson(item)).toList();
-    } catch (e) {
-      debugPrint('Error loading withdrawn applications: $e');
-      return [];
-    }
-  }
-
-  Future<void> _saveWithdrawnApplication(ApplicationModel app) async {
-    try {
-      final currentList = await _loadWithdrawnApplications();
-      currentList.removeWhere((item) => item.id == app.id);
-      currentList.add(app);
-      final jsonStr = json.encode(
-        currentList.map((item) => item.toJson()).toList(),
-      );
-      await _storage.saveScopedString('withdrawn_applications', jsonStr);
-    } catch (e) {
-      debugPrint('Error saving withdrawn application: $e');
-    }
-  }
-
   Future<List<ApplicationModel>> _loadOptimisticApplications() async {
     try {
-      final jsonStr = await _storage.getScopedString(
-        'optimistic_applications',
-      );
+      final jsonStr = await _storage.getScopedString('optimistic_applications');
       if (jsonStr == null || jsonStr.isEmpty) return [];
       final List<dynamic> decoded = json.decode(jsonStr);
       return decoded.map((item) => ApplicationModel.fromJson(item)).toList();
