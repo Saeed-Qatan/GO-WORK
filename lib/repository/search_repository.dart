@@ -13,16 +13,16 @@ class SearchRepository {
     String? query,
     String? categoryId,
     String? countryId,
-    String? locationType,
-    String? jobType,
+    String? jobLocationTypeId,
+    String? jobTypeId,
   }) async {
     try {
       final rawJobs = await _service.searchJobs(
         query: query,
         categoryId: categoryId,
         countryId: countryId,
-        locationType: locationType,
-        jobType: jobType,
+        jobLocationTypeId: jobLocationTypeId,
+        jobTypeId: jobTypeId,
       );
       final jobs = _parseJobs(rawJobs);
       _debugLog('Search repository parsed count: ${jobs.length}');

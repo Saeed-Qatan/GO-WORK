@@ -12,21 +12,28 @@ class SearchService {
     String? query,
     String? categoryId,
     String? countryId,
-    String? locationType,
-    String? jobType,
+    String? jobLocationTypeId,
+    String? jobTypeId,
   }) async {
     final queryParams = <String, String>{};
     _addParam(queryParams, 'search', query);
-    // ✅ أسماء الـ query keys مؤكدة من الباك إند: categories, countries,
-    // jobTypes, locationTypes (plural camelCase — مطابقة لأسماء endpoints
-    // الفلاتر: Jobs/countries, Jobs/job-types, Jobs/location-types).
-    // categories/countries: القيمة id رقمي (جدول حقيقي بقاعدة البيانات).
-    _addParam(queryParams, 'categories', categoryId);
-    _addParam(queryParams, 'countries', countryId);
-    // jobTypes/locationTypes: القيمة اسم الـ enum الإنجليزي كما هو
-    // (FullTime, PartTime, Contract, Internship / OnSite, Remote, Hybrid).
-    _addParam(queryParams, 'locationTypes', locationType);
-    _addParam(queryParams, 'jobTypes', jobType);
+    // ✅ countryId: مؤكد فعليًا بالاختبار المباشر — GET
+    // /Jobs/search?countryId=122 رجّع بالضبط نفس وظائف السعودية (id 122)،
+    // تطابق رياضي 100%. القيمة id رقمي.
+    _addParam(queryParams, 'countryId', countryId);
+    // ✅ categoryId: مؤكد فعليًا — GET /Jobs/search?categoryId=101 رجّع 39
+    // نتيجة، كلها فئة "تطوير البرمجيات" بدون استثناء. القيمة id رقمي.
+    _addParam(queryParams, 'categoryId', categoryId);
+    // ✅ jobTypeId: مؤكد فعليًا بالاختبار المباشر (jobTypeId=1 = FullTime).
+    _addParam(queryParams, 'jobTypeId', jobTypeId);
+    // ✅ jobLocationTypeId: مؤكد فعليًا بالاختبار المباشر
+    // (jobLocationTypeId=1 = OnSite). الاسم الحقيقي بالباك إند
+    // "JobLocationType" مو "LocationType" العادي — مطابق لنمط JobType،
+    // وهذا نفس ما كان JobModel.fromJson يتحقق منه أصلاً
+    // (json['jobLocationType'] قبل json['locationType']).
+    _addParam(queryParams, 'jobLocationTypeId', jobLocationTypeId);
+    // 🎉 الأربعة فلاتر مؤكدين فعليًا على السيرفر الحقيقي. الفلترة المحلية
+    // بالـ ViewModel أُزيلت بثقة كاملة.
 
     final endpoint = _buildEndpoint(queryParams);
     _debugLog('=== SEARCH SERVICE: GET $endpoint ===');

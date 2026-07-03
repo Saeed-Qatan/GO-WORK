@@ -5,9 +5,19 @@ import '../model/home/home_model.dart';
 import '../repository/search_repository.dart';
 import '../utils/api_storage.dart';
 import '../utils/app_error_parser.dart';
-import '../utils/search_text_normalizer.dart';
 import '../utils/status_translator.dart';
 
+/// ✅ الفلترة كلها server-side الآن، مؤكدة بالاختبار المباشر على السيرفر
+/// الحقيقي لكل فلتر على حدة:
+///   - categoryId          (GET /Jobs/search?categoryId=101 → 39 نتيجة،
+///                           كلها "تطوير البرمجيات" فقط)
+///   - countryId           (GET /Jobs/search?countryId=122 → تطابق رياضي
+///                           100% مع وظائف السعودية)
+///   - jobTypeId            (GET /Jobs/search?jobTypeId=1 → FullTime فقط)
+///   - jobLocationTypeId    (GET /Jobs/search?jobLocationTypeId=1 → OnSite
+///                           فقط — الاسم الحقيقي "JobLocationType" وليس
+///                           "LocationType")
+/// لا فلترة محلية بعد الآن — السيرفر هو مصدر الحقيقة الوحيد.
 class SearchViewModel extends ChangeNotifier {
   static const String allLabel = 'الكل';
   static const String allCategoriesLabel = 'جميع المجالات';
@@ -97,6 +107,8 @@ class SearchViewModel extends ChangeNotifier {
       }
 
       if (list != null && list.isNotEmpty) {
+        // نحتفظ بالـ id لأنه هو اللي يُرسل للـ backend للفلترة الفعلية،
+        // والـ name يُستخدم فقط للعرض بالواجهة.
         final parsed = list.map((item) {
           return <String, dynamic>{
             'id': (item['id'] ?? item['Id'] ?? item['code'] ?? '').toString(),
@@ -196,20 +208,23 @@ class SearchViewModel extends ChangeNotifier {
     _errorMessage = null;
     _debugLog('=== SEARCH VM: searchJobs start ===');
     _debugLog(
-      '=== SEARCH VM: query="$_searchQuery", category="${_selectedCategory?.rawValue}", locationType="${_selectedLocation?.rawValue}", jobType="${_selectedType?.rawValue}", country="${_selectedCountry?.rawValue}" ===',
+      '=== SEARCH VM: query="$_searchQuery", categoryId="${_selectedCategory?.id}", '
+      'countryId="${_selectedCountry?.id}", jobLocationTypeId="${_selectedLocation?.id}", '
+      'jobTypeId="${_selectedType?.id}" ===',
     );
     notifyListeners();
 
     try {
+      // كل الفلاتر id-based ومؤكدة server-side — بدون أي فلترة محلية.
       final jobs = await _repository.searchJobs(
         query: _searchQuery,
-        categoryId: _selectedCategory?.rawValue,
-        locationType: _selectedLocation?.rawValue,
-        jobType: _selectedType?.rawValue,
-        countryId: _selectedCountry?.rawValue,
+        categoryId: _selectedCategory?.id,
+        countryId: _selectedCountry?.id,
+        jobLocationTypeId: _selectedLocation?.id,
+        jobTypeId: _selectedType?.id,
       );
       if (_isDisposed || requestId != _searchRequestId) return;
-      _jobs = _applyClientFilters(jobs);
+      _jobs = jobs;
       _applySorting();
       _debugLog('=== SEARCH VM: jobs loaded=${_jobs.length} ===');
     } catch (e) {
@@ -220,7 +235,6 @@ class SearchViewModel extends ChangeNotifier {
       );
       _jobs = [];
     } finally {
-      // Avoid updating UI for stale / superseded requests.
       if (!_isDisposed && requestId == _searchRequestId) {
         _isLoading = false;
         notifyListeners();
@@ -244,88 +258,6 @@ class SearchViewModel extends ChangeNotifier {
     }
   }
 
-  List<JobModel> _applyClientFilters(List<JobModel> jobs) {
-    final selectedCategory = _selectedCategory;
-    final selectedCountry = _selectedCountry;
-    final selectedLocation = _selectedLocation;
-    final selectedType = _selectedType;
-
-    return jobs.where((job) {
-      // ── Dropdown filters ─────────────────────────────────────────────────
-      if (selectedCategory != null &&
-          !_matchesText(job.category, selectedCategory.rawValue)) {
-        return false;
-      }
-
-      if (selectedCountry != null &&
-          !_matchesText(job.country, selectedCountry.rawValue)) {
-        return false;
-      }
-
-      if (selectedLocation != null &&
-          !_matchesWorkMode(job, selectedLocation)) {
-        return false;
-      }
-
-      if (selectedType != null && !_matchesJobType(job, selectedType)) {
-        return false;
-      }
-
-      return true;
-    }).toList();
-  }
-
-  bool _matchesWorkMode(JobModel job, FilterOption selectedLocation) {
-    final selectedRaw = selectedLocation.rawValue?.trim();
-    if (selectedRaw == null || selectedRaw.isEmpty) return true;
-
-    final jobRaw = job.workMode.trim();
-    if (jobRaw.isEmpty) return false;
-
-    if (StatusTranslator.normalize(jobRaw) ==
-        StatusTranslator.normalize(selectedRaw)) {
-      return true;
-    }
-
-    final selectedLabel = StatusTranslator.workModeLabel(selectedRaw);
-    final jobLabel = StatusTranslator.workModeLabel(jobRaw);
-    if (selectedLabel.trim().isEmpty || jobLabel.trim().isEmpty) return false;
-
-    return StatusTranslator.normalize(selectedLabel) ==
-        StatusTranslator.normalize(jobLabel);
-  }
-
-  bool _matchesJobType(JobModel job, FilterOption selectedType) {
-    final selectedRaw = selectedType.rawValue?.trim();
-    if (selectedRaw == null || selectedRaw.isEmpty) return true;
-
-    final jobRaw = job.type.trim();
-    if (jobRaw.isEmpty) return false;
-
-    if (StatusTranslator.normalize(jobRaw) ==
-        StatusTranslator.normalize(selectedRaw)) {
-      return true;
-    }
-
-    final selectedLabel = StatusTranslator.jobTypeLabel(selectedRaw);
-    final jobLabel = StatusTranslator.jobTypeLabel(jobRaw);
-    if (selectedLabel.trim().isEmpty || jobLabel.trim().isEmpty) return false;
-
-    return StatusTranslator.normalize(selectedLabel) ==
-        StatusTranslator.normalize(jobLabel);
-  }
-
-  bool _matchesText(String jobValue, String? selectedValue) {
-    final selectedRaw = selectedValue?.trim();
-    if (selectedRaw == null || selectedRaw.isEmpty) return true;
-
-    final jobRaw = jobValue.trim();
-    if (jobRaw.isEmpty) return false;
-
-    return StatusTranslator.normalize(jobRaw) ==
-        StatusTranslator.normalize(selectedRaw);
-  }
-
   List<FilterOption> _mapOptions(
     List<Map<String, dynamic>> items,
     String defaultOption, {
@@ -336,16 +268,16 @@ class SearchViewModel extends ChangeNotifier {
     final seen = <String>{};
     final options = <FilterOption>[];
     for (final item in items) {
+      final rawId = item['id']?.toString() ?? '';
       final rawName = item['name']?.toString() ?? '';
-      if (rawName.trim().isEmpty) continue;
+      if (rawName.trim().isEmpty || rawId.trim().isEmpty) continue;
 
       final displayName = translate?.call(rawName) ?? rawName;
       final label = displayName.isEmpty ? rawName : displayName;
       if (label == defaultOption) continue;
 
-      final key = '${label.trim()}|${rawName.trim()}';
-      if (seen.add(key)) {
-        options.add(FilterOption(label: label, rawValue: rawName));
+      if (seen.add(rawId)) {
+        options.add(FilterOption(label: label, rawValue: rawName, id: rawId));
       }
     }
 
